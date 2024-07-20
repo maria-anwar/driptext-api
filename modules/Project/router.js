@@ -8,4 +8,8 @@ router.post("/create", (req, res) => {
 	projectController.create(req, res);
 });
 
+router.post("/detail", (req, res) => {
+	projectController.detail(req, res);
+});
+
 module.exports = router;

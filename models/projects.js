@@ -3,9 +3,10 @@ module.exports = (mongoose) => {
 
 	const ProjectSchema = new Schema(
 		{
-			id: { type: Number, required: true, unique: true },
+			id: { type: Number, required: false, unique: true },
 			projectName: { type: String, required: true },
 			speech: { type: String, required: false },
+			keywords: { type: String, required: false },
 			perspective: { type: String, required: false },
 			user: { type: Schema.Types.ObjectId, ref: "User", required: true },
 			isActive: {

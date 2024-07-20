@@ -8,12 +8,15 @@ const crypto = require("../../utils/crypto");
 const Users = db.User;
 const Roles = db.Role;
 const UserPlan = db.UserPlan;
+const Projects = db.Project;
 
 exports.create = async (req, res) => {
 	try {
 		const joiSchema = Joi.object({
 			firstName: Joi.string().required(),
 			lastName: Joi.string().required(),
+			projectName: Joi.string().required(),
+			keywords: Joi.string().required(),
 			email: Joi.string().email().required(),
 			roleId: Joi.string().optional().allow(null).allow(""),
 			planId: Joi.string().optional().allow(null).allow(""),
@@ -50,6 +53,13 @@ exports.create = async (req, res) => {
 			Users.create(userObj)
 				.then(async (user) => {
 					var userPlanObj = {};
+
+					var projectObj = {
+						projectName: req.body.projectName,
+						keywords: req.body.keywords,
+						user: user._id
+					};
+
 					if (req.body.planId) {
 						userPlanObj = {
 							user: user._id,
@@ -61,10 +71,10 @@ exports.create = async (req, res) => {
 							user: user._id
 						};
 					}
-
+					let createProject = await Projects.create(projectObj);
 					let createUserPlan = await UserPlan.create(userPlanObj);
 
-					if (createUserPlan) {
+					if (createUserPlan && createProject) {
 						emails.emailPassword(user);
 						res.send({ message: "User Added" });
 					}
