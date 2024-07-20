@@ -30,13 +30,9 @@ const usersController = require("./user.controller");
 // 	}
 // });
 
-// router.post("/create", (req, res) => {
-// 	if (req.role == "Administrator" || req.role == "Client") {
-// 		usersController.create(req, res);
-// 	} else {
-// 		res.status(403).send({ message: "Forbidden Access" });
-// 	}
-// });
+router.post("/create", (req, res) => {
+	usersController.create(req, res);
+});
 
 // router.post("/update", (req, res) => {
 // 	if (req.role == "Administrator" || req.role == "Client") {

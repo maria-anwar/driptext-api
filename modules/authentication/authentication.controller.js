@@ -10,76 +10,60 @@ const Users = db.User;
 const Roles = db.Role;
 
 exports.login = async (req, res) => {
-console.log(req.body)
-    // try {
-	// 	const userExist = await Users.findOne({
-	// 		where: {
-	// 			email: req.body.email.trim(),
-	// 			isActive: "Y"
-	// 		},
-	// 		attributes:["password"],
-	// 		raw: true
-	// 	});
-	// 	if (userExist) {
-	// 		const user = await Users.findOne({
-	// 			where: {
-	// 				email: req.body.email.trim(),
-	// 				password: req.body.password,
-	// 				isActive: "Y"
-	// 			},
-	// 			include: [
-					
-	// 				{
-	// 					model: Roles,
-	// 					attributes: ["title"]
-	// 				},
-					
-	// 			],
-	// 			attributes: ["id", "firstName", "lastName", "email", "clientId", "roleId"],
+	console.log(req.body);
+	try {
+		const userExist = await Users.findOne({
+			email: req.body.email.trim(),
+			isActive: "Y"
+		}).select("firstName lastName email role password");
+		if (userExist) {
+			const user = await Users.findOne({
+				email: req.body.email.trim(),
+				password: req.body.password,
+				isActive: "Y"
+			})
+				.select("firstName lastName email role password")
+				.populate({ path: "role", select: "title" });
 
-	// 		});
-	// 		if (user && userExist.password === req.body.password) {
-    //             encryptHelper(user);
-    //             const token = jwt.signToken({
-    //                 userId: user.id,
-    //                 profileId: user.userProfile.id,
-    //                 clientId: user.clientId,
-    //                 roleId: user.roleId,
-    //                 role: user.role.title
-    //             });
-    //             res.status(200).send({
-    //                 message: "Logged in successful",
-    //                 data: { user },
-    //                 token
-    //             });
-	// 		} else {
-	// 			res.status(403).send({
-	// 				title: "Incorrect Logins",
-	// 				message: "Incorrect Logins" });
-	// 		}
-	// 	} else {
-	// 		res.status(401).send({
-	// 			title: "Incorrect Email.",
-	// 			message: "Email does not exist in our system, Please verify you have entered correct email."
-	// 		});
-	// 	}
-	// } catch (err) {
-	// 	emails.errorEmail(req, err);
-	// 	console.log(err);
-	// 	res.status(500).send({
-	// 		message: err.message || "Some error occurred."
-	// 	});
-	// }
+			if (userExist && user.password == req.body.password) {
+				// encryptHelper(user);
+				console.log("logdin");
+				const token = jwt.signToken({
+					userId: user._id,
+					roleId: user.role,
+					role: user.role.title
+				});
+				res.status(200).send({
+					message: "Logged in successful",
+					data: { user },
+					token
+				});
+			} else {
+				res.status(403).send({
+					title: "Incorrect Logins",
+					message: "Incorrect Logins"
+				});
+			}
+		} else {
+			res.status(401).send({
+				title: "Incorrect Email.",
+				message: "Email does not exist in our system, Please verify you have entered correct email."
+			});
+		}
+	} catch (err) {
+		// emails.errorEmail(req, err);
+		console.log(err);
+		res.status(500).send({
+			message: err.message || "Some error occurred."
+		});
+	}
 };
-
-
-
 
 exports.create = async (req, res) => {
 	try {
 		const joiSchema = Joi.object({
 			firstName: Joi.string().required(),
-            lastName: Joi.string().required(),
+			lastName: Joi.string().required(),
 			email: Joi.string().email().required(),
 			password: Joi.string().min(8).max(16).required(),
 			clientId: Joi.string().optional().allow(null).allow(""),
@@ -95,7 +79,7 @@ exports.create = async (req, res) => {
 				message: message
 			});
 		} else {
-			const userExists = await Users.findOne({  email: req.body.email?.trim()});
+			const userExists = await Users.findOne({ email: req.body.email?.trim() });
 
 			if (userExists) {
 				res.status(401).send({
@@ -107,15 +91,15 @@ exports.create = async (req, res) => {
 					firstName: req.body.firstName?.trim(),
 					lastName: req.body.lastName?.trim(),
 					email: req.body.email,
-					password: req.body.password,
+					password: req.body.password
 				};
 
 				console.log(userObj);
 
 				// let transaction = await sequelize.transaction();
-				Users.create(userObj, )
+				Users.create(userObj)
 					.then(async (user) => {
-                        res.send({message:"User created",user})
+						res.send({ message: "User created", user });
 					})
 					.catch(async (err) => {
 						emails.errorEmail(req, err);
@@ -132,8 +116,6 @@ exports.create = async (req, res) => {
 		});
 	}
 };
-
-
 
 // exports.forgotPassword = async (req, res) => {
 // 	try {

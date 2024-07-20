@@ -1,13 +1,13 @@
+const { ref, required } = require("joi");
+
 module.exports = (mongoose) => {
 	const { Schema } = mongoose;
 
-	const SubPlanSchema = new Schema(
+	const UserSchema = new Schema(
 		{
-			title: { type: String, required: false },
-			duration: { type: Number, required: false },
-			price: { type: String, required: false },
-			// texts: { type: Number, required: false },
-
+			plan: { type: Schema.Types.ObjectId, ref: "Plan", required: false },
+			user: { type: Schema.Types.ObjectId, ref: "User", required: true },
+			subPlan: { type: Schema.Types.ObjectId, ref: "SubPlan", required: false },
 			isActive: {
 				type: String,
 				required: true,
@@ -27,5 +27,5 @@ module.exports = (mongoose) => {
 		}
 	);
 
-	return mongoose.model("SubPlan", SubPlanSchema);
+	return mongoose.model("UserPlan", UserSchema);
 };

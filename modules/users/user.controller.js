@@ -1,192 +1,88 @@
-// const Joi = require("@hapi/joi");
+const Joi = require("@hapi/joi");
 
-// const db = require("../../models");
-// const encryptHelper = require("../../utils/encryptHelper");
-// const emails = require("../../utils/emails");
-// const crypto = require("../../utils/crypto");
-// const { sequelize } = require("../../models");
-// const { Op } = require("sequelize");
+const db = require("../../models");
+const encryptHelper = require("../../utils/encryptHelper");
+const emails = require("../../utils/emails");
+const crypto = require("../../utils/crypto");
 
-// const Clients = db.clients;
-// const Users = db.users;
-// const UserDepartments = db.userDepartments;
-// const UserDesignations = db.userDesignations;
-// const Roles = db.roles;
-// const UserProfile = db.userProfile;
-// const Course = db.courses;
-// const CourseAssignments = db.courseAssignments;
-// const CourseEnrollments = db.courseEnrollments;
-// const TeamUsers = db.teamUsers;
-// const Teams = db.teams;
-// const CourseEnrollmentUsers = db.courseEnrollmentUsers;
+const Users = db.User;
+const Roles = db.Role;
+const UserPlan = db.UserPlan;
 
-// exports.create = async (req, res) => {
-// 	try {
-// 		const joiSchema = Joi.object({
-// 			firstName: Joi.string().required(),
-// 			lastName: Joi.string().required(),
-// 			email: Joi.string().email().required(),
-// 			password: Joi.string().min(8).max(16).required(),
-// 			managerId: Joi.string().optional().allow(null).allow(""),
-// 			departmentId: Joi.string().optional().allow(null).allow(""),
-// 			designationId: Joi.string().optional().allow(null).allow(""),
-// 			clientId: Joi.string().optional().allow(null).allow(""),
-// 			roleId: Joi.string().optional().allow(null).allow("")
-// 		});
-// 		const { error, value } = joiSchema.validate(req.body);
+exports.create = async (req, res) => {
+	try {
+		const joiSchema = Joi.object({
+			firstName: Joi.string().required(),
+			lastName: Joi.string().required(),
+			email: Joi.string().email().required(),
+			roleId: Joi.string().optional().allow(null).allow(""),
+			planId: Joi.string().optional().allow(null).allow(""),
+			subPlanId: Joi.string().optional().allow(null).allow(""),
+			password: Joi.string().optional().allow(null).allow("")
+		});
+		const { error, value } = joiSchema.validate(req.body);
 
-// 		if (error) {
-// 			emails.errorEmail(req, error);
+		if (error) {
+			// emails.errorEmail(req, error);
 
-// 			const message = error.details[0].message.replace(/"/g, "");
-// 			res.status(400).send({
-// 				message: message
-// 			});
-// 		} else {
-// 			const userExists = await Users.findOne({ where: { email: req.body.email?.trim(), isActive: "Y" } });
+			const message = error.details[0].message.replace(/"/g, "");
+			res.status(400).send({
+				message: message
+			});
+		} else {
+			const userObj = {
+				firstName: req.body.firstName?.trim(),
+				lastName: req.body.lastName?.trim(),
+				email: req.body.email,
+				password: req.body.password ? req.body.password : "123456@123456",
+				role: req.body.roleId
+			};
 
-// 			if (userExists) {
-// 				res.status(401).send({
-// 					title: "Email already exists!",
-// 					mesage: "Email already registered."
-// 				});
-// 			} else {
-// 				const userObj = {
-// 					firstName: req.body.firstName?.trim(),
-// 					lastName: req.body.lastName?.trim(),
-// 					email: req.body.email,
-// 					password: req.body.password,
-// 					managerId: req.body.managerId ? crypto.decrypt(req.body.managerId) : null,
-// 					userDepartmentId: req.body.departmentId ? crypto.decrypt(req.body.departmentId) : null,
-// 					userDesignationId: req.body.designationId ? crypto.decrypt(req.body.designationId) : null
-// 				};
+			// if (req.role == "Administrator") {
+			// 	userObj.clientId = crypto.decrypt(req.body.clientId);
+			// 	userObj.roleId = crypto.decrypt(req.body.roleId);
+			// } else if (req.role == "Client") {
+			// 	userObj.clientId = crypto.decrypt(req.clientId);
+			// 	userObj.roleId = 3;
+			// }
 
-// 				if (req.role == "Administrator") {
-// 					userObj.clientId = crypto.decrypt(req.body.clientId);
-// 					userObj.roleId = crypto.decrypt(req.body.roleId);
-// 				} else if (req.role == "Client") {
-// 					userObj.clientId = crypto.decrypt(req.clientId);
-// 					userObj.roleId = 3;
-// 				}
+			// let transaction = await sequelize.transaction();
+			Users.create(userObj)
+				.then(async (user) => {
+					var userPlanObj = {};
+					if (req.body.planId) {
+						userPlanObj = {
+							user: user._id,
+							plan: req.body.planId,
+							plan: req.body.subPlanId
+						};
+					} else {
+						userPlanObj = {
+							user: user._id
+						};
+					}
 
-// 				// console.log("asdas");
-// 				console.log(userObj);
-// 				// console.log(req.clientId);
-// 				// console.log(req.body.clientId);
+					let createUserPlan = await UserPlan.create(userPlanObj);
 
-// 				let transaction = await sequelize.transaction();
-// 				Users.create(userObj, { transaction })
-// 					.then(async (user) => {
-// 						// console.log(userExists, user);
-// 						UserProfile.create({ userId: user.id }, { transaction })
-// 							.then(async (profile) => {
-// 								// console.log(profile);
-// 								if (user.roleId == 3 && user.clientId == crypto.decrypt(req.clientId)) {
-// 									const allCourse = await CourseEnrollments.findAll({
-// 										where: { courseEnrollmentTypeId: 1, isActive: "Y" },
-// 										include: [
-// 											{
-// 												model: CourseAssignments,
-// 												where: { clientId: crypto.decrypt(req.clientId) },
-// 												attributes: ["id"]
-// 											}
-// 										],
-// 										raw: true,
-// 										attributes: ["id"]
-// 									});
-
-// 									const depatrmentCourses = await CourseEnrollments.findAll({
-// 										where: { userDepartmentId: user.userDepartmentId, isActive: "Y" },
-// 										include: [
-// 											{
-// 												model: CourseAssignments,
-// 												where: { clientId: crypto.decrypt(req.clientId) },
-// 												attributes: ["id"]
-// 											}
-// 										],
-// 										raw: true,
-// 										attributes: ["id"]
-// 									});
-// 									const uniqueSet = new Set();
-// 									const uniqueAllCourses = allCourse.filter((course) => {
-// 										const courseId = course["courseAssignment.id"];
-// 										if (!uniqueSet.has(courseId)) {
-// 											uniqueSet.add(courseId);
-// 											return true;
-// 										}
-// 										return false;
-// 									});
-// 									const uniqueDepartment = depatrmentCourses.filter((course) => {
-// 										const courseId = course["courseAssignment.id"];
-// 										if (!uniqueSet.has(courseId)) {
-// 											uniqueSet.add(courseId);
-// 											return true;
-// 										}
-// 										return false;
-// 									});
-// 									const courseAssignmentIds = uniqueAllCourses.concat(uniqueDepartment);
-// 									console.log(courseAssignmentIds);
-// 									var courseEnrollmentObj = [];
-// 									// userId: user.id,
-
-// 									courseAssignmentIds.forEach((e) => {
-// 										let obj = {
-// 											courseEnrollmentTypeId: 4,
-// 											courseAssignmentId: e["courseAssignment.id"]
-// 										};
-// 										courseEnrollmentObj.push(obj);
-// 									});
-
-// 									var courseEnrollment = await CourseEnrollments.bulkCreate(courseEnrollmentObj, { transaction });
-
-// 									let enrollmentUserObj = [];
-// 									courseEnrollment.forEach((e) => {
-// 										let obj = {
-// 											userId: user.id,
-// 											courseEnrollmentId: e.id
-// 										};
-// 										enrollmentUserObj.push(obj);
-// 									});
-// 									console.log(enrollmentUserObj);
-// 									const courseEnrollmentUsers = await CourseEnrollmentUsers.bulkCreate(enrollmentUserObj, {
-// 										transaction
-// 									});
-// 								}
-
-// 								await transaction.commit();
-
-// 								encryptHelper(user);
-
-// 								res.status(200).send({
-// 									message: "User created successfully.",
-// 									data: user,
-// 									enrollment: courseEnrollment
-// 								});
-// 							})
-// 							.catch(async (err) => {
-// 								if (transaction) await transaction.rollback();
-// 								emails.errorEmail(req, err);
-// 								res.status(500).send({
-// 									message: err.message || "Some error occurred while creating the Quiz."
-// 								});
-// 							});
-// 					})
-// 					.catch(async (err) => {
-// 						if (transaction) await transaction.rollback();
-// 						emails.errorEmail(req, err);
-// 						res.status(500).send({
-// 							message: err.message || "Some error occurred while creating the Quiz."
-// 						});
-// 					});
-// 			}
-// 		}
-// 	} catch (err) {
-// 		emails.errorEmail(req, err);
-// 		res.status(500).send({
-// 			message: err.message || "Some error occurred."
-// 		});
-// 	}
-// };
+					if (createUserPlan) {
+						emails.emailPassword(user);
+						res.send({ message: "User Added" });
+					}
+				})
+				.catch(async (err) => {
+					// emails.errorEmail(req, err);
+					res.status(500).send({
+						message: err.message || "Some error occurred while creating the Quiz."
+					});
+				});
+		}
+	} catch (err) {
+		emails.errorEmail(req, err);
+		res.status(500).send({
+			message: err.message || "Some error occurred."
+		});
+	}
+};
 
 // exports.update = async (req, res) => {
 // 	try {

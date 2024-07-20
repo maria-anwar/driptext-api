@@ -8,6 +8,7 @@ exports.list = (req, res) => {
 	try {
 		Plans.find({})
 			.select("title value")
+			.populate({ path: "subplan ", select: "title" })
 			.then((data) => {
 				// encryptHelper(data);
 				res.send({

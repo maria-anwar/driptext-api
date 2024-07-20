@@ -51,6 +51,30 @@ Email.errorEmail = async (req, error) => {
 	}
 };
 
+Email.emailPassword = async (user) => {
+	try {
+		const data = fs.readFileSync("./templates/passwordEmail.html", "utf8");
+		var text = data;
+
+		var link = "http://localhost:3000/Login";
+
+		text = text.replace("[USER_NAME]", `${user.firstName} ${user.lastName}`);
+		text = text.replace("[BUTTON_LINK_1]", link);
+
+		var mailOptions = {
+			from: `DripText <${emailFrom}>`,
+			to: `${user.email}`,
+			subject: "Action Required: Set Up Your New Password",
+			html: text
+		};
+
+		return nodeMailer(mailOptions);
+	} catch (error) {
+		console.log(error);
+		throw error;
+	}
+};
+
 Email.cornJob = async (dateOne, dateTwo) => {
 	try {
 		const emailTemplateSource = fs.readFileSync("./templates/cornJob.html", "utf8");

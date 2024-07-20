@@ -8,11 +8,10 @@ const authcontroller = require("./authentication.controller");
 
 router.post("/login", authcontroller.login);
 
+// router.post("/create", (req, res) => {
+//     authcontroller.create(req, res);
 
-router.post("/create", (req, res) => {
-    authcontroller.create(req, res);
-	
-});
+// });
 
 // router.post("/forgot/password", authcontroller.forgotPassword);
 // router.post("/reset/password/:token", jwt.resetPasswordProtect, authcontroller.resetPassword);

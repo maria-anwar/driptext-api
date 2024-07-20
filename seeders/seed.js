@@ -77,98 +77,69 @@ async function seedDatabase() {
 		]);
 		console.log("Users inserted:", users);
 
-		const plans = await Plans.insertMany([
-			{ title: "4 Texts", value: 4, createdAt: date, updatedAt: date },
-			{ title: "8 Texts", value: 8, createdAt: date, updatedAt: date },
-			{ title: "12 Texts", value: 12, createdAt: date, updatedAt: date }
-		]);
-		console.log("Roles inserted:", plans);
+		const subplansData = [
+			[
+				{ title: "3 Months", duration: 3, price: "420", createdAt: date, updatedAt: date },
+				{ title: "6 Months", duration: 6, price: "360", createdAt: date, updatedAt: date },
+				{ title: "12 Months", duration: 12, price: "300", createdAt: date, updatedAt: date }
+			],
+			[
+				{ title: "3 Months", duration: 3, price: "840", createdAt: date, updatedAt: date },
+				{ title: "6 Months", duration: 6, price: "720", createdAt: date, updatedAt: date },
+				{ title: "12 Months", duration: 12, price: "600", createdAt: date, updatedAt: date }
+			],
+			[
+				{ title: "3 Months", duration: 3, price: "1260", createdAt: date, updatedAt: date },
+				{ title: "6 Months", duration: 6, price: "1080", createdAt: date, updatedAt: date },
+				{ title: "12 Months", duration: 12, price: "900", createdAt: date, updatedAt: date }
+			]
+		];
 
-		const subplans = await SubPlans.insertMany([
-			{
-				title: "3 Months",
-				duration: 3,
-				price: "420",
-				texts: plans.find((plan) => plan.title == "4 Texts").value,
-				plan: plans.find((plan) => plan.title == "4 Texts")._id,
-				createdAt: date,
-				updatedAt: date
-			},
-			{
-				title: "6 Months",
-				duration: 6,
-				price: "360",
-				texts: plans.find((plan) => plan.title == "4 Texts").value,
-				plan: plans.find((plan) => plan.title == "4 Texts")._id,
-				createdAt: date,
-				updatedAt: date
-			},
-			{
-				title: "12 Months",
-				duration: 12,
-				price: "300",
-				texts: plans.find((plan) => plan.title == "4 Texts").value,
-				plan: plans.find((plan) => plan.title == "4 Texts")._id,
-				createdAt: date,
-				updatedAt: date
-			},
-			{
-				title: "3 Months",
-				duration: 3,
-				price: "840",
-				texts: plans.find((plan) => plan.title == "8 Texts").value,
-				plan: plans.find((plan) => plan.title == "8 Texts")._id,
-				createdAt: date,
-				updatedAt: date
-			},
-			{
-				title: "6 Months",
-				duration: 6,
-				price: "720",
-				texts: plans.find((plan) => plan.title == "8 Texts").value,
-				plan: plans.find((plan) => plan.title == "8 Texts")._id,
-				createdAt: date,
-				updatedAt: date
-			},
-			{
-				title: "12 Months",
-				duration: 12,
-				price: "600",
-				texts: plans.find((plan) => plan.title == "8 Texts").value,
-				plan: plans.find((plan) => plan.title == "8 Texts")._id,
-				createdAt: date,
-				updatedAt: date
-			},
-			{
-				title: "3 Months",
-				duration: 3,
-				price: "1260",
-				texts: plans.find((plan) => plan.title == "12 Texts").value,
-				plan: plans.find((plan) => plan.title == "12 Texts")._id,
-				createdAt: date,
-				updatedAt: date
-			},
-			{
-				title: "6 Months",
-				duration: 6,
-				price: "1080",
-				texts: plans.find((plan) => plan.title == "12 Texts").value,
-				plan: plans.find((plan) => plan.title == "12 Texts")._id,
-				createdAt: date,
-				updatedAt: date
-			},
-			{
-				title: "12 Months",
-				duration: 12,
-				price: "900",
-				texts: plans.find((plan) => plan.title == "12 Texts").value,
-				plan: plans.find((plan) => plan.title == "12 Texts")._id,
-				createdAt: date,
-				updatedAt: date
+		async function createPlansWithSubplans() {
+			const subplans = [];
+			for (const subplanGroup of subplansData) {
+				const savedSubplans = await SubPlans.insertMany(subplanGroup);
+				subplans.push(savedSubplans);
 			}
-		]);
-		console.log("Roles inserted:", plans);
-		await mongoose.disconnect();
+
+			const plansData = [
+				{
+					title: "4 Texts",
+					value: 4,
+					texts: 4,
+					createdAt: date,
+					updatedAt: date,
+					subplan: subplans[0].map((sp) => sp._id)
+				},
+				{
+					title: "8 Texts",
+					value: 8,
+					texts: 8,
+					createdAt: date,
+					updatedAt: date,
+					subplan: subplans[1].map((sp) => sp._id)
+				},
+				{
+					title: "12 Texts",
+					value: 12,
+					texts: 12,
+					createdAt: date,
+					updatedAt: date,
+					subplan: subplans[2].map((sp) => sp._id)
+				}
+			];
+
+			const plans = await Plans.insertMany(plansData);
+
+			// for (const plan of plans) {
+			// 	const populatedPlan = await Plans.findById(plan._id).populate("subplans");
+			// 	console.log(populatedPlan);
+			// }
+		}
+		await createPlansWithSubplans();
+
+		mongoose.connection.close();
+
 		console.log("MongoDB disconnected...");
 	} catch (err) {
 		console.error("Error seeding database:", err);

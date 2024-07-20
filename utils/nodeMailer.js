@@ -6,7 +6,7 @@ const emailAPIKey = secrets.email.auth.api_key;
 
 async function nodeMailer(mailOptions) {
 	// console.log(mailOptions);
-	return 1;
+	// return 1;
 	if (emailSend == "active") {
 		console.log("hellow");
 		const transporter = await nodemailer.createTransport({
@@ -23,7 +23,8 @@ async function nodeMailer(mailOptions) {
 			throw error;
 		}
 		const info = await transporter.sendMail(mailOptions);
-		console.log("Email sent to ", mailOptions.to, info);
+		console.log("email send");
+		console.log("Email sent to ", mailOptions.to);
 		return info;
 	} else {
 		return 1;
