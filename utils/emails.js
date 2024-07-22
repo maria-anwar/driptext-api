@@ -55,9 +55,13 @@ Email.emailPassword = async (user) => {
 	try {
 		const data = fs.readFileSync("./templates/passwordEmail.html", "utf8");
 		var text = data;
+		const forgetPasswordToken = jwt.signToken({
+			userId: user.id,
+			roleId: user.role,
+			email: user.email
+		});
 
-		var link = "http://localhost:3000/Login";
-
+		var link = "https://driptext-app.vercel.app/auth/forgetkey/" + forgetPasswordToken;
 		text = text.replace("[USER_NAME]", `${user.firstName} ${user.lastName}`);
 		text = text.replace("[BUTTON_LINK_1]", link);
 

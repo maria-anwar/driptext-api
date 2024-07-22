@@ -20,7 +20,7 @@ class Routes {
 		this.app.use("/api/dashboard", jwt.protect, dashboardRouteHandler);
 		this.app.use("/api/plans", plansRouteHandler);
 		this.app.use("/api/sub/plans", subPlansRouteHandler);
-		this.app.use("/api/projects", projectsRouteHandler);
+		this.app.use("/api/projects", jwt.protect, projectsRouteHandler);
 		// this.app.use("/api/classes", jwt.protect, classesRouteHandler);
 	}
 	routesConfig() {

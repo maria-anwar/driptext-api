@@ -42,8 +42,6 @@ exports.resetPasswordProtect = (req, res, next) => {
 			} else {
 				Object.assign(req, {
 					userId: decoded.userId,
-					profileId: decoded.profileId,
-					clientId: decoded.clientId,
 					roleId: decoded.roleId,
 					email: decoded.email
 				});

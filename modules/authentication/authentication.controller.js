@@ -10,7 +10,6 @@ const Users = db.User;
 const Roles = db.Role;
 
 exports.login = async (req, res) => {
-	console.log(req.body);
 	try {
 		const userExist = await Users.findOne({
 			email: req.body.email.trim(),
@@ -117,80 +116,79 @@ exports.create = async (req, res) => {
 	}
 };
 
-// exports.forgotPassword = async (req, res) => {
-// 	try {
-// 		var email = req.body.email.trim();
-// 		const user = await Users.findOne({
-// 			where: {
-// 				email: email,
-// 				isActive: "Y"
-// 			}
-// 		});
-// 		if (user) {
-// 			// emails.forgotPassword(user);
-// 			res.status(200).send({ message: "Email send to user." });
-// 		} else {
-// 			res.status(401).send({
-// 				title: "Incorrect Email.",
-// 				message: "Email does not exist in our system, Please verify you have entered correct email."
-// 			});
-// 		}
-// 	} catch (err) {
-// 		emails.errorEmail(req, err);
-// 		res.status(500).send({
-// 			message: err.message || "Some error occurred while reset password."
-// 		});
-// 	}
-// };
-// exports.resetPassword = async (req, res) => {
-// 	try {
-// 		const joiSchema = Joi.object({
-// 			password: Joi.string().min(8).max(16).required(),
-// 			confirmPassword: Joi.any().valid(Joi.ref("password")).required()
-// 		});
-// 		const { error, value } = joiSchema.validate(req.body);
-// 		if (error) {
-// 			emails.errorEmail(req, error);
+exports.forgotPassword = async (req, res) => {
+	try {
+		var email = req.body.email.trim();
+		const user = await Users.findOne({
+			where: {
+				email: email,
+				isActive: "Y"
+			}
+		});
+		if (user) {
+			emails.forgotPassword(user);
+			res.status(200).send({ message: "Email send to user." });
+		} else {
+			res.status(401).send({
+				title: "Incorrect Email.",
+				message: "Email does not exist in our system, Please verify you have entered correct email."
+			});
+		}
+	} catch (err) {
+		emails.errorEmail(req, err);
+		res.status(500).send({
+			message: err.message || "Some error occurred while reset password."
+		});
+	}
+};
 
-// 			const message = error.details[0].message.replace(/"/g, "");
-// 			res.status(400).send({
-// 				message: message
-// 			});
-// 		} else {
-// 			var email = req.email;
-// 			const user = await Users.findOne({
-// 				where: {
-// 					email: email,
-// 					isActive: "Y"
-// 				}
-// 			});
+exports.resetPassword = async (req, res) => {
+	try {
+		const joiSchema = Joi.object({
+			password: Joi.string().min(8).max(16).required(),
+			confirmPassword: Joi.any().valid(Joi.ref("password")).required()
+		});
+		const { error, value } = joiSchema.validate(req.body);
+		if (error) {
+			// emails.errorEmail(req, error);
 
-// 			if (user) {
-// 				var password = req.body.password;
+			const message = error.details[0].message.replace(/"/g, "");
+			res.status(400).send({
+				message: message
+			});
+		} else {
+			var email = req.email;
+			const user = await Users.findOne({
+				email: email,
+				isActive: "Y"
+			});
 
-// 				Users.update({ password: crypto.encrypt(password) }, { where: { id: user.id } })
-// 					.then((result) => {
-// 						res.send({
-// 							message: "User password reset successfully."
-// 						});
-// 					})
-// 					.catch((err) => {
-// 						emails.errorEmail(req, err);
-// 						res.status(500).send({
-// 							message: "Error while reset User password"
-// 						});
-// 					});
-// 			} else {
-// 				res.status(401).send({
-// 					title: "Incorrect Email.",
-// 					message: "Email does not exist in our system, Please verify you have entered correct email."
-// 				});
-// 			}
-// 		}
-// 	} catch (err) {
-// 		emails.errorEmail(req, err);
-// 		res.status(500).send({
-// 			message: err.message || "Some error occurred while reset password."
-// 		});
-// 	}
-// };
+			if (user) {
+				var password = req.body.password;
+
+				Users.findOneAndUpdate({ email: email.trim() }, { password: password }, { new: true })
+					.then((result) => {
+						res.send({
+							message: "User password reset successfully."
+						});
+					})
+					.catch((err) => {
+						emails.errorEmail(req, err);
+						res.status(500).send({
+							message: "Error while reset User password"
+						});
+					});
+			} else {
+				res.status(401).send({
+					title: "Incorrect Email.",
+					message: "Email does not exist in our system, Please verify you have entered correct email."
+				});
+			}
+		}
+	} catch (err) {
+		emails.errorEmail(req, err);
+		res.status(500).send({
+			message: err.message || "Some error occurred while reset password."
+		});
+	}
+};
