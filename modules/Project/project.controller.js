@@ -14,7 +14,12 @@ exports.create = async (req, res) => {
 		const joiSchema = Joi.object({
 			projectName: Joi.string().required(),
 			id: Joi.string().required(),
-			userId: Joi.string().optional().allow(null).allow("")
+			keywords: Joi.string().required(),
+			userId: Joi.string().required(),
+			numberOfTasks: Joi.string().required(),
+			projectStatus: Joi.string().optional().allow(null).allow(""),
+			speech: Joi.string().optional().allow(null).allow(""),
+			perspective: Joi.string().optional().allow(null).allow("")
 		});
 		const { error, value } = joiSchema.validate(req.body);
 
@@ -30,11 +35,24 @@ exports.create = async (req, res) => {
 			if (!userExists) {
 				res.send({ message: "User Not Found" });
 			} else {
+				let projectObj = {
+					projectName: req.body.projectName,
+					keywords: req.body.keywords,
+					user: req.body.userId,
+					projectStatus: req.body.projectStatus,
+					speech: req.body.speech ? req.body.speech : "",
+					perspective: req.body.perspective ? req.body.perspective : ""
+				};
+				if (userExists.role.title == "Leads") {
+					projectObj.numberOfTasks;
+
+					Project.create(projectObj).then((response) => {
+						// let projectTaskObj={
+						// }
+					});
+				}
 				const projectName = req.body.projectName;
 				const id = req.body.id;
-
-				if (userExists.title == "Leads") {
-				}
 			}
 		}
 	} catch (err) {

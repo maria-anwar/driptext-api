@@ -5,9 +5,9 @@ module.exports = (mongoose) => {
 
 	const UserSchema = new Schema(
 		{
-			plan: { type: Schema.Types.ObjectId, ref: "Plan", required: false },
-			user: { type: Schema.Types.ObjectId, ref: "User", required: true },
-			subPlan: { type: Schema.Types.ObjectId, ref: "SubPlan", required: false },
+			plan: { type: Schema.Types.ObjectId, ref: "Plan", required: false, unique: false },
+			user: { type: Schema.Types.ObjectId, ref: "User", required: true, unique: false },
+			subPlan: { type: Schema.Types.ObjectId, ref: "SubPlan", required: false, unique: false },
 			isActive: {
 				type: String,
 				required: true,
