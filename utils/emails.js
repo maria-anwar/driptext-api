@@ -61,7 +61,7 @@ Email.emailPassword = async (user) => {
 			email: user.email
 		});
 
-		var link = "http://localhost:5173/auth/forgetkey" + forgetPasswordToken;
+		var link = "http://localhost:5173/auth/forgetkey/" + forgetPasswordToken;
 		text = text.replace("[USER_NAME]", `${user.firstName} ${user.lastName}`);
 		text = text.replace("[BUTTON_LINK_1]", link);
 
