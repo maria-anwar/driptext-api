@@ -12,6 +12,7 @@ const Projects = db.Project;
 
 exports.create = async (req, res) => {
 	try {
+		console.log("req", req)
 		const joiSchema = Joi.object({
 			firstName: Joi.string().required(),
 			lastName: Joi.string().required(),
@@ -75,7 +76,8 @@ exports.create = async (req, res) => {
 					let createUserPlan = await UserPlan.create(userPlanObj);
 
 					if (createUserPlan && createProject) {
-						emails.emailPassword(user);
+						console.log("here")
+						emails.AwsEmailPassword(user);
 						res.send({ message: "User Added" });
 					}
 				})

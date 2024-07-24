@@ -1,15 +1,26 @@
 const fs = require("fs");
+const AWS = require('aws-sdk');
 const secrets = require("../config/secrets");
 const nodeMailer = require("./nodeMailer");
 const jwt = require("./jwt");
 const crypto = require("../utils/crypto");
 const handlebars = require("handlebars");
-
 const baseURL = secrets.frontend_URL;
+
+// SES configuration
+const SES_CONFIG = {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    region: process.env.AWS_REGION  
+};
+const ses = new AWS.SES(SES_CONFIG);
+ 
+ 
 
 const emailErrorTo = secrets.email.error;
 const emailFrom = secrets.email.auth.from;
-
+const awsSource=process.env.AWS_SOURCE
+console.log(awsSource)
 /**
  * Email component
  * @constructor
@@ -170,5 +181,47 @@ Email.forgotPassword = async (user) => {
 		throw error;
 	}
 };
+
+Email.AwsEmailPassword = async (user) => {
+    try {
+        const data = fs.readFileSync("./templates/passwordEmail.html", "utf8");
+        let text = data;
+        
+	   const forgetPasswordToken = jwt.signToken({
+		userId: user.id,
+		roleId: user.role,
+		email: user.email
+	});
+
+        const link = `http://localhost:5173/auth/forgetkey/${forgetPasswordToken}`;
+        text = text.replace("[USER_NAME]", `${user.firstName} ${user.lastName}`);
+        text = text.replace("[BUTTON_LINK_1]", link);
+		
+
+        const params = {
+            Source: `DripText <${awsSource}>`,
+            Destination: {
+                ToAddresses: [user.email]
+            },
+            Message: {
+                Subject: {
+                    Data: "Action Required: Set Up Your New Password"
+                },
+                Body: {
+                    Html: {
+                        Data: text
+                    }
+                }
+            }
+        };
+
+        await ses.sendEmail(params).promise();
+     
+    } catch (error) {
+      
+        throw error;
+    }
+};
+
 
 module.exports = Email;
