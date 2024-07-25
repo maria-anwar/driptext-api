@@ -101,7 +101,7 @@ exports.create = async (req, res) => {
 exports.update = async (req, res) => {
 	try {
 		const joiSchema = Joi.object({
-			userId: Joi.string().required(),
+			// userId: Joi.string().required(),
 			firstName: Joi.string().required(),
 			lastName: Joi.string().required(),
 			email: Joi.string().required()
@@ -116,7 +116,7 @@ exports.update = async (req, res) => {
 				message: message
 			});
 		} else {
-			const userId = req.body.userId;
+			const userId = req.userId;
 
 			const user = {
 				firstName: req.body.firstName?.trim(),
