@@ -5,6 +5,7 @@ const router = express.Router();
 const fileUpload = require("../../utils/fileUpload");
 const { upload } = fileUpload("users");
 const usersController = require("./user.controller");
+const jwt = require("../../utils/jwt");
 
 // router.post("/list", (req, res) => {
 // 	if (req.role == "Administrator" || req.role == "Client") {

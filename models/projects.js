@@ -1,9 +1,10 @@
 module.exports = (mongoose) => {
 	const { Schema } = mongoose;
+	const AutoIncrement = require("mongoose-sequence")(mongoose);
 
 	const ProjectSchema = new Schema(
 		{
-			id: { type: Number, required: false, unique: false },
+			id: { type: Number, unique: true },
 			projectName: { type: String, required: true, unique: false },
 			speech: { type: String, required: false, unique: false },
 			keywords: { type: String, required: false, unique: false },
@@ -22,6 +23,7 @@ module.exports = (mongoose) => {
 			timestamps: true
 		}
 	);
+	ProjectSchema.plugin(AutoIncrement, { inc_field: "id" });
 
 	return mongoose.model("Project", ProjectSchema);
 };

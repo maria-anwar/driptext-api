@@ -16,7 +16,7 @@ dotenv.config();
 class Server {
 	constructor() {
 		this.app = express();
-		// this.connectToDatabase();
+		this.connectToDatabase();
 	}
 	// mongodb://localhost:27017/
 	connectToDatabase() {

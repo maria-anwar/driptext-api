@@ -1,9 +1,10 @@
 module.exports = (mongoose) => {
 	const { Schema } = mongoose;
+	const AutoIncrement = require("mongoose-sequence")(mongoose);
 
 	const ProjectTaskSchema = new Schema(
 		{
-			id: { type: Number, required: true, unique: false },
+			taskId: { type: Number, unique: true },
 			tasks: { type: String, required: false, unique: false },
 			status: {
 				type: String,
@@ -32,6 +33,7 @@ module.exports = (mongoose) => {
 			timestamps: true
 		}
 	);
+	ProjectTaskSchema.plugin(AutoIncrement, { inc_field: "taskId" });
 
 	return mongoose.model("ProjectTask", ProjectTaskSchema);
 };

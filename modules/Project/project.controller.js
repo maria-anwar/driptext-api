@@ -71,7 +71,7 @@ exports.detail = async (req, res) => {
 		const { error, value } = joiSchema.validate(req.body);
 
 		if (error) {
-			emails.errorEmail(req, error);
+			// emails.errorEmail(req, error);
 
 			const message = error.details[0].message.replace(/"/g, "");
 			res.status(400).send({
@@ -81,13 +81,13 @@ exports.detail = async (req, res) => {
 			const userId = req.body.userId;
 
 			Project.find({ user: userId })
-				.select("projectName keywords")
+				.select("projectName keywords id projectStatus")
 				.then((response) => {
 					res.send({ message: "List of the client projects", data: response });
 				});
 		}
 	} catch (err) {
-		emails.errorEmail(req, err);
+		// emails.errorEmail(req, err);
 		res.status(500).send({
 			message: err.message || "Some error occurred."
 		});
