@@ -8,6 +8,7 @@ module.exports = (mongoose) => {
 			projectName: { type: String, required: true, unique: false },
 			speech: { type: String, required: false, unique: false },
 			keywords: { type: String, required: false, unique: false },
+			duration: { type: String, required: false, unique: false },
 			perspective: { type: String, required: false, unique: false },
 			numberOfTasks: { type: String, required: false, unique: false },
 			projectStatus: { type: String, required: false, default: "Not initalized", unique: false },

@@ -1,5 +1,5 @@
 const Joi = require("@hapi/joi");
-
+const mongoose = require("mongoose");
 const db = require("../../models");
 const encryptHelper = require("../../utils/encryptHelper");
 const emails = require("../../utils/emails");
@@ -14,14 +14,16 @@ const Company = db.Company;
 
 exports.create = async (req, res) => {
 	try {
-		console.log("req", req);
 		const joiSchema = Joi.object({
 			firstName: Joi.string().required(),
 			lastName: Joi.string().required(),
 			projectName: Joi.string().required(),
 			keywords: Joi.string().required(),
 			email: Joi.string().email().required(),
-			roleId: Joi.string().optional().allow(null).allow(""),
+			roleId: Joi.string().required(),
+			country: Joi.string().optional().allow(null).allow(""),
+			vatId: Joi.string().optional().allow(null).allow(""),
+			companyName: Joi.string().optional().allow(null).allow(""),
 			planId: Joi.string().optional().allow(null).allow(""),
 			subPlanId: Joi.string().optional().allow(null).allow(""),
 			password: Joi.string().optional().allow(null).allow("")
@@ -40,17 +42,22 @@ exports.create = async (req, res) => {
 				firstName: req.body.firstName?.trim(),
 				lastName: req.body.lastName?.trim(),
 				email: req.body.email,
+				country: req.body.country ? req.body.country : null,
+				vatIdNo: req.body.vatId ? req.body.vatId : null,
+				companyName: req.body.companyName ? req.body.companyName : null,
 				password: req.body.password ? req.body.password : "123456@123456",
 				role: req.body.roleId
 			};
+			const session = await mongoose.startSession();
+			session.startTransaction();
 
-			// if (req.role == "Administrator") {
-			// 	userObj.clientId = crypto.decrypt(req.body.clientId);
-			// 	userObj.roleId = crypto.decrypt(req.body.roleId);
-			// } else if (req.role == "Client") {
-			// 	userObj.clientId = crypto.decrypt(req.clientId);
-			// 	userObj.roleId = 3;
-			// }
+			let userRole = await Roles.findOne({ _id: userObj.role });
+			if (userRole.title == "Client" && !req.body.planId && !req.body.subPlanId) {
+				await session.commitTransaction();
+				session.endSession();
+				res.send({ message: "Plan and SubPlan ID's are required for the client role" });
+				return 1;
+			}
 
 			// let transaction = await sequelize.transaction();
 			Users.create(userObj)
@@ -67,7 +74,7 @@ exports.create = async (req, res) => {
 						userPlanObj = {
 							user: user._id,
 							plan: req.body.planId,
-							plan: req.body.subPlanId
+							subPlan: req.body.subPlanId
 						};
 					} else {
 						userPlanObj = {
@@ -78,13 +85,18 @@ exports.create = async (req, res) => {
 					let createUserPlan = await UserPlan.create(userPlanObj);
 
 					if (createUserPlan && createProject) {
-						console.log("here");
+						// console.log("here");
 						emails.AwsEmailPassword(user);
-						res.send({ message: "User Added" });
+
+						await session.commitTransaction();
+						session.endSession();
+						res.send({ message: "User Added", data: user });
 					}
 				})
 				.catch(async (err) => {
 					// emails.errorEmail(req, err);
+					await session.abortTransaction();
+					session.endSession();
 					res.status(500).send({
 						message: err.message || "Some error occurred while creating the Quiz."
 					});
@@ -103,8 +115,7 @@ exports.update = async (req, res) => {
 		const joiSchema = Joi.object({
 			// userId: Joi.string().required(),
 			firstName: Joi.string().required(),
-			lastName: Joi.string().required(),
-			email: Joi.string().required()
+			lastName: Joi.string().required()
 		});
 		const { error, value } = joiSchema.validate(req.body);
 
@@ -120,8 +131,7 @@ exports.update = async (req, res) => {
 
 			const user = {
 				firstName: req.body.firstName?.trim(),
-				lastName: req.body.lastName?.trim(),
-				email: req.body.email
+				lastName: req.body.lastName?.trim()
 			};
 
 			var updateUser = await Users.findOneAndUpdate({ _id: userId, isActive: "Y" }, user, { new: true });
@@ -145,6 +155,8 @@ exports.update = async (req, res) => {
 };
 
 exports.onboarding = async (req, res) => {
+	const session = await mongoose.startSession();
+	session.startTransaction();
 	try {
 		const joiSchema = Joi.object({
 			speech: Joi.string().required(),
@@ -187,7 +199,7 @@ exports.onboarding = async (req, res) => {
 			var whereClause;
 			if (userId) {
 				whereClause = {
-					_id: userId,
+					user: userId,
 					isActive: "Y"
 				};
 			} else {
@@ -200,9 +212,10 @@ exports.onboarding = async (req, res) => {
 			let project = await Projects.findOne(whereClause)
 				.populate({ path: "user", select: "email role", populate: { path: "role", select: "title" } })
 				.select("id projectName keywords");
+
 			let role = project.user.role;
 			if (project && role) {
-				if ((role.title = "Leads")) {
+				if (role.title == "Leads") {
 					let proectTaskObj = {
 						tasks: "1",
 						keywords: project.keywords,
@@ -218,15 +231,42 @@ exports.onboarding = async (req, res) => {
 					);
 					let createProjectTask = await ProjectTask.create(proectTaskObj);
 					if (upadteProject && createProjectTask) {
+						await session.commitTransaction();
+						session.endSession();
 						res.send({ message: "OnBoarding successful", data: createProjectTask });
 					}
+				} else if (role.title == "Client") {
+					let userPlan = await UserPlan.findOne({ user: userId })
+						.populate({ path: "plan" })
+						.populate({ path: "subPlan" });
+
+					let proectTaskObj = {
+						tasks: userPlan.texts,
+						keywords: project.keywords,
+						desiredNumberOfWords: userPlan.plan.desiredWords,
+						project: project._id
+					};
+					companyInfoObj.user = project.user._id;
+					let createCompany = await Company.create(companyInfoObj);
+					let upadteProject = await Projects.findOneAndUpdate(
+						{ _id: project._id },
+						{ speech: speech, prespective: prespective, duration: userPlan.subPlan.duration },
+						{ new: true }
+					);
+					let createProjectTask = await ProjectTask.create(proectTaskObj);
+					if (upadteProject && createProjectTask) {
+						await session.commitTransaction();
+						session.endSession();
+						res.send({ message: "OnBoarding successful", data: createProjectTask });
+					}
+					// res.send(userPlan);
 				}
 			}
-
-			// res.send({ data: project });
 		}
 	} catch (err) {
 		// emails.errorEmail(req, err);
+		await session.abortTransaction();
+		session.endSession();
 		res.status(500).send({
 			message: err.message || "Some error occurred."
 		});

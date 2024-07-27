@@ -7,7 +7,8 @@ const Roles = db.Role;
 
 exports.list = (req, res) => {
 	try {
-		Roles.find({}).select('title ')
+		Roles.find({})
+			.select("title ")
 			.then((data) => {
 				encryptHelper(data);
 				res.send({

@@ -8,6 +8,7 @@ module.exports = (mongoose) => {
 			title: { type: String, required: false },
 			value: { type: Number, required: true },
 			texts: { type: Number, required: false },
+			desiredWords: { type: String, required: false },
 			subplan: [{ type: Schema.Types.ObjectId, ref: "SubPlan", required: true }],
 			isActive: {
 				type: String,

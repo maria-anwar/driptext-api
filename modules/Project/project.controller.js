@@ -6,8 +6,10 @@ const emails = require("../../utils/emails");
 const crypto = require("../../utils/crypto");
 
 const Users = db.User;
+const UserPlan = db.UserPlan;
 const Roles = db.Role;
 const Project = db.Project;
+const ProjectTask = db.ProjectTask;
 
 exports.create = async (req, res) => {
 	try {
@@ -81,9 +83,35 @@ exports.detail = async (req, res) => {
 			const userId = req.body.userId;
 
 			Project.find({ user: userId })
-				.select("projectName keywords id projectStatus")
-				.then((response) => {
-					res.send({ message: "List of the client projects", data: response });
+				.then(async (response) => {
+					// console.log(response);
+
+					// Extract the project IDs from the response
+					let projectIds = response.map((project) => project._id);
+					let userPlan = await UserPlan.findOne({ user: userId }).populate({ path: "plan" });
+					// Find the ProjectTasks that match the project IDs
+					// let projectTask = await ProjectTask.find({ project: { $in: projectIds } });
+
+					let project = [];
+					response.forEach((pro, index) => {
+						let projectObj = {
+							_id: pro._id,
+							projectName: pro.projectName,
+							keywords: pro.keywords,
+							projectStatus: pro.projectStatus,
+							createdAt: pro.createdAt,
+							duration: pro.duration,
+							texts: userPlan.plan.texts
+						};
+						project.push(projectObj);
+					});
+
+					res.send({ message: "List of the client projects", data: project });
+				})
+				.catch((err) => {
+					res.status(500).send({
+						message: err.message || "Some error occurred."
+					});
 				});
 		}
 	} catch (err) {

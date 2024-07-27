@@ -107,6 +107,7 @@ async function seedDatabase() {
 					title: "4 Texts",
 					value: 4,
 					texts: 4,
+					desiredWords: "1500",
 					createdAt: date,
 					updatedAt: date,
 					subplan: subplans[0].map((sp) => sp._id)
@@ -115,6 +116,7 @@ async function seedDatabase() {
 					title: "8 Texts",
 					value: 8,
 					texts: 8,
+					desiredWords: "1500",
 					createdAt: date,
 					updatedAt: date,
 					subplan: subplans[1].map((sp) => sp._id)
@@ -123,6 +125,7 @@ async function seedDatabase() {
 					title: "12 Texts",
 					value: 12,
 					texts: 12,
+					desiredWords: "1500",
 					createdAt: date,
 					updatedAt: date,
 					subplan: subplans[2].map((sp) => sp._id)
