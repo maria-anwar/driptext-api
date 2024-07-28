@@ -208,25 +208,26 @@ exports.onboarding = async (req, res) => {
 					isActive: "Y"
 				};
 			}
-
 			let project = await Projects.findOne(whereClause)
 				.populate({ path: "user", select: "email role", populate: { path: "role", select: "title" } })
 				.select("id projectName keywords");
 
 			let role = project.user.role;
-			if (project && role) {
-				if (role.title == "Leads") {
+
+			if (role && project) {
+				if (role.title == "leads" || role.title == "Leads") {
 					let proectTaskObj = {
 						tasks: "1",
 						keywords: project.keywords,
-						project: project._id
+						project: project._id,
+						desiredNumberOfWords: "1500"
 					};
 					companyInfoObj.user = project.user._id;
 
 					let createCompany = await Company.create(companyInfoObj);
 					let upadteProject = await Projects.findOneAndUpdate(
 						{ _id: project._id },
-						{ speech: speech, prespective: prespective },
+						{ speech: speech, prespective: prespective, duration: "1" },
 						{ new: true }
 					);
 					let createProjectTask = await ProjectTask.create(proectTaskObj);

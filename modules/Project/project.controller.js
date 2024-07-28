@@ -89,10 +89,15 @@ exports.detail = async (req, res) => {
 					// Extract the project IDs from the response
 					let projectIds = response.map((project) => project._id);
 					let userPlan = await UserPlan.findOne({ user: userId }).populate({ path: "plan" });
-					// Find the ProjectTasks that match the project IDs
-					// let projectTask = await ProjectTask.find({ project: { $in: projectIds } });
-
 					let project = [];
+
+					console.log(userPlan);
+					if (!userPlan.plan) {
+						console.log("HI");
+						let projectTask = await ProjectTask.find({ project: projectIds }).populate;
+						console.log(projectTask);
+					}
+
 					response.forEach((pro, index) => {
 						let projectObj = {
 							_id: pro._id,
@@ -101,7 +106,7 @@ exports.detail = async (req, res) => {
 							projectStatus: pro.projectStatus,
 							createdAt: pro.createdAt,
 							duration: pro.duration,
-							texts: userPlan.plan.texts
+							texts: userPlan.plan ? userPlan.plan.texts : "1"
 						};
 						project.push(projectObj);
 					});

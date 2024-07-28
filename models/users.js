@@ -12,6 +12,7 @@ module.exports = (mongoose) => {
 			phone: { type: String, required: false },
 			vatIdNo: { type: String },
 			role: { type: Schema.Types.ObjectId, ref: "Role", required: false },
+			isSubScribed: { type: String, required: true, default: "N" },
 			isActive: {
 				type: String,
 				required: true,

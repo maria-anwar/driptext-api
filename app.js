@@ -16,11 +16,11 @@ dotenv.config();
 class Server {
 	constructor() {
 		this.app = express();
-		this.connectToDatabase();
+		// this.connectToDatabase();
 	}
 	// mongodb://localhost:27017/
 	connectToDatabase() {
-		const dbURI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/driptextdb";
+		const dbURI = "mongodb://127.0.0.1:27017/driptextdb";
 
 		mongoose.connect(dbURI);
 
