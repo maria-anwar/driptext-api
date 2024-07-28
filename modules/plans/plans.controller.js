@@ -7,8 +7,8 @@ const Plans = db.Plan;
 exports.list = (req, res) => {
 	try {
 		Plans.find({})
-			.select("title value")
-			.populate({ path: "subplan ", select: "title" })
+			.select("title value subplan")
+			// .populate({ path: "subplan ", select: "title" })
 			.then((data) => {
 				// encryptHelper(data);
 				res.send({
