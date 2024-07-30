@@ -98,7 +98,10 @@ exports.detail = async (req, res) => {
 						console.log(projectTask);
 					}
 
-					response.forEach((pro, index) => {
+					for (const pro of response) {
+						// Assuming `ProjectTask` has a field `project` that references `Project`'s _id
+						const countTasks = await ProjectTask.countDocuments({ project: pro._id });
+
 						let projectObj = {
 							_id: pro._id,
 							projectName: pro.projectName,
@@ -106,10 +109,12 @@ exports.detail = async (req, res) => {
 							projectStatus: pro.projectStatus,
 							createdAt: pro.createdAt,
 							duration: pro.duration,
-							texts: userPlan.plan ? userPlan.plan.texts : "1"
+							texts: countTasks,
+							countTasks: countTasks // Add the count of tasks to the project object
 						};
+
 						project.push(projectObj);
-					});
+					}
 
 					res.send({ message: "List of the client projects", data: project });
 				})

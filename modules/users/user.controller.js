@@ -297,7 +297,12 @@ exports.onboarding = async (req, res) => {
 
 				let upadteProject = await Projects.findOneAndUpdate(
 					{ _id: project._id },
-					{ speech: speech, prespective: prespective, duration: userPlan.subPlan.duration },
+					{
+						speech: speech,
+						prespective: prespective,
+						duration: userPlan.subPlan.duration,
+						numberOfTasks: userPlan.plan.texts
+					},
 					{ new: true }
 				);
 				console.log("update project", upadteProject);

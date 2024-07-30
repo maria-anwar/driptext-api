@@ -11,7 +11,7 @@ const SubPlans = db.SubPlan;
 
 async function seedDatabase() {
 	try {
-		await mongoose.connect("mongodb://127.0.0.1:27017/driptextdb");
+		await mongoose.connect(process.env.MONGODB_URI);
 
 		console.log("MongoDB connected...");
 
