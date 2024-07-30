@@ -240,9 +240,9 @@ exports.onboarding = async (req, res) => {
 					let userPlan = await UserPlan.findOne({ user: userId })
 						.populate({ path: "plan" })
 						.populate({ path: "subPlan" });
-
+					console.log(userPlan);
 					let proectTaskObj = {
-						tasks: userPlan.texts,
+						tasks: userPlan.plan.texts,
 						keywords: project.keywords,
 						desiredNumberOfWords: userPlan.plan.desiredWords,
 						project: project._id
