@@ -5,7 +5,7 @@ module.exports = (mongoose) => {
 	const ProjectTaskSchema = new Schema(
 		{
 			taskId: { type: Number, unique: true },
-			tasks: { type: String, required: false, unique: false },
+			tasks: { type: Number, unique: true },
 			status: {
 				type: String,
 				required: true,
@@ -34,6 +34,7 @@ module.exports = (mongoose) => {
 		}
 	);
 	ProjectTaskSchema.plugin(AutoIncrement, { inc_field: "taskId" });
+	ProjectTaskSchema.plugin(AutoIncrement, { inc_field: "tasks" });
 
 	return mongoose.model("ProjectTask", ProjectTaskSchema);
 };

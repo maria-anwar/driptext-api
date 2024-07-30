@@ -26,7 +26,8 @@ exports.create = async (req, res) => {
 			companyName: Joi.string().optional().allow(null).allow(""),
 			planId: Joi.string().optional().allow(null).allow(""),
 			subPlanId: Joi.string().optional().allow(null).allow(""),
-			password: Joi.string().optional().allow(null).allow("")
+			password: Joi.string().optional().allow(null).allow(""),
+			isSubscribed: Joi.string().optional().allow("").allow(null)
 		});
 		const { error, value } = joiSchema.validate(req.body);
 
@@ -46,7 +47,8 @@ exports.create = async (req, res) => {
 				vatIdNo: req.body.vatId ? req.body.vatId : null,
 				companyName: req.body.companyName ? req.body.companyName : null,
 				password: req.body.password ? req.body.password : "123456@123456",
-				role: req.body.roleId
+				role: req.body.roleId,
+				isSubscribed: req.body.isSubscribed ? req.body.isSubscribed : "N"
 			};
 			const session = await mongoose.startSession();
 			session.startTransaction();
@@ -208,59 +210,105 @@ exports.onboarding = async (req, res) => {
 					isActive: "Y"
 				};
 			}
+
+			let getUserRole = await Users.findOne({ _id: userId }).populate({ path: "role" });
+
+			if (getUserRole.isSubscribed == "Y" && getUserRole.role.title == "Leads") {
+				let getRole = await Roles.findOne({ title: "Client" });
+
+				let updateUserRole = await Users.findOneAndUpdate(
+					{ _id: userId, isActive: "Y" },
+					{ role: getRole._id },
+					{ new: true }
+				);
+			}
+
 			let project = await Projects.findOne(whereClause)
 				.populate({ path: "user", select: "email role", populate: { path: "role", select: "title" } })
 				.select("id projectName keywords");
 
 			let role = project.user.role;
 
-			if (role && project) {
-				if (role.title == "leads" || role.title == "Leads") {
-					let proectTaskObj = {
-						tasks: "1",
-						keywords: project.keywords,
-						project: project._id,
-						desiredNumberOfWords: "1500"
-					};
-					companyInfoObj.user = project.user._id;
+			if (project.projectName != projectName) {
+				if (role && project) {
+					if (role.title == "leads" || role.title == "Leads") {
+						let proectTaskObj = {
+							tasks: "1",
+							keywords: project.keywords,
+							project: project._id,
+							desiredNumberOfWords: "1500",
+							numberOfTasks: "1"
+						};
+						companyInfoObj.user = project.user._id;
 
-					let createCompany = await Company.create(companyInfoObj);
-					let upadteProject = await Projects.findOneAndUpdate(
-						{ _id: project._id },
-						{ speech: speech, prespective: prespective, duration: "1" },
-						{ new: true }
-					);
-					let createProjectTask = await ProjectTask.create(proectTaskObj);
-					if (upadteProject && createProjectTask) {
-						await session.commitTransaction();
-						session.endSession();
-						res.send({ message: "OnBoarding successful", data: createProjectTask });
+						let createCompany = await Company.create(companyInfoObj);
+						let upadteProject = await Projects.findOneAndUpdate(
+							{ _id: project._id },
+							{ speech: speech, prespective: prespective, duration: "1" },
+							{ new: true }
+						);
+						let createProjectTask = await ProjectTask.create(proectTaskObj);
+						if (upadteProject && createProjectTask) {
+							await session.commitTransaction();
+							session.endSession();
+							res.send({ message: "OnBoarding successful", data: createProjectTask });
+						}
+					} else if (role.title == "Client") {
+						let userPlan = await UserPlan.findOne({ user: userId })
+							.populate({ path: "plan" })
+							.populate({ path: "subPlan" });
+						console.log(userPlan);
+						let proectTaskObj = {
+							keywords: project.keywords,
+							desiredNumberOfWords: userPlan.plan.desiredWords,
+							project: project._id,
+							numberOfTasks: userPlan.plan.texts
+						};
+						companyInfoObj.user = project.user._id;
+						let createCompany = await Company.create(companyInfoObj);
+						let upadteProject = await Projects.create(
+							{ speech: speech, prespective: prespective, duration: userPlan.subPlan.duration },
+							{ new: true }
+						);
+						let createProjectTask = await ProjectTask.create(proectTaskObj);
+						if (upadteProject && createProjectTask) {
+							await session.commitTransaction();
+							session.endSession();
+							res.send({ message: "OnBoarding successful", data: createProjectTask });
+						}
+						// res.send(userPlan);
 					}
-				} else if (role.title == "Client") {
-					let userPlan = await UserPlan.findOne({ user: userId })
-						.populate({ path: "plan" })
-						.populate({ path: "subPlan" });
-					console.log(userPlan);
-					let proectTaskObj = {
-						tasks: userPlan.plan.texts,
-						keywords: project.keywords,
-						desiredNumberOfWords: userPlan.plan.desiredWords,
-						project: project._id
-					};
-					companyInfoObj.user = project.user._id;
-					let createCompany = await Company.create(companyInfoObj);
-					let upadteProject = await Projects.findOneAndUpdate(
-						{ _id: project._id },
-						{ speech: speech, prespective: prespective, duration: userPlan.subPlan.duration },
-						{ new: true }
-					);
-					let createProjectTask = await ProjectTask.create(proectTaskObj);
-					if (upadteProject && createProjectTask) {
-						await session.commitTransaction();
-						session.endSession();
-						res.send({ message: "OnBoarding successful", data: createProjectTask });
-					}
-					// res.send(userPlan);
+				}
+			} else if (project.projectName == projectName) {
+				console.log("in ELSE IF");
+				let userPlan = await UserPlan.findOne({ user: userId })
+					.populate({ path: "plan" })
+					.populate({ path: "subPlan" });
+				console.log(userPlan);
+				let proectTaskObj = {
+					keywords: project.keywords,
+					desiredNumberOfWords: userPlan.plan.desiredWords,
+					project: project._id,
+					numberOfTasks: userPlan.plan.texts
+				};
+				companyInfoObj.user = project.user._id;
+				let createCompany = await Company.findOneAndUpdate({ user: userId }, companyInfoObj, { new: true });
+				console.log("company");
+
+				let upadteProject = await Projects.findOneAndUpdate(
+					{ _id: project._id },
+					{ speech: speech, prespective: prespective, duration: userPlan.subPlan.duration },
+					{ new: true }
+				);
+				console.log("update project", upadteProject);
+
+				let createProjectTask = await ProjectTask.create(proectTaskObj);
+				console.log("update project task", createProjectTask);
+
+				if (upadteProject && createProjectTask) {
+					await session.commitTransaction();
+					session.endSession();
+					res.send({ message: "OnBoarding successful", data: createProjectTask });
 				}
 			}
 		}

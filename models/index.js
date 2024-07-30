@@ -11,7 +11,7 @@ const basename = path.basename(__filename);
 const db = {};
 
 // MongoDB connection string
-const dbURI = "mongodb://127.0.0.1:27017/driptextdb";
+const dbURI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/driptextdb";
 
 // Connect to MongoDB
 mongoose.connect(dbURI);
