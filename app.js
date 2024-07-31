@@ -20,7 +20,7 @@ class Server {
 	}
 	// mongodb://localhost:27017/
 	connectToDatabase() {
-		const dbURI = "mongodb://127.0.0.1:27017/driptextdb";
+		const dbURI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/driptextdb";
 
 		mongoose.connect(dbURI);
 
