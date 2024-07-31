@@ -5,6 +5,7 @@ const nodeMailer = require("./nodeMailer");
 const jwt = require("./jwt");
 const crypto = require("../utils/crypto");
 const handlebars = require("handlebars");
+
 const path = require("path");
 const baseURL = secrets.frontend_URL;
 
@@ -183,9 +184,10 @@ Email.forgotPassword = async (user) => {
 
 Email.AwsEmailPassword = async (user) => {
 	try {
-		const data = fs.readFileSync("./templates/awsPasswordUpdateEmail.html", "utf8");
-		// const filePath = path.join(__dirname, "templates", "awsPasswordUpdateEmail.html");
-		// const data = fs.readFileSync(filePath, "utf8");
+		// const data = fs.readFileSync("./templates/awsPasswordUpdateEmail.html", "utf8");
+		const filePath = "E:\\driptext-backend\\templates\\awsPasswordUpdateEmail.html";
+		const data = fs.readFileSync(filePath, "utf8");
+		// ("E:\\driptext-backend\\templates\\awsPasswordUpdateEmail.html");
 		let text = data;
 
 		const forgetPasswordToken = jwt.signToken({
