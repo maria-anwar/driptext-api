@@ -106,50 +106,49 @@ exports.create = async (req, res) => {
 							message: err.message || "Some error occurred while creating the Quiz."
 						});
 					});
+			} else if (alredyExist && (alredyExist.role.title == "Leads" || alredyExist.role.title == "leads")) {
+				Users.findOneAndUpdate({ _id: alredyExist._id }, userObj, { new: true })
+					.then(async (user) => {
+						var userPlanObj = {};
+
+						var projectObj = {
+							projectName: req.body.projectName,
+							keywords: req.body.keywords,
+							user: user._id
+						};
+
+						if (req.body.planId) {
+							userPlanObj = {
+								user: user._id,
+								plan: req.body.planId,
+								subPlan: req.body.subPlanId
+							};
+						} else {
+							userPlanObj = {
+								user: user._id
+							};
+						}
+						let createProject = await Projects.create(projectObj);
+						let createUserPlan = await UserPlan.create(userPlanObj);
+
+						if (createUserPlan && createProject) {
+							// console.log("here");
+							emails.AwsEmailPassword(user);
+
+							await session.commitTransaction();
+							session.endSession();
+							res.send({ message: "User Added", data: user });
+						}
+					})
+					.catch(async (err) => {
+						// emails.errorEmail(req, err);
+						await session.abortTransaction();
+						session.endSession();
+						res.status(500).send({
+							message: err.message || "Some error occurred while creating the Quiz."
+						});
+					});
 			}
-			//  else if (alredyExist && (alredyExist.role.title == "Leads" || alredyExist.role.title == "leads")) {
-			// 	Users.findOneAndUpdate({ _id: alredyExist._id }, userObj, { new: true })
-			// 		.then(async (user) => {
-			// 			var userPlanObj = {};
-
-			// 			var projectObj = {
-			// 				projectName: req.body.projectName,
-			// 				keywords: req.body.keywords,
-			// 				user: user._id
-			// 			};
-
-			// 			if (req.body.planId) {
-			// 				userPlanObj = {
-			// 					user: user._id,
-			// 					plan: req.body.planId,
-			// 					subPlan: req.body.subPlanId
-			// 				};
-			// 			} else {
-			// 				userPlanObj = {
-			// 					user: user._id
-			// 				};
-			// 			}
-			// 			let createProject = await Projects.create(projectObj);
-			// 			let createUserPlan = await UserPlan.create(userPlanObj);
-
-			// 			if (createUserPlan && createProject) {
-			// 				// console.log("here");
-			// 				emails.AwsEmailPassword(user);
-
-			// 				await session.commitTransaction();
-			// 				session.endSession();
-			// 				res.send({ message: "User Added", data: user });
-			// 			}
-			// 		})
-			// 		.catch(async (err) => {
-			// 			// emails.errorEmail(req, err);
-			// 			await session.abortTransaction();
-			// 			session.endSession();
-			// 			res.status(500).send({
-			// 				message: err.message || "Some error occurred while creating the Quiz."
-			// 			});
-			// 		});
-			// }
 		}
 	} catch (err) {
 		emails.errorEmail(req, err);
@@ -260,16 +259,6 @@ exports.onboarding = async (req, res) => {
 			}
 
 			let getUserRole = await Users.findOne({ _id: userId }).populate({ path: "role" });
-
-			// if (getUserRole.isSubscribed == "Y" && (getUserRole.role.title == "Leads" || getUserRole.role.title == "leads")) {
-			// 	let getRole = await Roles.findOne({ title: "Client" });
-
-			// 	let updateUserRole = await Users.findOneAndUpdate(
-			// 		{ _id: userId, isActive: "Y" },
-			// 		{ role: getRole._id },
-			// 		{ new: true }
-			// 	);
-			// }
 
 			let getproject = await Projects.findOne(whereClause);
 			if (getproject) {
