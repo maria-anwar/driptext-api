@@ -6,6 +6,7 @@ module.exports = (mongoose) => {
 		{
 			id: { type: Number, unique: true },
 			projectName: { type: String, required: true, unique: false },
+			tasks: { type: Number, unique: false, required: false },
 			speech: { type: String, required: false, unique: false },
 			keywords: { type: String, required: false, unique: false },
 			duration: { type: String, required: false, unique: false },

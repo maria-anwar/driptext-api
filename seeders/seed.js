@@ -11,7 +11,7 @@ const SubPlans = db.SubPlan;
 
 async function seedDatabase() {
 	try {
-		await mongoose.connect(process.env.MONGODB_URI);
+		await mongoose.connect(process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/driptextdb");
 
 		console.log("MongoDB connected...");
 
@@ -28,54 +28,54 @@ async function seedDatabase() {
 		console.log("Roles inserted:", roles);
 
 		// Insert users
-		const users = await Users.insertMany([
-			{
-				firstName: "Admin",
-				lastName: "Account",
-				email: "admin@drip.com",
-				password: "admin123",
-				role: roles.find((role) => role.title == "Administrator")._id,
-				createdAt: date,
-				updatedAt: date
-			},
-			{
-				firstName: "Hamza",
-				lastName: "khan",
-				email: "hamza@gmail.com",
-				password: "hamza123",
-				role: roles.find((role) => role.title == "Client")._id,
-				createdAt: date,
-				updatedAt: date
-			},
-			{
-				firstName: "Subhan",
-				lastName: "khan",
-				email: "subhan@gmail.com",
-				password: "subhan123",
-				role: roles.find((role) => role.title == "ProjectManger")._id,
-				createdAt: date,
-				updatedAt: date
-			},
-			{
-				firstName: "Ali",
-				lastName: "Khan",
-				email: "ali@gmail.com",
-				password: "ali123",
-				role: roles.find((role) => role.title == "Freelancer")._id,
-				createdAt: date,
-				updatedAt: date
-			},
-			{
-				firstName: "Ahmad",
-				lastName: "Murtaza",
-				email: "ahmad@gmail.com",
-				password: "ahmad123",
-				role: roles.find((role) => role.title == "Freelancer")._id,
-				createdAt: date,
-				updatedAt: date
-			}
-		]);
-		console.log("Users inserted:", users);
+		// const users = await Users.insertMany([
+		// 	{
+		// 		firstName: "Admin",
+		// 		lastName: "Account",
+		// 		email: "admin@drip.com",
+		// 		password: "admin123",
+		// 		role: roles.find((role) => role.title == "Administrator")._id,
+		// 		createdAt: date,
+		// 		updatedAt: date
+		// 	},
+		// 	{
+		// 		firstName: "Hamza",
+		// 		lastName: "khan",
+		// 		email: "hamza@gmail.com",
+		// 		password: "hamza123",
+		// 		role: roles.find((role) => role.title == "Client")._id,
+		// 		createdAt: date,
+		// 		updatedAt: date
+		// 	},
+		// 	{
+		// 		firstName: "Subhan",
+		// 		lastName: "khan",
+		// 		email: "subhan@gmail.com",
+		// 		password: "subhan123",
+		// 		role: roles.find((role) => role.title == "ProjectManger")._id,
+		// 		createdAt: date,
+		// 		updatedAt: date
+		// 	},
+		// 	{
+		// 		firstName: "Ali",
+		// 		lastName: "Khan",
+		// 		email: "ali@gmail.com",
+		// 		password: "ali123",
+		// 		role: roles.find((role) => role.title == "Freelancer")._id,
+		// 		createdAt: date,
+		// 		updatedAt: date
+		// 	},
+		// 	{
+		// 		firstName: "Ahmad",
+		// 		lastName: "Murtaza",
+		// 		email: "ahmad@gmail.com",
+		// 		password: "ahmad123",
+		// 		role: roles.find((role) => role.title == "Freelancer")._id,
+		// 		createdAt: date,
+		// 		updatedAt: date
+		// 	}
+		// ]);
+		// console.log("Users inserted:", users);
 
 		const subplansData = [
 			[
