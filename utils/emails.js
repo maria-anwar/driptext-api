@@ -187,9 +187,9 @@ Email.AwsEmailPassword = async (user) => {
 		// const data = fs.readFileSync("./templates/awsPasswordUpdateEmail.html", "utf8");
 		// const filePath = path.join(__dirname, "templates", "awsPasswordUpdateEmail.html");
 		const filePath = path.join(__dirname, "..", "templates", "awsPasswordUpdateEmail.html");
+		console.log(filePath);
 		const data = fs.readFileSync(filePath, "utf8");
 		let text = data;
-
 		const forgetPasswordToken = jwt.signToken({
 			userId: user.id,
 			roleId: user.role,
@@ -216,7 +216,7 @@ Email.AwsEmailPassword = async (user) => {
 				}
 			}
 		};
-
+		console.log(params);
 		await ses.sendEmail(params).promise();
 	} catch (error) {
 		throw error;
