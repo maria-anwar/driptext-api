@@ -91,7 +91,7 @@ exports.create = async (req, res) => {
 
 						if (createUserPlan && createProject) {
 							// console.log("here");
-							emails.AwsEmailPassword(user);
+							emails.emailPassword(user);
 
 							await session.commitTransaction();
 							session.endSession();
