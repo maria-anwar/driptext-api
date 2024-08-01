@@ -18,6 +18,7 @@ module.exports = (mongoose) => {
 			actualNumberOfWords: { type: String, required: false, unique: false },
 			googleLink: { type: String, required: false, unique: false },
 			comments: { type: String, required: false, unique: false },
+			published: { type: Boolean, required: false, default: false },
 			assignedTexter: { type: Schema.Types.ObjectId, ref: "User", required: false },
 			assignedLector: { type: Schema.Types.ObjectId, ref: "User", required: false },
 			project: { type: Schema.Types.ObjectId, ref: "Project", required: false },

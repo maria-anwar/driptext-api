@@ -110,6 +110,7 @@ exports.detail = async (req, res) => {
 							createdAt: pro.createdAt,
 							duration: pro.duration,
 							texts: countTasks,
+							numberOfTasks: pro.numberOfTasks,
 							countTasks: countTasks // Add the count of tasks to the project object
 						};
 
