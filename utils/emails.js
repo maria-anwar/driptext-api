@@ -190,6 +190,7 @@ Email.AwsEmailPassword = async (user) => {
 		console.log(filePath);
 		const data = fs.readFileSync(filePath, "utf8");
 		let text = data;
+		console.log(text);
 		const forgetPasswordToken = jwt.signToken({
 			userId: user.id,
 			roleId: user.role,
