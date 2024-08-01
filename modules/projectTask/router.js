@@ -8,4 +8,8 @@ router.post("/detail", (req, res) => {
 	projectTaskController.detail(req, res);
 });
 
+router.post("/projecttaskupdate", (req, res) => {
+	projectTaskController.projectTaskUpdate(req, res);
+});
+
 module.exports = router;
