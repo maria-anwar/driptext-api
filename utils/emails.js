@@ -64,7 +64,11 @@ Email.errorEmail = async (req, error) => {
 
 Email.emailPassword = async (user) => {
 	try {
-		const data = fs.readFileSync("./templates/passwordEmail.html", "utf8");
+		const filePath = path.join(__dirname, "..", "templates", "awsPasswordUpdateEmail.html");
+		console.log(filePath);
+		const data = fs.readFileSync(filePath, "utf8");
+		// const data = fs.readFileSync("./templates/passwordEmail.html", "utf8");
+
 		var text = data;
 		const forgetPasswordToken = jwt.signToken({
 			userId: user.id,
