@@ -107,6 +107,8 @@ exports.create = async (req, res) => {
 						});
 					});
 			} else if (alredyExist && (alredyExist.role.title == "Leads" || alredyExist.role.title == "leads")) {
+				res.send({ message: "You have free trial no more projects" });
+			} else if (alredyExist && alredyExist.role.title == "Client") {
 				Users.findOneAndUpdate({ _id: alredyExist._id }, userObj, { new: true })
 					.then(async (user) => {
 						var userPlanObj = {};
