@@ -56,12 +56,14 @@ exports.create = async (req, res) => {
 			let alredyExist = await Users.findOne({ email: userObj.email }).populate("role");
 
 			let userRole = await Roles.findOne({ _id: userObj.role });
+			console.log(userRole);
 			if (userRole.title == "Client" && !req.body.planId && !req.body.subPlanId) {
 				await session.commitTransaction();
 				session.endSession();
 				res.send({ message: "Plan and SubPlan ID's are required for the client role" });
 				return 1;
 			}
+			console.log(alredyExist);
 
 			if (!alredyExist) {
 				// let transaction = await sequelize.transaction();

@@ -1,6 +1,6 @@
 const fs = require("fs");
 // const AWS = require("aws-sdk");
-const { SESClient, SendEmailCommand } = require('@aws-sdk/client-ses');
+const { SESClient, SendEmailCommand } = require("@aws-sdk/client-ses");
 
 const secrets = require("../config/secrets");
 const nodeMailer = require("./nodeMailer");
@@ -20,7 +20,7 @@ const baseURL = secrets.frontend_URL;
 // const ses = new AWS.SES(SES_CONFIG);
 
 const SES_CONFIG = {
-    region: process.env.AWS_REGION
+	region: process.env.AWS_REGION
 };
 
 const ses = new SESClient(SES_CONFIG);
@@ -28,7 +28,7 @@ const ses = new SESClient(SES_CONFIG);
 const emailErrorTo = secrets.email.error;
 const emailFrom = secrets.email.auth.from;
 const awsSource = process.env.AWS_SOURCE;
- 
+
 /**
  * Email component
  * @constructor
@@ -167,27 +167,41 @@ Email.addUser = async (user) => {
 Email.forgotPassword = async (user) => {
 	try {
 		const forgetPasswordToken = jwt.signToken({
-			userId: user.id,
-			roleId: user.roleId,
+			userId: user._id,
+			roleId: user.role,
 			email: user.email
 		});
 
-		var link = "https://driptext-api.vercel.app/" + "reset/password/" + forgetPasswordToken;
+		var link = `http://localhost:5173/auth/forgetkey/${forgetPasswordToken}`;
 
 		const data = fs.readFileSync("./templates/emailForgotPassword.html", "utf8");
 		var text = data;
-		text = text.replace("[USER_NAME]", user.firstName + " " + user.lastName);
+		text = text.replace("[USER_NAME]", `${user.firstName} ${user.lastName}`);
 		text = text.replace("[BUTTON_LINK_1]", link);
 		text = text.replace("[TEXT_LINK]", link);
 
-		var mailOptions = {
-			from: `LMS <${emailFrom}>`,
-			to: user.email,
-			subject: "Reset Password",
-			html: text
+		// Set up the email parameters
+		const params = {
+			Source: `DripText <${awsSource}>`,
+			Destination: {
+				ToAddresses: [user.email]
+			},
+			Message: {
+				Subject: {
+					Data: "Action Required: Set Up Your New Password"
+				},
+				Body: {
+					Html: {
+						Data: text
+					}
+				}
+			}
 		};
 
-		nodeMailer(mailOptions);
+		// Send the email using AWS SES
+		const command = new SendEmailCommand(params);
+		await ses.send(command);
+		console.log("Email sent successfully");
 	} catch (error) {
 		console.log(error);
 		throw error;
@@ -195,57 +209,53 @@ Email.forgotPassword = async (user) => {
 };
 
 Email.AwsEmailPassword = async (user) => {
-    try {
-        // Construct the file path for the email template
-        const filePath = path.join(__dirname, "..", "templates", "awsPasswordUpdateEmail.html");
-         
+	try {
+		// Construct the file path for the email template
+		const filePath = path.join(__dirname, "..", "templates", "awsPasswordUpdateEmail.html");
 
-        // Read the email template file
-        const data = fs.readFileSync(filePath, "utf8");
-        let text = data;
-   v
+		// Read the email template file
+		const data = fs.readFileSync(filePath, "utf8");
+		let text = data;
+		v;
 
-        // Generate the forget password token
-        const forgetPasswordToken = jwt.signToken
-	    ({
-            userId: user.id,
-            roleId: user.role,
-            email: user.email
-        }); // Use JWT secret from environment variables
+		// Generate the forget password token
+		const forgetPasswordToken = jwt.signToken({
+			userId: user._id,
+			roleId: user.role,
+			email: user.email
+		}); // Use JWT secret from environment variables
 
-        // Construct the password reset link
-        const link = `http://localhost:5173/auth/forgetkey/${forgetPasswordToken}`;
-        text = text.replace("[USER_NAME]", `${user.firstName} ${user.lastName}`);
-        text = text.replace("[BUTTON_LINK_1]", link);
+		// Construct the password reset link
+		const link = `http://localhost:5173/auth/forgetkey/${forgetPasswordToken}`;
+		text = text.replace("[USER_NAME]", `${user.firstName} ${user.lastName}`);
+		text = text.replace("[BUTTON_LINK_1]", link);
 
-        // Set up the email parameters
-        const params = {
-            Source: `DripText <${awsSource}>`,
-            Destination: {
-                ToAddresses: [user.email]
-            },
-            Message: {
-                Subject: {
-                    Data: "Action Required: Set Up Your New Password"
-                },
-                Body: {
-                    Html: {
-                        Data: text
-                    }
-                }
-            }
-        };
+		// Set up the email parameters
+		const params = {
+			Source: `DripText <${awsSource}>`,
+			Destination: {
+				ToAddresses: [user.email]
+			},
+			Message: {
+				Subject: {
+					Data: "Action Required: Set Up Your New Password"
+				},
+				Body: {
+					Html: {
+						Data: text
+					}
+				}
+			}
+		};
 
- 
-        // Send the email using AWS SES
-        const command = new SendEmailCommand(params);
-        await ses.send(command);
-        console.log('Email sent successfully');
-    } catch (error) {
-        console.error(`Error sending email: ${error}`);
-        throw error;
-    }
+		// Send the email using AWS SES
+		const command = new SendEmailCommand(params);
+		await ses.send(command);
+		console.log("Email sent successfully");
+	} catch (error) {
+		console.error(`Error sending email: ${error}`);
+		throw error;
+	}
 };
-
 
 module.exports = Email;
