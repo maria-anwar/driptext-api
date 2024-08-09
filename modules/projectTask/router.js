@@ -8,7 +8,7 @@ router.post("/detail", (req, res) => {
 	projectTaskController.detail(req, res);
 });
 
-router.post("/projecttaskupdate", (req, res) => {
+router.post("/projectTaskUpdate", (req, res) => {
 	projectTaskController.projectTaskUpdate(req, res);
 });
 

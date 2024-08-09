@@ -11,7 +11,7 @@ const SubPlans = db.SubPlan;
 
 async function seedDatabase() {
 	try {
-		await mongoose.connect("mongodb://127.0.0.1:27017/driptextdb-abdullah");
+		await mongoose.connect(process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/driptextdb");
 
 		console.log("MongoDB connected...");
 
@@ -79,19 +79,19 @@ async function seedDatabase() {
 
 		const subplansData = [
 			[
-				{ title: "3 Months", duration: 3, price: "420", createdAt: date, updatedAt: date },
-				{ title: "6 Months", duration: 6, price: "360", createdAt: date, updatedAt: date },
-				{ title: "12 Months", duration: 12, price: "300", createdAt: date, updatedAt: date }
+				{ title: "3 Months", duration: 3, price: "420", chargebeeId: "3-months-4-texts-EUR-Every-3-months", createdAt: date, updatedAt: date },
+				{ title: "6 Months", duration: 6, price: "360", chargebeeId: "6-months-4-texts-EUR-Every-6-months", createdAt: date, updatedAt: date },
+				{ title: "12 Months", duration: 12, price: "300", chargebeeId: "12-months-4-texts-EUR-Yearly", createdAt: date, updatedAt: date }
 			],
 			[
-				{ title: "3 Months", duration: 3, price: "840", createdAt: date, updatedAt: date },
-				{ title: "6 Months", duration: 6, price: "720", createdAt: date, updatedAt: date },
-				{ title: "12 Months", duration: 12, price: "600", createdAt: date, updatedAt: date }
+				{ title: "3 Months", duration: 3, price: "840", chargebeeId: "3-months-8-texts-EUR-Every-3-months", createdAt: date, updatedAt: date },
+				{ title: "6 Months", duration: 6, price: "720", chargebeeId: "6-months-8-texts-EUR-Every-6-months", createdAt: date, updatedAt: date },
+				{ title: "12 Months", duration: 12, price: "600", chargebeeId: "12-months-8-texts-EUR-Yearly", createdAt: date, updatedAt: date }
 			],
 			[
-				{ title: "3 Months", duration: 3, price: "1260", createdAt: date, updatedAt: date },
-				{ title: "6 Months", duration: 6, price: "1080", createdAt: date, updatedAt: date },
-				{ title: "12 Months", duration: 12, price: "900", createdAt: date, updatedAt: date }
+				{ title: "3 Months", duration: 3, price: "1260", chargebeeId: "3-months-12-texts-EUR-Every-3-months", createdAt: date, updatedAt: date },
+				{ title: "6 Months", duration: 6, price: "1080", chargebeeId: "6-months-12-texts-EUR-Every-6-months", createdAt: date, updatedAt: date },
+				{ title: "12 Months", duration: 12, price: "900", chargebeeId: "12-months-12-texts-EUR-Yearly", createdAt: date, updatedAt: date }
 			]
 		];
 

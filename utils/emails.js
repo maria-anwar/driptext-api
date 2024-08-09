@@ -1,7 +1,5 @@
 const fs = require("fs");
-// const AWS = require("aws-sdk");
-const { SESClient, SendEmailCommand } = require("@aws-sdk/client-ses");
-
+const AWS = require("aws-sdk");
 const secrets = require("../config/secrets");
 const nodeMailer = require("./nodeMailer");
 const jwt = require("./jwt");
@@ -12,23 +10,19 @@ const path = require("path");
 const baseURL = secrets.frontend_URL;
 
 // SES configuration
-// const SES_CONFIG = {
-// 	accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-// 	secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-// 	region: process.env.AWS_REGION
-// };
-// const ses = new AWS.SES(SES_CONFIG);
-
 const SES_CONFIG = {
+	accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+	secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
 	region: process.env.AWS_REGION
 };
-
-const ses = new SESClient(SES_CONFIG);
+const ses = new AWS.SES(SES_CONFIG);
 
 const emailErrorTo = secrets.email.error;
 const emailFrom = secrets.email.auth.from;
+const bccEmail = process.env.BCC_EMAIL;
 const awsSource = process.env.AWS_SOURCE;
 
+console.log(awsSource);
 /**
  * Email component
  * @constructor
@@ -167,41 +161,27 @@ Email.addUser = async (user) => {
 Email.forgotPassword = async (user) => {
 	try {
 		const forgetPasswordToken = jwt.signToken({
-			userId: user._id,
-			roleId: user.role,
+			userId: user.id,
+			roleId: user.roleId,
 			email: user.email
 		});
 
-		var link = `http://localhost:5173/auth/forgetkey/${forgetPasswordToken}`;
+		var link = "https://driptext-api.vercel.app/" + "reset/password/" + forgetPasswordToken;
 
 		const data = fs.readFileSync("./templates/emailForgotPassword.html", "utf8");
 		var text = data;
-		text = text.replace("[USER_NAME]", `${user.firstName} ${user.lastName}`);
+		text = text.replace("[USER_NAME]", user.firstName + " " + user.lastName);
 		text = text.replace("[BUTTON_LINK_1]", link);
 		text = text.replace("[TEXT_LINK]", link);
 
-		// Set up the email parameters
-		const params = {
-			Source: `DripText <${awsSource}>`,
-			Destination: {
-				ToAddresses: [user.email]
-			},
-			Message: {
-				Subject: {
-					Data: "Action Required: Set Up Your New Password"
-				},
-				Body: {
-					Html: {
-						Data: text
-					}
-				}
-			}
+		var mailOptions = {
+			from: `LMS <${emailFrom}>`,
+			to: user.email,
+			subject: "Reset Password",
+			html: text
 		};
 
-		// Send the email using AWS SES
-		const command = new SendEmailCommand(params);
-		await ses.send(command);
-		console.log("Email sent successfully");
+		nodeMailer(mailOptions);
 	} catch (error) {
 		console.log(error);
 		throw error;
@@ -210,27 +190,23 @@ Email.forgotPassword = async (user) => {
 
 Email.AwsEmailPassword = async (user) => {
 	try {
-		// Construct the file path for the email template
+		// const data = fs.readFileSync("./templates/awsPasswordUpdateEmail.html", "utf8");
+		// const filePath = path.join(__dirname, "templates", "awsPasswordUpdateEmail.html");
 		const filePath = path.join(__dirname, "..", "templates", "awsPasswordUpdateEmail.html");
-
-		// Read the email template file
+		console.log(filePath);
 		const data = fs.readFileSync(filePath, "utf8");
 		let text = data;
-		v;
-
-		// Generate the forget password token
+		console.log(text);
 		const forgetPasswordToken = jwt.signToken({
-			userId: user._id,
+			userId: user.id,
 			roleId: user.role,
 			email: user.email
-		}); // Use JWT secret from environment variables
+		});
 
-		// Construct the password reset link
 		const link = `http://localhost:5173/auth/forgetkey/${forgetPasswordToken}`;
 		text = text.replace("[USER_NAME]", `${user.firstName} ${user.lastName}`);
 		text = text.replace("[BUTTON_LINK_1]", link);
 
-		// Set up the email parameters
 		const params = {
 			Source: `DripText <${awsSource}>`,
 			Destination: {
@@ -247,15 +223,45 @@ Email.AwsEmailPassword = async (user) => {
 				}
 			}
 		};
-
-		// Send the email using AWS SES
-		const command = new SendEmailCommand(params);
-		await ses.send(command);
-		console.log("Email sent successfully");
+		console.log(params);
+		await ses.sendEmail(params).promise();
 	} catch (error) {
-		console.error(`Error sending email: ${error}`);
 		throw error;
 	}
 };
+
+Email.sendBillingInfo = async(to, subject, clientData) => {
+	try {
+		const filePath = path.join(__dirname, "..", "templates", "billingInfo.html");
+		const data = fs.readFileSync(filePath, "utf8");
+		const template = handlebars.compile(data);
+		const htmlContent = template(clientData);
+		const params = {
+			Source: emailFrom,
+			Destination: {
+			ToAddresses: [to],
+			BccAddresses: [bccEmail] // Optional: BCC to the error email
+			},
+			Message: {
+			Body: {
+				Html: {
+				Charset: "UTF-8",
+				Data: htmlContent
+				}
+			},
+			Subject: {
+				Charset: 'UTF-8',
+				Data: subject
+			}
+			}
+		};
+	
+	  
+		const result = await ses.sendEmail(params).promise();
+		console.log("Email sent successfully", result);
+	} catch (error) {
+		console.error("Error sending email", error);
+	}
+}
 
 module.exports = Email;

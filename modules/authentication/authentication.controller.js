@@ -120,8 +120,10 @@ exports.forgotPassword = async (req, res) => {
 	try {
 		var email = req.body.email.trim();
 		const user = await Users.findOne({
-			email: email,
-			isActive: "Y"
+			where: {
+				email: email,
+				isActive: "Y"
+			}
 		});
 		if (user) {
 			emails.forgotPassword(user);

@@ -7,8 +7,8 @@ const crypto = require("../../utils/crypto");
 
 const Users = db.User;
 const Roles = db.Role;
-const ProjectTask = db.ProjectTask;
 const Project = db.Project;
+const ProjectTask = db.ProjectTask;
 
 exports.detail = async (req, res) => {
 	try {
@@ -41,7 +41,8 @@ exports.detail = async (req, res) => {
 	}
 };
 
-exports.projectTaskUpdate = async (req, res) => {
+
+exports.projectTaskUpdate = async (req,res) => {
 	try {
 		const joiSchema = Joi.object({
 			projectId: Joi.string().required(),
@@ -50,7 +51,7 @@ exports.projectTaskUpdate = async (req, res) => {
 
 		const { error, value } = joiSchema.validate(req.body);
 
-		if (error) {
+		if(error) {
 			const message = error.details[0].message.replace(/"/g, "");
 			res.status(400).send({
 				message: message
@@ -59,17 +60,18 @@ exports.projectTaskUpdate = async (req, res) => {
 			const projectId = req.body.projectId;
 			const projectTaskId = req.body.projectTaskId;
 
-			const project = await Project.findOne({ _id: projectId });
+			const project =await Project.find({ _id: projectId})
 
-			if (!project) {
+			if(!project) {
+				
 				res.status(401).send({
 					message: "Project not Found"
 				});
 			}
 
-			const projectTask = await ProjectTask.findOne({ _id: projectTaskId, project: projectId });
+			const projectTask =await ProjectTask.find({_id: projectTaskId, project: projectTaskId})
 
-			if (!projectTask) {
+			if(!projectTask){
 				res.status(401).send({
 					message: "Task not found."
 				});
@@ -77,16 +79,13 @@ exports.projectTaskUpdate = async (req, res) => {
 
 			const reverse = !projectTask.published;
 
-			const projectTaskUpdate = await ProjectTask.findOneAndUpdate(
-				{ _id: projectTaskId },
-				{ published: reverse },
-				{ new: true }
-			);
+
+			const projectTaskUpdate = await ProjectTask.findOneAndUpdate({_id: projectTaskId},{published: reverse},{new: true})
 
 			if (projectTaskUpdate) {
 				res.send({
 					message: "ProjectTask updated successfully.",
-					data: projectTaskUpdate
+					data: projectTaskUpdate,
 				});
 			} else {
 				res.status(500).send({
@@ -99,4 +98,4 @@ exports.projectTaskUpdate = async (req, res) => {
 			message: err.message || "Some error occurred."
 		});
 	}
-};
+}

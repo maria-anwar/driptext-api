@@ -6,6 +6,7 @@ module.exports = (mongoose) => {
 			title: { type: String, required: false },
 			duration: { type: Number, required: false },
 			price: { type: String, required: false },
+			chargebeeId: {type: String, required: false},
 			// texts: { type: Number, required: false },
 
 			isActive: {

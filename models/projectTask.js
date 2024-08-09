@@ -8,7 +8,7 @@ module.exports = (mongoose) => {
 			status: {
 				type: String,
 				required: true,
-				default: "ready to start"
+				default: "Uninitialized"
 			},
 			keywords: { type: String, required: false, unique: false },
 			dueDate: { type: String, required: false, unique: false },

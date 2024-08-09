@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eaeaea;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .billing-info {
+            margin: 20px 0;
+        }
+        .billing-info table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .billing-info th, .billing-info td {
+            text-align: left;
+            padding: 8px;
+            border-bottom: 1px solid #eaeaea;
+        }
+        .billing-info th {
+            background-color: #f4f4f4;
+        }
+        .footer {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid #eaeaea;
+            font-size: 12px;
+            color: #888888;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Billing Information</h1>
+        </div>
+        <div class="billing-info">
+            <h2>Client Details</h2>
+            <table>
+                <tr>
+                    <th>Name</th>
+                    <td>{{clientName}}</td>
+                </tr>
+                <tr>
+                    <th>Email</th>
+                    <td>{{clientEmail}}</td>
+                </tr>
+            </table>
+            <h2>Invoice Details</h2>
+            <table>
+                <tr>
+                    <th>Subscription Status</th>
+                    <td>{{subscriptionStatus}}</td>
+                </tr>
+                <tr>
+                    <th>Subscription Start Date</th>
+                    <td>{{subscriptionStartDate}}</td>
+                </tr>
+                <tr>
+                    <th>Subscription End Date</th>
+                    <td>{{subscriptionEndDate}}</td>
+                </tr>
+                <tr>
+                    <th>Payment Method Type</th>
+                    <td>{{paymentMethodType}}</td>
+                </tr>
+                <tr>
+                    <th>Total Amount</th>
+                    <td>{{amount}}</td>
+                </tr>
+            </table>
+        </div>
+        <div class="footer">
+            <p>Thank you for your business!</p>
+            <p>If you have any questions, please contact us at support@example.com</p>
+        </div>
+    </div>
+</body>
+</html>
