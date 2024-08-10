@@ -483,7 +483,7 @@ exports.onboarding = async (req, res) => {
 					let userPlan = await UserPlan.findOne({ user: userId })
 						.populate({ path: "plan" })
 						.populate({ path: "subPlan" });
-					console.log(userPlan);
+					console.log("userplan: ", userPlan, "userId: ", userId);
 
 					// let getProject = await Projects.findOne({ projectName: projectName, user: userId });
 
@@ -526,7 +526,7 @@ exports.onboarding = async (req, res) => {
 						.populate({ path: "plan" })
 						.populate({ path: "subPlan" });
 					if (taskCount <= userPlan.plan.texts) {
-						const checkStatusOfProject = await Projects.findOne({ id: project._id });
+						const checkStatusOfProject = await Projects.findOne({ _id: project._id });
 						if (checkStatusOfProject.status === "in progress") {
 							taskStatus = "Ready to start";
 						}
