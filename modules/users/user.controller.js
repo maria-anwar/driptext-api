@@ -165,7 +165,7 @@ exports.create = async (req, res) => {
 							}
 							console.log("13");
 							// console.log("here");
-							await emails.emailPassword(user);
+							await emails.AwsEmailPassword(user);
 
 							await session.commitTransaction();
 							session.endSession();
@@ -412,20 +412,25 @@ exports.onboarding = async (req, res) => {
 			var whereClause;
 			if (userId) {
 				whereClause = {
-					user: userId,
-					projectName: projectName,
+					_id: userId,
 					isActive: "Y"
 				};
 			}
-			let getproject = await Projects.findOne(whereClause);
-			if (getproject) {
-				var project = await Projects.findOne(whereClause)
-					.populate({ path: "user", select: "email role", populate: { path: "role", select: "title" } })
-					.select("id projectName keywords");
-				var role = project.user.role;
+			let getuser = await Users.findOne(whereClause).populate({ path: "role", select: "title" });
+			if (getuser) {
+				var role = getuser.role;
+				console.log("role");
+				var project = await Projects.findOne({ projectName: projectName, user: userId });
+				console.log(project);
+				if (project) {
+					var project = await Projects.findOne({ projectName: projectName, user: userId })
+
+						.populate({ path: "user", select: "email role", populate: { path: "role", select: "title" } })
+						.select("id projectName keywords");
+				}
 			}
 
-			if (role) {
+			if (getuser && project) {
 				if ((role.title == "leads" || role.title == "Leads") && project.projectName == projectName) {
 					let taskCount = await ProjectTask.countDocuments({ project: project._id });
 					if (taskCount == 0) {
@@ -470,6 +475,7 @@ exports.onboarding = async (req, res) => {
 				} else if ((role.title == "leads" || role.title == "Leads") && project.projectName != projectName) {
 					res.status(500).send({ message: "You are Leads Role so you can not onboard another project/task" });
 				} else if (role.title == "Client" && project.projectName != projectName) {
+					console.log("4545");
 					let userPlan = await UserPlan.findOne({ user: userId })
 						.populate({ path: "plan" })
 						.populate({ path: "subPlan" });
@@ -553,6 +559,43 @@ exports.onboarding = async (req, res) => {
 					} else {
 						res.status(500).send({ message: "You have reached your Task limit please upgrade your package" });
 					}
+				}
+			} else if (role && role.title == "Client") {
+				console.log("7878");
+				let userPlan = await UserPlan.findOne({ user: userId })
+					.populate({ path: "plan" })
+					.populate({ path: "subPlan" });
+
+				companyInfoObj.user = userId;
+
+				if (speech !== "" && prespective !== "") {
+					projectStatus = "Ready";
+				}
+
+				let createCompany = await Company.create(companyInfoObj);
+
+				let createProject = await Projects.create({
+					projectName: projectName,
+					speech: speech,
+					prespective: prespective,
+					duration: userPlan.subPlan.duration,
+					numberOfTasks: userPlan.plan.texts,
+					projectStatus: projectStatus,
+					tasks: 1,
+					user: userId
+				});
+
+				let proectTaskObj = {
+					keywords: createProject.keywords ? createProject.keywords : null,
+					desiredNumberOfWords: userPlan.plan.desiredWords,
+					project: createProject._id
+				};
+				let createProjectTask = await ProjectTask.create(proectTaskObj);
+
+				if (createProject && createProjectTask) {
+					await session.commitTransaction();
+					session.endSession();
+					res.send({ message: "OnBoarding successful", data: createProjectTask });
 				}
 			} else {
 				await session.commitTransaction();

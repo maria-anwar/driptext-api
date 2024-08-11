@@ -21,6 +21,7 @@ const emailErrorTo = secrets.email.error;
 const emailFrom = secrets.email.auth.from;
 const bccEmail = process.env.BCC_EMAIL;
 const awsSource = process.env.AWS_SOURCE;
+const awsNoreplySource = process.env.AWS_NOREPLY_SOURCE;
 
 console.log(awsSource);
 /**
@@ -237,7 +238,7 @@ Email.sendBillingInfo = async (to, subject, clientData) => {
 		const template = handlebars.compile(data);
 		const htmlContent = template(clientData);
 		const params = {
-			Source: `DripText <${awsSource}>`,
+			Source: `DripText <${awsNoreplySource}>`,
 			Destination: {
 				ToAddresses: [to]
 			},
