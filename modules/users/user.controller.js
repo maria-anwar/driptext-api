@@ -150,10 +150,10 @@ exports.create = async (req, res) => {
 								await emails.sendBillingInfo(clientData.clientEmail, "Your Billing Information", clientData);
 							}
 							await emails.AwsEmailPassword(user);
-
+							let getuser = await Users.findOne({ _id: user._id }).populate("role");
 							await session.commitTransaction();
 							session.endSession();
-							res.send({ message: "User Added", data: user });
+							res.send({ message: "User Added", data: getuser });
 						}
 					})
 					.catch(async (err) => {
@@ -248,10 +248,11 @@ exports.create = async (req, res) => {
 						}
 						if (createUserPlan && createProject) {
 							emails.AwsEmailPassword(user);
+							let getuser = await Users.findOne({ _id: user._id }).populate("role");
 
 							await session.commitTransaction();
 							session.endSession();
-							res.send({ message: "User Added", data: user });
+							res.send({ message: "User Added", data: getuser });
 						}
 					})
 					.catch(async (err) => {
@@ -460,7 +461,7 @@ exports.onboarding = async (req, res) => {
 						.select("id projectName keywords");
 				}
 			}
-
+			console.log("id");
 			if (getuser && project) {
 				if ((role.title == "leads" || role.title == "Leads") && project.projectName == projectName) {
 					let taskCount = await ProjectTask.countDocuments({ project: project._id });
@@ -624,6 +625,10 @@ exports.onboarding = async (req, res) => {
 					session.endSession();
 					res.send({ message: "OnBoarding successful", data: createProjectTask });
 				}
+			} else if (role && role.title == "leads") {
+				await session.commitTransaction();
+				session.endSession();
+				res.status(500).send({ message: "As free trial gives only 1 task" });
 			} else {
 				await session.commitTransaction();
 				session.endSession();
