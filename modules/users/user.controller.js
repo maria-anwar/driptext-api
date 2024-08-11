@@ -43,7 +43,6 @@ exports.create = async (req, res) => {
 				message: "Some Error"
 			});
 		} else {
-			console.log("1");
 			const billResponse = req.body.response;
 			const userObj = {
 				firstName: req.body.firstName?.trim(),
@@ -58,23 +57,18 @@ exports.create = async (req, res) => {
 			};
 			const session = await mongoose.startSession();
 			session.startTransaction();
-			console.log("2");
 
 			let alredyExist = await Users.findOne({ email: userObj.email }).populate("role");
 
 			let userRole = await Roles.findOne({ _id: userObj.role });
-			console.log("22");
 			if (userRole.title == "Client" && !req.body.planId && !req.body.subPlanId) {
 				await session.commitTransaction();
 				session.endSession();
 				res.send({ message: "Plan and SubPlan ID's are required for the client role" });
 				return 1;
 			}
-			console.log("3");
 
 			if (!alredyExist) {
-				console.log("4");
-				// let transaction = await sequelize.transaction();
 				Users.create(userObj)
 					.then(async (user) => {
 						console.log("5");
@@ -104,9 +98,7 @@ exports.create = async (req, res) => {
 						let paymentMethod;
 						let billingResponse;
 						let createBilling = "";
-						console.log("8");
 						if (req.body.response) {
-							console.log("9");
 							subscriptionItems = {
 								item_price_id: billResponse.subscription.subscription_items[0].item_price_id,
 								item_type: billResponse.subscription.subscription_items[0].item_type,
@@ -140,17 +132,11 @@ exports.create = async (req, res) => {
 							};
 							createBilling = await Billing.create(billingResponse);
 						}
-						console.log("10");
 						let createProject = await Projects.create(projectObj);
 						let createUserPlan = await UserPlan.create(userPlanObj);
 
 						if (createUserPlan && createProject) {
-							console.log("11");
-							// console.log("In Email block")
-							// Data to be injected into the template
-
 							if (createBilling !== "") {
-								console.log("12");
 								const clientData = {
 									clientName: `${req.body.firstName} ${req.body.lastName}`,
 									clientEmail: `${req.body.email}`,
@@ -163,8 +149,6 @@ exports.create = async (req, res) => {
 								// Send email
 								await emails.sendBillingInfo(clientData.clientEmail, "Your Billing Information", clientData);
 							}
-							console.log("13");
-							// console.log("here");
 							await emails.AwsEmailPassword(user);
 
 							await session.commitTransaction();
@@ -207,11 +191,62 @@ exports.create = async (req, res) => {
 								user: user._id
 							};
 						}
-						let createProject = await Projects.create(projectObj);
-						let createUserPlan = await UserPlan.create(userPlanObj);
+						let subscriptionItems;
+						let paymentMethod;
+						let billingResponse;
+						let createBilling = "";
 
+						if (req.body.response) {
+							subscriptionItems = {
+								item_price_id: billResponse.subscription.subscription_items[0].item_price_id,
+								item_type: billResponse.subscription.subscription_items[0].item_type,
+								quantity: billResponse.subscription.subscription_items[0].quantity,
+								unit_price: billResponse.subscription.subscription_items[0].unit_price,
+								amount: billResponse.subscription.subscription_items[0].amount,
+								current_term_start: billResponse.subscription.subscription_items[0].current_term_start,
+								current_term_end: billResponse.subscription.subscription_items[0].current_term_end,
+								next_billing_at: billResponse.subscription.subscription_items[0].next_billing_at,
+								free_quantity: billResponse.subscription.subscription_items[0].free_quantity
+							};
+
+							paymentMethod = {
+								type: billResponse.customer.payment_method.type,
+								reference_id: billResponse.customer.payment_method.reference_id,
+								gateway: billResponse.customer.payment_method.gateway,
+								gateway_account_id: billResponse.customer.payment_method.gateway_account_id,
+								status: billResponse.customer.payment_method.status
+							};
+
+							billingResponse = {
+								userId: user._id,
+								subscriptionId: billResponse.subscription.id,
+								subscriptionStatus: billResponse.subscription.status,
+								subscriptionItem: [subscriptionItems],
+								customer_id: billResponse.customer.id,
+								customer_first_name: billResponse.customer.first_name,
+								customer_last_name: billResponse.customer.last_name,
+								customer_email: billResponse.customer.email,
+								payment_method: paymentMethod
+							};
+							createBilling = await Billing.create(billingResponse);
+						}
+						let createProject = await Projects.create(projectObj);
+						let createUserPlan = await UserPlan.findOneAndUpdate({ user: user._id }, userPlanObj, { new: true });
+
+						if (createBilling !== "") {
+							const clientData = {
+								clientName: `${req.body.firstName} ${req.body.lastName}`,
+								clientEmail: `${req.body.email}`,
+								subscriptionStatus: `${billResponse.subscription.status}`,
+								subscriptionStartDate: `${billResponse.subscription.subscription_items[0].current_term_start}`,
+								subscriptionEndDate: `${billResponse.subscription.subscription_items[0].current_term_end}`,
+								paymentMethodType: `${billResponse.customer.payment_method.type}`,
+								amount: `${billResponse.subscription.subscription_items[0].unit_price}`
+							};
+							// Send email
+							await emails.sendBillingInfo(clientData.clientEmail, "Your Billing Information", clientData);
+						}
 						if (createUserPlan && createProject) {
-							// console.log("here");
 							emails.AwsEmailPassword(user);
 
 							await session.commitTransaction();
@@ -295,7 +330,6 @@ exports.create = async (req, res) => {
 						let createBilling = await Billing.create(billingResponse);
 
 						if (createUserPlan && createProject && createBilling) {
-							// console.log("here");
 							await emails.AwsEmailPassword(user);
 
 							await session.commitTransaction();
@@ -419,12 +453,9 @@ exports.onboarding = async (req, res) => {
 			let getuser = await Users.findOne(whereClause).populate({ path: "role", select: "title" });
 			if (getuser) {
 				var role = getuser.role;
-				console.log("role");
 				var project = await Projects.findOne({ projectName: projectName, user: userId });
-				console.log(project);
 				if (project) {
 					var project = await Projects.findOne({ projectName: projectName, user: userId })
-
 						.populate({ path: "user", select: "email role", populate: { path: "role", select: "title" } })
 						.select("id projectName keywords");
 				}
@@ -475,7 +506,6 @@ exports.onboarding = async (req, res) => {
 				} else if ((role.title == "leads" || role.title == "Leads") && project.projectName != projectName) {
 					res.status(500).send({ message: "You are Leads Role so you can not onboard another project/task" });
 				} else if (role.title == "Client" && project.projectName != projectName) {
-					console.log("4545");
 					let userPlan = await UserPlan.findOne({ user: userId })
 						.populate({ path: "plan" })
 						.populate({ path: "subPlan" });
@@ -511,8 +541,6 @@ exports.onboarding = async (req, res) => {
 						session.endSession();
 						res.send({ message: "OnBoarding successful", data: createProjectTask });
 					}
-
-					// res.send(userPlan);
 				} else if (project.projectName == projectName && role.title == "Client") {
 					let taskCount = await ProjectTask.countDocuments({ project: project._id });
 
@@ -561,7 +589,6 @@ exports.onboarding = async (req, res) => {
 					}
 				}
 			} else if (role && role.title == "Client") {
-				console.log("7878");
 				let userPlan = await UserPlan.findOne({ user: userId })
 					.populate({ path: "plan" })
 					.populate({ path: "subPlan" });
@@ -611,4 +638,14 @@ exports.onboarding = async (req, res) => {
 			message: err.message || "Some error occurred."
 		});
 	}
+};
+
+exports.findUserPlan = async (req, res) => {
+	UserPlan.find({ user: "66b8c02ac454e13575527fee" })
+		.then((response) => {
+			res.send(response);
+		})
+		.catch((err) => {
+			console.log(err);
+		});
 };

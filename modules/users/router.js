@@ -18,4 +18,8 @@ router.post("/create/onboarding", (req, res) => {
 	usersController.onboarding(req, res);
 });
 
+router.post("/userplan", (req, res) => {
+	usersController.findUserPlan(req, res);
+});
+
 module.exports = router;
