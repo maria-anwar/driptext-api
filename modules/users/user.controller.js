@@ -474,10 +474,10 @@ exports.onboarding = async (req, res) => {
 							res.send({ message: "OnBoarding successful", data: createProjectTask });
 						}
 					} else {
-						res.send({ message: "As free trial gives only 1 task" });
+						res.status(500).send({ message: "As free trial gives only 1 task" });
 					}
 				} else if ((role.title == "leads" || role.title == "Leads") && project.projectName != projectName) {
-					res.send({ message: "You are Leads Role so you can not onboard another project/task" });
+					res.status(500).send({ message: "You are Leads Role so you can not onboard another project/task" });
 				} else if (role.title == "Client" && project.projectName != projectName) {
 					console.log("in");
 					let userPlan = await UserPlan.findOne({ user: userId })
@@ -561,7 +561,7 @@ exports.onboarding = async (req, res) => {
 							res.send({ message: "OnBoarding successful", data: createProjectTask });
 						}
 					} else {
-						res.send({ message: "You have reached your Task limit please upgrade your package" });
+						res.status(500).send({ message: "You have reached your Task limit please upgrade your package" });
 					}
 				}
 			} else {
