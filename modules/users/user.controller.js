@@ -161,11 +161,11 @@ exports.create = async (req, res) => {
 									amount: `${billResponse.subscription.subscription_items[0].unit_price}`
 								};
 								// Send email
-								emails.sendBillingInfo(clientData.clientEmail, "Your Billing Information", clientData);
+								await emails.sendBillingInfo(clientData.clientEmail, "Your Billing Information", clientData);
 							}
 							console.log("13");
 							// console.log("here");
-							emails.emailPassword(user);
+							await emails.emailPassword(user);
 
 							await session.commitTransaction();
 							session.endSession();
@@ -296,7 +296,7 @@ exports.create = async (req, res) => {
 
 						if (createUserPlan && createProject && createBilling) {
 							// console.log("here");
-							emails.AwsEmailPassword(user);
+							await emails.AwsEmailPassword(user);
 
 							await session.commitTransaction();
 							session.endSession();
@@ -425,7 +425,7 @@ exports.onboarding = async (req, res) => {
 				var role = project.user.role;
 			}
 
-			if (role && project) {
+			if (role) {
 				if ((role.title == "leads" || role.title == "Leads") && project.projectName == projectName) {
 					let taskCount = await ProjectTask.countDocuments({ project: project._id });
 					if (taskCount == 0) {
