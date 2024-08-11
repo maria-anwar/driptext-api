@@ -150,7 +150,10 @@ exports.create = async (req, res) => {
 								await emails.sendBillingInfo(clientData.clientEmail, "Your Billing Information", clientData);
 							}
 							await emails.AwsEmailPassword(user);
-							let getuser = await Users.findOne({ _id: user._id }).populate("role");
+							let getuser = await Users.findOne({ _id: user._id })
+								.select("firstName lastName email role password")
+								.populate({ path: "role", select: "title" });
+
 							await session.commitTransaction();
 							session.endSession();
 							res.send({ message: "User Added", data: getuser });
@@ -248,7 +251,10 @@ exports.create = async (req, res) => {
 						}
 						if (createUserPlan && createProject) {
 							emails.AwsEmailPassword(user);
-							let getuser = await Users.findOne({ _id: user._id }).populate("role");
+
+							let getuser = await Users.findOne({ _id: user._id })
+								.select("firstName lastName email role password")
+								.populate({ path: "role", select: "title" });
 
 							await session.commitTransaction();
 							session.endSession();
