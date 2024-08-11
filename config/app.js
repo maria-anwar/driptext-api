@@ -22,8 +22,8 @@ class AppConfig {
         this.app.use((req, res, next) => {
             console.log("__________________________________");
             console.log(`${new Date()} ${req.originalUrl}`);
-            console.log("Request Params: ", req.params);
-            console.log("Request Body: ", req.body);
+            // console.log("Request Params: ", req.params);
+            // console.log("Request Body: ", req.body);
 
             res.header("Access-Control-Allow-Origin", req.headers.origin);
             res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
