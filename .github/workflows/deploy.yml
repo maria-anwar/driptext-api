@@ -1,0 +1,28 @@
+name: Deploy Node.js App
+
+on:
+  push:
+    branches: [ "main", "cicd" ]
+  # pull_request:
+  #   branches: [ "main" ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    - name: Login to server and update code
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          cd ~/apps/driptext-api
+          git pull
+          /home/ubuntu/.nvm/versions/node/v18.19.0/bin/npm -v
+          /home/ubuntu/.nvm/versions/node/v18.19.0/bin/npm ci
+          /home/ubuntu/.nvm/versions/node/v18.19.0/bin/pm2 restart driptext-api
+# eval "$(ssh-agent -s)"
+# ssh-add ~/.ssh/id_rsa_malhoc_api
