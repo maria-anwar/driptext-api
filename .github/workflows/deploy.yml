@@ -21,8 +21,8 @@ jobs:
         script: |
           cd ~/apps/driptext-api
           git pull
-          /home/ubuntu/.nvm/versions/node/v18.19.0/bin/npm -v
-          /home/ubuntu/.nvm/versions/node/v18.19.0/bin/npm ci
+          npm -v
+          npm ci
           /home/ubuntu/.nvm/versions/node/v18.19.0/bin/pm2 restart driptext-api
 # eval "$(ssh-agent -s)"
 # ssh-add ~/.ssh/id_rsa_malhoc_api
