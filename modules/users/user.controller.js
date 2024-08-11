@@ -392,9 +392,9 @@ exports.onboarding = async (req, res) => {
 			});
 		} else {
 			const userId = req.body.userId ? req.body.userId : null;
-			const projectName = req.body.projectName;
-			const speech = req.body.speech;
-			const prespective = req.body.prespective;
+			const projectName = req.body.projectName.trim();
+			const speech = req.body.speech.trim();
+			const prespective = req.body.prespective.trim();
 
 			let companyInfoObj = {
 				companyBackgorund: req.body.companyBackgorund,
@@ -417,15 +417,6 @@ exports.onboarding = async (req, res) => {
 					isActive: "Y"
 				};
 			}
-			// } else {
-			// 	whereClause = {
-			// 		projectName: projectName,
-			// 		isActive: "Y"
-			// 	};
-			// }
-
-			// let getUserRole = await Users.findOne({ _id: userId }).populate({ path: "role" });
-
 			let getproject = await Projects.findOne(whereClause);
 			if (getproject) {
 				var project = await Projects.findOne(whereClause)
@@ -447,7 +438,7 @@ exports.onboarding = async (req, res) => {
 							project: project._id,
 							desiredNumberOfWords: "1500",
 							status: taskStatus,
-							tasks: taskCount + 1
+							tasks: taskCount
 						};
 						companyInfoObj.user = project.user._id;
 
@@ -479,13 +470,9 @@ exports.onboarding = async (req, res) => {
 				} else if ((role.title == "leads" || role.title == "Leads") && project.projectName != projectName) {
 					res.status(500).send({ message: "You are Leads Role so you can not onboard another project/task" });
 				} else if (role.title == "Client" && project.projectName != projectName) {
-					console.log("in");
 					let userPlan = await UserPlan.findOne({ user: userId })
 						.populate({ path: "plan" })
 						.populate({ path: "subPlan" });
-					console.log("userplan: ", userPlan, "userId: ", userId);
-
-					// let getProject = await Projects.findOne({ projectName: projectName, user: userId });
 
 					companyInfoObj.user = project.user._id;
 
@@ -522,11 +509,14 @@ exports.onboarding = async (req, res) => {
 					// res.send(userPlan);
 				} else if (project.projectName == projectName && role.title == "Client") {
 					let taskCount = await ProjectTask.countDocuments({ project: project._id });
+
 					let userPlan = await UserPlan.findOne({ user: userId })
 						.populate({ path: "plan" })
 						.populate({ path: "subPlan" });
+
 					if (taskCount <= userPlan.plan.texts) {
 						const checkStatusOfProject = await Projects.findOne({ _id: project._id });
+
 						if (checkStatusOfProject.status === "in progress") {
 							taskStatus = "Ready to start";
 						}
@@ -548,7 +538,7 @@ exports.onboarding = async (req, res) => {
 								prespective: prespective,
 								duration: userPlan.subPlan.duration,
 								numberOfTasks: userPlan.plan.texts,
-								tasks: taskCount + 1
+								tasks: taskCount
 							},
 							{ new: true }
 						);
@@ -565,46 +555,9 @@ exports.onboarding = async (req, res) => {
 					}
 				}
 			} else {
-				// let getProject = await Projects.findOne({ projectName: projectName, user: userId });
-
-				console.log("in");
-				let userPlan = await UserPlan.findOne({ user: userId })
-					.populate({ path: "plan" })
-					.populate({ path: "subPlan" });
-				console.log(userPlan);
-
-				companyInfoObj.user = userId;
-
-				let createCompany = await Company.create(companyInfoObj);
-
-				if (prespective !== "" && speech !== "") {
-					projectStatus = "Ready";
-				}
-
-				let createProject = await Projects.create({
-					projectName: projectName,
-					speech: speech,
-					prespective: prespective,
-					duration: userPlan.subPlan.duration,
-					numberOfTasks: userPlan.plan.texts,
-					projectStatus: projectStatus,
-					tasks: 1,
-					user: userId
-				});
-
-				let proectTaskObj = {
-					// keywords: project.keywords,
-					desiredNumberOfWords: userPlan.plan.desiredWords,
-					project: createProject._id
-				};
-
-				let createProjectTask = await ProjectTask.create(proectTaskObj);
-
-				if (createProject && createProjectTask) {
-					await session.commitTransaction();
-					session.endSession();
-					res.send({ message: "OnBoarding successful", data: createProjectTask });
-				}
+				await session.commitTransaction();
+				session.endSession();
+				res.send({ message: "You are not a valid user" });
 			}
 		}
 	} catch (err) {

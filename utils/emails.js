@@ -230,38 +230,53 @@ Email.AwsEmailPassword = async (user) => {
 	}
 };
 
-Email.sendBillingInfo = async(to, subject, clientData) => {
+Email.sendBillingInfo = async (to, subject, clientData) => {
 	try {
 		const filePath = path.join(__dirname, "..", "templates", "billingInfo.html");
 		const data = fs.readFileSync(filePath, "utf8");
 		const template = handlebars.compile(data);
 		const htmlContent = template(clientData);
 		const params = {
-			Source: emailFrom,
+			Source: `DripText <${awsSource}>`,
 			Destination: {
-			ToAddresses: [to],
-			BccAddresses: [bccEmail] // Optional: BCC to the error email
+				ToAddresses: [to]
 			},
 			Message: {
-			Body: {
-				Html: {
-				Charset: "UTF-8",
-				Data: htmlContent
+				Subject: {
+					Data: subject
+				},
+				Body: {
+					Html: {
+						Data: htmlContent
+					}
 				}
-			},
-			Subject: {
-				Charset: 'UTF-8',
-				Data: subject
-			}
 			}
 		};
-	
-	  
+		// const params = {
+		// 	Source: emailFrom,
+		// 	Destination: {
+		// 	ToAddresses: [to],
+		// 	BccAddresses: [bccEmail] // Optional: BCC to the error email
+		// 	},
+		// 	Message: {
+		// 	Body: {
+		// 		Html: {
+		// 		Charset: "UTF-8",
+		// 		Data: htmlContent
+		// 		}
+		// 	},
+		// 	Subject: {
+		// 		Charset: 'UTF-8',
+		// 		Data: subject
+		// 	}
+		// 	}
+		// };
+
 		const result = await ses.sendEmail(params).promise();
 		console.log("Email sent successfully", result);
 	} catch (error) {
 		console.error("Error sending email", error);
 	}
-}
+};
 
 module.exports = Email;
