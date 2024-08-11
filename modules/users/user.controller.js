@@ -230,7 +230,7 @@ exports.create = async (req, res) => {
 							};
 							createBilling = await Billing.create(billingResponse);
 						}
-						let createProject = await Projects.create(projectObj);
+						let createProject = await Projects.findOneAndUpdate({ user: user._id }, projectObj, { new: true });
 						let createUserPlan = await UserPlan.findOneAndUpdate({ user: user._id }, userPlanObj, { new: true });
 
 						if (createBilling !== "") {
