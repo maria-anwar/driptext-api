@@ -204,7 +204,7 @@ Email.AwsEmailPassword = async (user) => {
 			email: user.email
 		});
 
-		const link = `http://localhost:5173/auth/forgetkey/${forgetPasswordToken}`;
+		const link = `https://driptext-app.vercel.app/auth/forgetkey/${forgetPasswordToken}`;
 		text = text.replace("[USER_NAME]", `${user.firstName} ${user.lastName}`);
 		text = text.replace("[BUTTON_LINK_1]", link);
 
@@ -238,7 +238,7 @@ Email.sendBillingInfo = async (to, subject, clientData) => {
 		const template = handlebars.compile(data);
 		const htmlContent = template(clientData);
 		const params = {
-			Source: `DripText <${awsNoreplySource}>`,
+			Source: `DripText <noreply@driptext.de>`,
 			Destination: {
 				ToAddresses: [to]
 			},
