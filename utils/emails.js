@@ -196,7 +196,7 @@ Email.forgotPassword = async (user) => {
     text = text.replace("[TEXT_LINK]", link);
 
     var mailOptions = {
-      from: `LMS <${emailFrom}>`,
+      from: `DripText <noreply@driptext.de>`,
       to: user.email,
       subject: "Reset Password",
       html: text,
@@ -331,9 +331,9 @@ Email.onBoadingSuccess = async (user) => {
       email: user.email,
     });
 
-    const link = `https://driptext-app.vercel.app/auth/forgetkey/${forgetPasswordToken}`;
-    text = text.replace("[USER_NAME]", `${user.firstName} ${user.lastName}`);
-    text = text.replace("[BUTTON_LINK_1]", link);
+    // const link = `https://driptext-app.vercel.app/auth/forgetkey/${forgetPasswordToken}`;
+    // text = text.replace("[USER_NAME]", `${user.firstName} ${user.lastName}`);
+    // text = text.replace("[BUTTON_LINK_1]", link);
 
     const params = {
       Source: `DripText <noreply@driptext.de>`,
