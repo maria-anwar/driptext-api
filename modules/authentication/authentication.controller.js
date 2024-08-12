@@ -119,12 +119,8 @@ exports.create = async (req, res) => {
 exports.forgotPassword = async (req, res) => {
 	try {
 		var email = req.body.email.trim();
-		const user = await Users.findOne({
-			where: {
-				email: email,
-				isActive: "Y"
-			}
-		});
+		const user = await Users.findOne({email: email});
+		console.log("user: ", user)
 		if (user) {
 			emails.forgotPassword(user);
 			res.status(200).send({ message: "Email send to user." });

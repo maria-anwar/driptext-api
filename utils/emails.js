@@ -182,8 +182,8 @@ Email.forgotPassword = async (user) => {
     });
 
     var link =
-      "https://driptext-api.vercel.app/" +
-      "reset/password/" +
+      "https://driptext-app.vercel.app/" +
+      "auth/forgetkey/" +
       forgetPasswordToken;
 
     const data = fs.readFileSync(
