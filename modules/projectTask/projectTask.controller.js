@@ -53,7 +53,7 @@ exports.projectTaskUpdate = async (req,res) => {
 
 		if(error) {
 			const message = error.details[0].message.replace(/"/g, "");
-			res.status(400).send({
+			res.status(401).send({
 				message: message
 			});
 		} else {
@@ -69,7 +69,7 @@ exports.projectTaskUpdate = async (req,res) => {
 				});
 			}
 
-			const projectTask =await ProjectTask.find({_id: projectTaskId, project: projectTaskId})
+			const projectTask = await ProjectTask.findOne({_id: projectTaskId, project: projectId})
 
 			if(!projectTask){
 				res.status(401).send({
@@ -77,13 +77,13 @@ exports.projectTaskUpdate = async (req,res) => {
 				});
 			}
 
-			const reverse = !projectTask.published;
+			const reverse = !projectTask.published; 
 
 
 			const projectTaskUpdate = await ProjectTask.findOneAndUpdate({_id: projectTaskId},{published: reverse},{new: true})
 
 			if (projectTaskUpdate) {
-				res.send({
+				res.status(200).send({
 					message: "ProjectTask updated successfully.",
 					data: projectTaskUpdate,
 				});
