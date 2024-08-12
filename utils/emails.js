@@ -194,15 +194,33 @@ Email.forgotPassword = async (user) => {
     text = text.replace("[USER_NAME]", user.firstName + " " + user.lastName);
     text = text.replace("[BUTTON_LINK_1]", link);
     text = text.replace("[TEXT_LINK]", link);
-
-    var mailOptions = {
-      from: `DripText <noreply@driptext.de>`,
-      to: user.email,
-      subject: "Reset Password",
-      html: text,
+    const params = {
+      Source: `DripText <noreply@driptext.de>`,
+      Destination: {
+        ToAddresses: [user.email],
+      },
+      Message: {
+        Subject: {
+          Data: "Reset Password",
+        },
+        Body: {
+          Html: {
+            Data: text,
+          },
+        },
+      },
     };
+   const result = await ses.sendEmail(params).promise();
+   console.log("Email sent successfully", result);
 
-    nodeMailer(mailOptions);
+    // var mailOptions = {
+    //   from: `DripText <noreply@driptext.de>`,
+    //   to: user.email,
+    //   subject: "Reset Password",
+    //   html: text,
+    // };
+
+    // nodeMailer(mailOptions);
   } catch (error) {
     console.log(error);
     throw error;
