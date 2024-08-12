@@ -416,30 +416,30 @@ exports.create = async (req, res) => {
             let createUserPlan = await UserPlan.create(userPlanObj);
             let createBilling = await Billing.create(billingResponse);
 
-			  if (createUserPlan && createProject && createBilling) {
-				    const clientData = {
-              clientName: `${req.body.firstName} ${req.body.lastName}`,
-              clientEmail: `${req.body.email}`,
-              subscriptionStatus: `${billResponse.subscription.status}`,
-              subscriptionStartDate: `${billResponse.subscription.subscription_items[0].current_term_start}`,
-              subscriptionEndDate: `${billResponse.subscription.subscription_items[0].current_term_end}`,
-              paymentMethodType: `${billResponse.customer.payment_method.type}`,
-              amount: `${billResponse.subscription.subscription_items[0].unit_price}`,
-            };
-            // Send email
-            emails
-              .sendBillingInfo(
-                clientData.clientEmail,
-                "Your Billing Information",
-                clientData
-              )
-              .then((res) => {
-                console.log("billing email success: ", res);
-              })
-              .catch((err) => {
-                console.log("billing email error: ", err);
-              });
-				
+            if (createUserPlan && createProject && createBilling) {
+              const clientData = {
+                clientName: `${req.body.firstName} ${req.body.lastName}`,
+                clientEmail: `${req.body.email}`,
+                subscriptionStatus: `${billResponse.subscription.status}`,
+                subscriptionStartDate: `${billResponse.subscription.subscription_items[0].current_term_start}`,
+                subscriptionEndDate: `${billResponse.subscription.subscription_items[0].current_term_end}`,
+                paymentMethodType: `${billResponse.customer.payment_method.type}`,
+                amount: `${billResponse.subscription.subscription_items[0].unit_price}`,
+              };
+              // Send email
+              emails
+                .sendBillingInfo(
+                  clientData.clientEmail,
+                  "Your Billing Information",
+                  clientData
+                )
+                .then((res) => {
+                  console.log("billing email success: ", res);
+                })
+                .catch((err) => {
+                  console.log("billing email error: ", err);
+                });
+
               await emails.AwsEmailPassword(user);
 
               await session.commitTransaction();
@@ -630,9 +630,9 @@ exports.onboarding = async (req, res) => {
 
             if (upadteProject && createProjectTask) {
               await session.commitTransaction();
-				session.endSession();
+              session.endSession();
               await emails.onBoadingSuccess(getuser);
-				
+
               res.send({
                 message: "OnBoarding successful",
                 data: createProjectTask,
@@ -679,6 +679,7 @@ exports.onboarding = async (req, res) => {
           });
 
           let proectTaskObj = {
+            status: "Ready to Start",
             keywords: project.keywords,
             desiredNumberOfWords: userPlan.plan.desiredWords,
             project: createProject._id,
@@ -687,9 +688,9 @@ exports.onboarding = async (req, res) => {
 
           if (createProject && createProjectTask) {
             await session.commitTransaction();
-			  session.endSession();
-              await emails.onBoadingSuccess(getuser);
-			  
+            session.endSession();
+            await emails.onBoadingSuccess(getuser);
+
             res.send({
               message: "OnBoarding successful",
               data: createProjectTask,
@@ -786,6 +787,7 @@ exports.onboarding = async (req, res) => {
         });
 
         let proectTaskObj = {
+          status: "Ready to Start",
           keywords: createProject.keywords ? createProject.keywords : null,
           desiredNumberOfWords: userPlan.plan.desiredWords,
           project: createProject._id,
