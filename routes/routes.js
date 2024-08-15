@@ -10,6 +10,7 @@ const subPlansRouteHandler = require("../modules/subPlans/router");
 const projectsRouteHandler = require("../modules/Project/router");
 const projectTaskRouteHandler = require("../modules/projectTask/router");
 const chargebeeRoutHandler = require("../modules/chargebee/router")
+const freelancerRouteHandler = require("../modules/freelancer/route");
 
 class Routes {
 	constructor(app) {
@@ -24,7 +25,9 @@ class Routes {
 		this.app.use("/api/sub/plans", subPlansRouteHandler);
 		this.app.use("/api/projects", jwt.protect, projectsRouteHandler);
 		this.app.use("/api/project/tasks", jwt.protect, projectTaskRouteHandler);
-		this.app.use("/api/chargebee", chargebeeRoutHandler)
+		this.app.use("/api/chargebee", chargebeeRoutHandler);
+		this.app.use("/api/freelancer", freelancerRouteHandler);
+
 		// this.app.use("/api/classes", jwt.protect, classesRouteHandler);
 	}
 	routesConfig() {
