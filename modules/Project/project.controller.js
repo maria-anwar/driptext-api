@@ -76,7 +76,7 @@ exports.detail = async (req, res) => {
 			// emails.errorEmail(req, error);
 
 			const message = error.details[0].message.replace(/"/g, "");
-			res.status(400).send({
+			res.status(401).send({
 				message: message
 			});
 		} else {
@@ -84,34 +84,41 @@ exports.detail = async (req, res) => {
 
 			Project.find({ user: userId })
 				.then(async (response) => {
+					// console.log(response);
+
 					// Extract the project IDs from the response
 					let projectIds = response.map((project) => project._id);
-					let userPlan = await UserPlan.findOne({ user: userId }).populate({ path: "plan" });
-					let project = [];
+					// let userPlan = await UserPlan.findOne({ user: userId }).populate({ path: "plan" });
+					// let project = [];
 
-					if (!userPlan.plan) {
-						let projectTask = await ProjectTask.find({ project: projectIds }).populate;
-					}
+					// console.log(userPlan);
+					// if (!userPlan.plan) {
+					// 	console.log("HI");
+					// 	let projectTask = await ProjectTask.find({ project: projectIds }).populate;
+					// 	console.log(projectTask);
+					// }
 
-					for (const pro of response) {
-						// Assuming `ProjectTask` has a field `project` that references `Project`'s _id
-						const countTasks = await ProjectTask.countDocuments({ project: pro._id });
-						let projectObj = {
-							_id: pro._id,
-							projectName: pro.projectName,
-							keywords: pro.keywords,
-							projectStatus: pro.projectStatus,
-							createdAt: pro.createdAt,
-							duration: pro.duration,
-							texts: countTasks,
-							totalTexts: userPlan?.plan?.texts || "1",
-							numberOfTasks: pro.numberOfTasks
-						};
+					// for (const pro of response) {
+					// 	// Assuming `ProjectTask` has a field `project` that references `Project`'s _id
+					// 	const countTasks = await ProjectTask.countDocuments({ project: pro._id });
 
-						project.push(projectObj);
-					}
+					// 	let projectObj = {
+					// 		_id: pro._id,
+					// 		projectName: pro.projectName,
+					// 		keywords: pro.keywords,
+					// 		projectStatus: pro.projectStatus,
+					// 		createdAt: pro.createdAt,
+					// 		duration: pro.duration,
+					// 		texts: countTasks,
+					// 		totalTexts: userPlan?.plan?.texts || "1",
+					// 		numberOfTasks: pro.numberOfTasks,
+					// 		countTasks: countTasks // Add the count of tasks to the project object
+					// 	};
 
-					res.send({ message: "List of the client projects", data: project });
+					// 	project.push(projectObj);
+					// }
+
+					res.send({ message: "List of the client projects", data: response });
 				})
 				.catch((err) => {
 					res.status(500).send({

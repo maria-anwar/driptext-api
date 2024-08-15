@@ -8,6 +8,7 @@ module.exports = (mongoose) => {
 			plan: { type: Schema.Types.ObjectId, ref: "Plan", required: false, unique: false },
 			user: { type: Schema.Types.ObjectId, ref: "User", required: true, unique: false },
 			subPlan: { type: Schema.Types.ObjectId, ref: "SubPlan", required: false, unique: false },
+			projectId: { type: Schema.Types.ObjectId, ref: "Project", required: false, unique: false },
 			isActive: {
 				type: String,
 				required: true,
