@@ -80,7 +80,8 @@ exports.create = async (req, res) => {
 						var projectObj = {
 							projectName: req.body.projectName,
 							keywords: req.body.keywords ? req.body.keywords : null,
-							user: user._id
+							user: user._id,
+							tasks: 0
 						};
 
 						if (req.body.planId) {
@@ -192,7 +193,8 @@ exports.create = async (req, res) => {
 						var projectObj = {
 							projectName: req.body.projectName,
 							keywords: req.body.keywords ? req.body.keywords : null,
-							user: user._id
+							user: user._id,
+							tasks: 0
 						};
 
 						if (req.body.planId) {
@@ -288,16 +290,13 @@ exports.create = async (req, res) => {
 							message: err.message || "Some error occurred while creating the Quiz."
 						});
 					});
-			} else {
+			} else if (alredyExist && alredyExist.role.title === "Client") {
 				//alreexist && client role
-				if (alredyExist && alredyExist.role.title === "Client") {
-				} else {
-					res.status(401).send({ message: "UnAuthorized for this action." });
-				}
 				const userRole = await Roles.findOne({ _id: userObj.role });
 				if (userRole.title !== "Client") {
 					res.status(403).send({ message: "You have to buy Subscription." });
 				}
+
 				userObj.password = alredyExist.password;
 				Users.findOneAndUpdate({ _id: alredyExist._id }, userObj, { new: true })
 					.then(async (user) => {
@@ -306,7 +305,8 @@ exports.create = async (req, res) => {
 						var projectObj = {
 							projectName: req.body.projectName,
 							keywords: req.body.keywords ? req.body.keywords : null,
-							user: user._id
+							user: user._id,
+							tasks: 0
 						};
 
 						if (req.body.planId) {
@@ -397,6 +397,8 @@ exports.create = async (req, res) => {
 							message: err.message || "Some error occurred while creating the Quiz."
 						});
 					});
+			} else {
+				res.status(401).send({ message: "UnAuthorized for this action." });
 			}
 		}
 	} catch (err) {
