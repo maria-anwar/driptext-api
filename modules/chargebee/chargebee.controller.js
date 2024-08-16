@@ -62,7 +62,7 @@ exports.createPaymentIntent = async (req, res) => {
     res.json(result.hosted_page);
   } catch (error) {
     console.error("Error creating payment intent:", error);
-    res.status(500).send("Internal Server Error");
+    res.status(500).send(error.message || "Internal Server Error");
   }
 };
 
