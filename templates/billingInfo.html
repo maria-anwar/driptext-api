@@ -51,13 +51,24 @@
             font-size: 12px;
             color: #888888;
         }
+        .logo{
+            width: 140px;
+            margin-bottom: 10px;
+        }
+       @media only screen and (max-width: 768px) {
+        .logo{
+            width: 65px;
+            margin-bottom: 10px;
+
+        }
+       }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <img width="140px" style="margin-bottom: 10px;" src="https://driptext.de/wp-content/uploads/2023/03/driptext.png" alt="Logo">
-            <h1 style="font-weight: 600;" >Welcome Driptext! Your Subscription Is Now Active.</h1>
+            <img class="logo" src="https://driptext.de/wp-content/uploads/2023/03/driptext.png" alt="Logo">
+            <h1 style="font-weight: 500; font-size: 35px;" >Welcome Driptext! Your Subscription Is Now Active.</h1>
         </div>
         <div class="billing-info">
             <h2>Client Details</h2>
