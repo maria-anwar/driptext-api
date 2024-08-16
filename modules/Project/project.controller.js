@@ -84,41 +84,8 @@ exports.detail = async (req, res) => {
 
 			Users.find({ _id: userId })
 				.populate("projects")
+				.select("email firstName isSubScribed lastName")
 				.then(async (response) => {
-					// console.log(response);
-
-					// Extract the project IDs from the response
-					// let projectIds = response.map((project) => project._id);
-					// let userPlan = await UserPlan.findOne({ user: userId }).populate({ path: "plan" });
-					// let project = [];
-
-					// console.log(userPlan);
-					// if (!userPlan.plan) {
-					// 	console.log("HI");
-					// 	let projectTask = await ProjectTask.find({ project: projectIds }).populate;
-					// 	console.log(projectTask);
-					// }
-
-					// for (const pro of response) {
-					// 	// Assuming `ProjectTask` has a field `project` that references `Project`'s _id
-					// 	const countTasks = await ProjectTask.countDocuments({ project: pro._id });
-
-					// 	let projectObj = {
-					// 		_id: pro._id,
-					// 		projectName: pro.projectName,
-					// 		keywords: pro.keywords,
-					// 		projectStatus: pro.projectStatus,
-					// 		createdAt: pro.createdAt,
-					// 		duration: pro.duration,
-					// 		texts: countTasks,
-					// 		totalTexts: userPlan?.plan?.texts || "1",
-					// 		numberOfTasks: pro.numberOfTasks,
-					// 		countTasks: countTasks // Add the count of tasks to the project object
-					// 	};
-
-					// 	project.push(projectObj);
-					// }
-
 					res.send({ message: "List of the client projects", data: response });
 				})
 				.catch((err) => {

@@ -192,7 +192,7 @@ exports.create = async (req, res) => {
 					res.status(403).send({ message: "You are a registered user.Buy Subscription." });
 				} else {
 					userObj.password = alredyExist.password;
-					Users.findOneAndUpdate({ _id: alredyExist._id }, userObj, { new: true })
+					Users.findOneAndUpdate({ _id: alredyExist._id.toString() }, userObj, { new: true })
 						.then(async (user) => {
 							var userPlanObj = {};
 
