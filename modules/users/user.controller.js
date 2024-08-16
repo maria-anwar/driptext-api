@@ -134,15 +134,17 @@ exports.create = async (req, res) => {
 							};
 							createBilling = await Billing.create(billingResponse);
 						}
+
 						let createProject = await Projects.create(projectObj);
-						console.log("IDIDIDIDIDI", createProject._id, createProject.projectName);
 						let nameChar = createProject.projectName.slice(0, 2);
 						let idChar = createProject._id.toString().slice(-4);
 						let projectId = nameChar + "-" + idChar;
+
 						await Projects.findByIdAndUpdate(createProject._id, { projectId: projectId }, { new: true });
-						console.log("PIDDDDDD", projectId);
 						await Users.findByIdAndUpdate(user._id, { $push: { projects: createProject._id } }, { new: true });
+
 						userPlanObj.projectId = createProject._id;
+
 						let createUserPlan = await UserPlan.create(userPlanObj);
 
 						if (createUserPlan && createProject) {
@@ -173,11 +175,10 @@ exports.create = async (req, res) => {
 
 							await session.commitTransaction();
 							session.endSession();
-							res.status(200).send({ message: "User Added", data: getuser });
+							res.status(200).send({ message: "User Added", data: getuser, project: createProject });
 						}
 					})
 					.catch(async (err) => {
-						console.log("14");
 						// emails.errorEmail(req, err);
 						await session.abortTransaction();
 						session.endSession();
@@ -252,19 +253,20 @@ exports.create = async (req, res) => {
 								};
 								createBilling = await Billing.create(billingResponse);
 							}
+
 							let createProject = await Projects.findOneAndUpdate({ user: user._id }, projectObj, { new: true });
 							let nameChar = createProject.projectName.slice(0, 2);
 							let idChar = createProject._id.toString().slice(-4);
 							let projectId = nameChar + "-" + idChar;
+
 							await Projects.findByIdAndUpdate({ _id: createProject._id }, { projectId: projectId }, { new: true });
-							console.log("PIDDDDDD", projectId);
+
 							await Users.findByIdAndUpdate(
 								{ _id: alredyExist },
 								{ $push: { projects: createProject._id } },
 								{ new: true }
 							);
 							let createUserPlan = await UserPlan.findOneAndUpdate({ user: user._id }, userPlanObj, { new: true });
-							console.log("create billing: ", createBilling);
 							if (createBilling !== "") {
 								const clientData = {
 									clientName: `${req.body.firstName} ${req.body.lastName}`,
@@ -294,7 +296,7 @@ exports.create = async (req, res) => {
 
 								await session.commitTransaction();
 								session.endSession();
-								res.status(200).send({ message: "User Added", data: getuser });
+								res.status(200).send({ message: "User Added", data: getuser, project: createProject });
 							}
 						})
 						.catch(async (err) => {
@@ -419,7 +421,7 @@ exports.create = async (req, res) => {
 
 							await session.commitTransaction();
 							session.endSession();
-							res.send({ message: "User Added", data: user });
+							res.send({ message: "User Added", data: user, project: createProject });
 						}
 					})
 					.catch(async (err) => {
