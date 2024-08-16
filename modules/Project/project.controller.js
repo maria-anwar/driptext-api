@@ -82,12 +82,13 @@ exports.detail = async (req, res) => {
 		} else {
 			const userId = req.body.userId;
 
-			Project.find({ user: userId })
+			Users.find({ _id: userId })
+				.populate("projects")
 				.then(async (response) => {
 					// console.log(response);
 
 					// Extract the project IDs from the response
-					let projectIds = response.map((project) => project._id);
+					// let projectIds = response.map((project) => project._id);
 					// let userPlan = await UserPlan.findOne({ user: userId }).populate({ path: "plan" });
 					// let project = [];
 

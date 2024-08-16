@@ -74,7 +74,6 @@ exports.create = async (req, res) => {
 			if (!alredyExist) {
 				Users.create(userObj)
 					.then(async (user) => {
-						console.log("5");
 						var userPlanObj = {};
 
 						var projectObj = {
@@ -85,7 +84,6 @@ exports.create = async (req, res) => {
 						};
 
 						if (req.body.planId) {
-							console.log("6");
 							userPlanObj = {
 								user: user._id,
 								plan: req.body.planId,
@@ -137,6 +135,13 @@ exports.create = async (req, res) => {
 							createBilling = await Billing.create(billingResponse);
 						}
 						let createProject = await Projects.create(projectObj);
+						console.log("IDIDIDIDIDI", createProject._id, createProject.projectName);
+						let nameChar = createProject.projectName.slice(0, 2);
+						let idChar = createProject._id.toString().slice(-4);
+						let projectId = nameChar + "-" + idChar;
+						await Projects.findByIdAndUpdate(createProject._id, { projectId: projectId }, { new: true });
+						console.log("PIDDDDDD", projectId);
+						await Users.findByIdAndUpdate(user._id, { $push: { projects: createProject._id } }, { new: true });
 						userPlanObj.projectId = createProject._id;
 						let createUserPlan = await UserPlan.create(userPlanObj);
 
@@ -168,7 +173,7 @@ exports.create = async (req, res) => {
 
 							await session.commitTransaction();
 							session.endSession();
-							res.status(200).send({ message: "User Added", data: getuser, project: createProject });
+							res.status(200).send({ message: "User Added", data: getuser });
 						}
 					})
 					.catch(async (err) => {
@@ -183,120 +188,131 @@ exports.create = async (req, res) => {
 			} else if (alredyExist && (alredyExist.role.title == "Leads" || alredyExist.role.title == "leads")) {
 				const userRole = await Roles.findOne({ _id: userObj.role });
 				if (userRole.title !== "Client") {
-					res.status(403).send({ message: "You have to buy Subscription." });
-				}
-				userObj.password = alredyExist.password;
-				Users.findOneAndUpdate({ _id: alredyExist._id }, userObj, { new: true })
-					.then(async (user) => {
-						var userPlanObj = {};
+					res.status(403).send({ message: "You are a registered user.Buy Subscription." });
+				} else {
+					userObj.password = alredyExist.password;
+					Users.findOneAndUpdate({ _id: alredyExist._id }, userObj, { new: true })
+						.then(async (user) => {
+							var userPlanObj = {};
 
-						var projectObj = {
-							projectName: req.body.projectName,
-							keywords: req.body.keywords ? req.body.keywords : null,
-							user: user._id,
-							tasks: 0
-						};
-
-						if (req.body.planId) {
-							userPlanObj = {
+							var projectObj = {
+								projectName: req.body.projectName,
+								keywords: req.body.keywords ? req.body.keywords : null,
 								user: user._id,
-								plan: req.body.planId,
-								subPlan: req.body.subPlanId
-							};
-						} else {
-							userPlanObj = {
-								user: user._id
-							};
-						}
-						let subscriptionItems;
-						let paymentMethod;
-						let billingResponse;
-						let createBilling = "";
-
-						if (req.body.response) {
-							subscriptionItems = {
-								item_price_id: billResponse.subscription.subscription_items[0].item_price_id,
-								item_type: billResponse.subscription.subscription_items[0].item_type,
-								quantity: billResponse.subscription.subscription_items[0].quantity,
-								unit_price: billResponse.subscription.subscription_items[0].unit_price,
-								amount: billResponse.subscription.subscription_items[0].amount,
-								current_term_start: billResponse.subscription.subscription_items[0].current_term_start,
-								current_term_end: billResponse.subscription.subscription_items[0].current_term_end,
-								next_billing_at: billResponse.subscription.subscription_items[0].next_billing_at,
-								free_quantity: billResponse.subscription.subscription_items[0].free_quantity
+								tasks: 0
 							};
 
-							paymentMethod = {
-								type: billResponse.customer.payment_method.type,
-								reference_id: billResponse.customer.payment_method.reference_id,
-								gateway: billResponse.customer.payment_method.gateway,
-								gateway_account_id: billResponse.customer.payment_method.gateway_account_id,
-								status: billResponse.customer.payment_method.status
-							};
+							if (req.body.planId) {
+								userPlanObj = {
+									user: user._id,
+									plan: req.body.planId,
+									subPlan: req.body.subPlanId
+								};
+							} else {
+								userPlanObj = {
+									user: user._id
+								};
+							}
+							let subscriptionItems;
+							let paymentMethod;
+							let billingResponse;
+							let createBilling = "";
 
-							billingResponse = {
-								userId: user._id,
-								subscriptionId: billResponse.subscription.id,
-								subscriptionStatus: billResponse.subscription.status,
-								subscriptionItem: [subscriptionItems],
-								customer_id: billResponse.customer.id,
-								customer_first_name: billResponse.customer.first_name,
-								customer_last_name: billResponse.customer.last_name,
-								customer_email: billResponse.customer.email,
-								payment_method: paymentMethod
-							};
-							createBilling = await Billing.create(billingResponse);
-						}
-						let createProject = await Projects.findOneAndUpdate({ user: user._id }, projectObj, { new: true });
-						let createUserPlan = await UserPlan.findOneAndUpdate({ user: user._id }, userPlanObj, { new: true });
-						console.log("create billing: ", createBilling);
-						if (createBilling !== "") {
-							const clientData = {
-								clientName: `${req.body.firstName} ${req.body.lastName}`,
-								clientEmail: `${req.body.email}`,
-								subscriptionStatus: `${billResponse.subscription.status}`,
-								subscriptionStartDate: `${billResponse.subscription.subscription_items[0].current_term_start}`,
-								subscriptionEndDate: `${billResponse.subscription.subscription_items[0].current_term_end}`,
-								paymentMethodType: `${billResponse.customer.payment_method.type}`,
-								amount: `${billResponse.subscription.subscription_items[0].unit_price}`
-							};
-							// Send email
-							emails
-								.sendBillingInfo(clientData.clientEmail, "Your Billing Information", clientData)
-								.then((res) => {
-									console.log("billing email success: ", res);
-								})
-								.catch((err) => {
-									console.log("billing email error: ", err);
-								});
-						}
-						if (createUserPlan && createProject) {
-							emails.AwsEmailPassword(user);
+							if (req.body.response) {
+								subscriptionItems = {
+									item_price_id: billResponse.subscription.subscription_items[0].item_price_id,
+									item_type: billResponse.subscription.subscription_items[0].item_type,
+									quantity: billResponse.subscription.subscription_items[0].quantity,
+									unit_price: billResponse.subscription.subscription_items[0].unit_price,
+									amount: billResponse.subscription.subscription_items[0].amount,
+									current_term_start: billResponse.subscription.subscription_items[0].current_term_start,
+									current_term_end: billResponse.subscription.subscription_items[0].current_term_end,
+									next_billing_at: billResponse.subscription.subscription_items[0].next_billing_at,
+									free_quantity: billResponse.subscription.subscription_items[0].free_quantity
+								};
 
-							let getuser = await Users.findOne({ _id: user._id })
-								.select("firstName lastName email role password")
-								.populate({ path: "role", select: "title" });
+								paymentMethod = {
+									type: billResponse.customer.payment_method.type,
+									reference_id: billResponse.customer.payment_method.reference_id,
+									gateway: billResponse.customer.payment_method.gateway,
+									gateway_account_id: billResponse.customer.payment_method.gateway_account_id,
+									status: billResponse.customer.payment_method.status
+								};
 
-							await session.commitTransaction();
+								billingResponse = {
+									userId: user._id,
+									subscriptionId: billResponse.subscription.id,
+									subscriptionStatus: billResponse.subscription.status,
+									subscriptionItem: [subscriptionItems],
+									customer_id: billResponse.customer.id,
+									customer_first_name: billResponse.customer.first_name,
+									customer_last_name: billResponse.customer.last_name,
+									customer_email: billResponse.customer.email,
+									payment_method: paymentMethod
+								};
+								createBilling = await Billing.create(billingResponse);
+							}
+							let createProject = await Projects.findOneAndUpdate({ user: user._id }, projectObj, { new: true });
+							let nameChar = createProject.projectName.slice(0, 2);
+							let idChar = createProject._id.toString().slice(-4);
+							let projectId = nameChar + "-" + idChar;
+							await Projects.findByIdAndUpdate({ _id: createProject._id }, { projectId: projectId }, { new: true });
+							console.log("PIDDDDDD", projectId);
+							await Users.findByIdAndUpdate(
+								{ _id: alredyExist },
+								{ $push: { projects: createProject._id } },
+								{ new: true }
+							);
+							let createUserPlan = await UserPlan.findOneAndUpdate({ user: user._id }, userPlanObj, { new: true });
+							console.log("create billing: ", createBilling);
+							if (createBilling !== "") {
+								const clientData = {
+									clientName: `${req.body.firstName} ${req.body.lastName}`,
+									clientEmail: `${req.body.email}`,
+									subscriptionStatus: `${billResponse.subscription.status}`,
+									subscriptionStartDate: `${billResponse.subscription.subscription_items[0].current_term_start}`,
+									subscriptionEndDate: `${billResponse.subscription.subscription_items[0].current_term_end}`,
+									paymentMethodType: `${billResponse.customer.payment_method.type}`,
+									amount: `${billResponse.subscription.subscription_items[0].unit_price}`
+								};
+								// Send email
+								emails
+									.sendBillingInfo(clientData.clientEmail, "Your Billing Information", clientData)
+									.then((res) => {
+										console.log("billing email success: ", res);
+									})
+									.catch((err) => {
+										console.log("billing email error: ", err);
+									});
+							}
+							if (createUserPlan && createProject) {
+								emails.AwsEmailPassword(user);
+
+								let getuser = await Users.findOne({ _id: user._id })
+									.select("firstName lastName email role password")
+									.populate({ path: "role", select: "title" });
+
+								await session.commitTransaction();
+								session.endSession();
+								res.status(200).send({ message: "User Added", data: getuser });
+							}
+						})
+						.catch(async (err) => {
+							// emails.errorEmail(req, err);
+							await session.abortTransaction();
 							session.endSession();
-							res.status(200).send({ message: "User Added", data: getuser, project: createProject });
-						}
-					})
-					.catch(async (err) => {
-						// emails.errorEmail(req, err);
-						await session.abortTransaction();
-						session.endSession();
-						res.status(500).send({
-							message: err.message || "Some error occurred while creating the Quiz."
+							res.status(500).send({
+								message: err.message || "Some error occurred while creating the Quiz."
+							});
 						});
-					});
+				}
 			} else if (alredyExist && alredyExist.role.title === "Client") {
 				//alreexist && client role
+
 				const userRole = await Roles.findOne({ _id: userObj.role });
 				if (userRole.title !== "Client") {
 					res.status(403).send({ message: "You have to buy Subscription." });
 				}
-
 				userObj.password = alredyExist.password;
 				Users.findOneAndUpdate({ _id: alredyExist._id }, userObj, { new: true })
 					.then(async (user) => {
@@ -306,7 +322,7 @@ exports.create = async (req, res) => {
 							projectName: req.body.projectName,
 							keywords: req.body.keywords ? req.body.keywords : null,
 							user: user._id,
-							tasks: 0
+							task: 0
 						};
 
 						if (req.body.planId) {
@@ -358,7 +374,24 @@ exports.create = async (req, res) => {
 						}
 
 						let createProject = await Projects.create(projectObj);
+
+						let nameChar = createProject.projectName.slice(0, 2);
+						let idChar = createProject._id.toString().slice(-4);
+						let projectId = nameChar + "-" + idChar;
+
+						let updateProjectId = await Projects.findByIdAndUpdate(
+							{ _id: createProject._id },
+							{ projectId: projectId },
+							{ new: true }
+						);
+
+						let pushProjectId = await Users.findByIdAndUpdate(
+							{ _id: alredyExist._id },
+							{ $push: { projects: createProject._id } },
+							{ new: true }
+						);
 						userPlanObj.projectId = createProject._id;
+
 						let createUserPlan = await UserPlan.create(userPlanObj);
 						let createBilling = await Billing.create(billingResponse);
 
@@ -386,7 +419,7 @@ exports.create = async (req, res) => {
 
 							await session.commitTransaction();
 							session.endSession();
-							res.send({ message: "User Added", data: user, project: createProject });
+							res.send({ message: "User Added", data: user });
 						}
 					})
 					.catch(async (err) => {
@@ -480,13 +513,11 @@ exports.onboarding = async (req, res) => {
 				message: message
 			});
 		} else {
-			console.log("1");
 			const userId = req.body.userId ? req.body.userId : null;
 			const projectId = req.body.projectId;
 			const projectName = req.body.projectName.trim();
 			const speech = req.body.speech.trim();
 			const prespective = req.body.prespective.trim();
-			console.log("IDsssss", userId, projectId);
 
 			let companyInfoObj = {
 				companyBackgorund: req.body.companyBackgorund,
@@ -497,11 +528,9 @@ exports.onboarding = async (req, res) => {
 				contentPurpose: req.body.contentPurpose,
 				contentInfo: req.body.contentInfo
 			};
-			console.log("2");
 
 			var whereClause;
 			if (userId) {
-				console.log("3");
 				whereClause = {
 					_id: userId,
 					isActive: "Y"
@@ -512,14 +541,12 @@ exports.onboarding = async (req, res) => {
 				select: "title"
 			});
 			if (getuser) {
-				console.log("4");
 				var role = getuser.role;
 				var project = await Projects.findOne({
 					_id: projectId,
 					user: userId
 				});
 				if (project) {
-					console.log("5");
 					var project = await Projects.findOne({
 						_id: projectId,
 						user: userId
@@ -534,18 +561,14 @@ exports.onboarding = async (req, res) => {
 					res.status(404).send({ message: "Project not found!" });
 				}
 			}
-			console.log("6");
 			if (getuser && project) {
-				console.log("7");
 				if ((role.title == "leads" || role.title == "Leads") && project.projectName == projectName) {
-					console.log("8");
 					let taskCount = await ProjectTask.countDocuments({
 						project: projectId
 					});
 					if (taskCount == 0) {
 						let projectStatus;
 						let taskStatus;
-						console.log("9");
 						if (speech !== "" && prespective !== "") {
 							projectStatus = "Free Trial";
 							taskStatus = "Ready to Start";
@@ -555,7 +578,7 @@ exports.onboarding = async (req, res) => {
 							project: project._id,
 							desiredNumberOfWords: "1500",
 							status: taskStatus,
-							tasks: taskCount + 1
+							tasks: taskCount
 						};
 						companyInfoObj.user = project.user._id;
 
@@ -573,12 +596,20 @@ exports.onboarding = async (req, res) => {
 							},
 							{ new: true }
 						);
-						console.log("10");
 
 						let createProjectTask = await ProjectTask.create(proectTaskObj);
 
+						let nameChar = upadteProject.projectName.slice(0, 2);
+						let idChar = createProjectTask._id.toString().slice(-4);
+						let taskId = nameChar + "-" + idChar;
+
+						let updateTaskId = await ProjectTask.findByIdAndUpdate(
+							{ _id: createProjectTask._id },
+							{ taskName: taskId },
+							{ new: true }
+						);
+
 						if (upadteProject && createProjectTask) {
-							console.log("11");
 							await session.commitTransaction();
 							session.endSession();
 							await emails.onBoadingSuccess(getuser);
@@ -595,65 +626,14 @@ exports.onboarding = async (req, res) => {
 					res.status(403).send({
 						message: "You are Leads Role so you can not onboard another project/task"
 					});
-				}
-				// else if (
-				// 	role.title == "Client" &&
-				// 	project.projectName != projectName
-				// ) {
-				// 	let userPlan = await UserPlan.findOne({ user: userId })
-				// 		.populate({ path: "plan" })
-				// 		.populate({ path: "subPlan" });
-
-				// 	companyInfoObj.user = project.user._id;
-
-				// 	if (speech !== "" && prespective !== "") {
-				// 		projectStatus = "Ready";
-				// 	}
-
-				// 	let createCompany = await Company.create(companyInfoObj);
-
-				// 	let createProject = await Projects.create({
-				// 		projectName: projectName,
-				// 		speech: speech,
-				// 		prespective: prespective,
-				// 		duration: userPlan.subPlan.duration,
-				// 		numberOfTasks: userPlan.plan.texts,
-				// 		projectStatus: projectStatus,
-				// 		tasks: 1,
-				// 		user: userId,
-				// 	});
-
-				// 	let proectTaskObj = {
-				// 		status: "Ready to Start",
-				// 		keywords: project.keywords,
-				// 		desiredNumberOfWords: userPlan.plan.desiredWords,
-				// 		project: createProject._id,
-				// 	};
-				// 	let createProjectTask = await ProjectTask.create(proectTaskObj);
-
-				// 	if (createProject && createProjectTask) {
-				// 		await session.commitTransaction();
-				// 		session.endSession();
-				// 		await emails.onBoadingSuccess(getuser);
-
-				// 		res.send({
-				// 			message: "OnBoarding successful",
-				// 			data: createProjectTask,
-				// 		});
-				// 	}
-				// }
-				else if (role.title == "Client" && project.projectName == projectName) {
-					console.log("12");
-
+				} else if (role.title == "Client" && project.projectName == projectName) {
 					let taskCount = await ProjectTask.countDocuments({
 						project: project._id
 					});
-					console.log("cOunnnnnnt", taskCount);
 
 					let userPlan = await UserPlan.findOne({ user: userId, projectId: projectId })
 						.populate("plan")
 						.populate("subPlan");
-					console.log("userPlannn", userPlan);
 
 					if (taskCount <= userPlan.plan.texts - 1) {
 						let projectStatus;
@@ -661,7 +641,6 @@ exports.onboarding = async (req, res) => {
 						if (speech !== "" && prespective !== "") {
 							projectStatus = "Ready";
 						}
-						console.log("13");
 
 						let proectTaskObj = {
 							keywords: project.keywords,
@@ -670,10 +649,8 @@ exports.onboarding = async (req, res) => {
 						};
 
 						companyInfoObj.user = project.user._id;
-						console.log("14");
 
 						let createCompany = await Company.findOneAndUpdate({ user: userId }, companyInfoObj, { new: true });
-						console.log("15");
 
 						let upadteProject = await Projects.findOneAndUpdate(
 							{ _id: project._id },
@@ -683,16 +660,23 @@ exports.onboarding = async (req, res) => {
 								duration: userPlan.subPlan.duration,
 								numberOfTasks: userPlan.plan.texts,
 								projectStatus: projectStatus,
-								tasks: taskCount + 1
+								tasks: taskCount
 							},
 							{ new: true }
 						);
 
 						let createProjectTask = await ProjectTask.create(proectTaskObj);
-						console.log("16");
+						let nameChar = upadteProject.projectName.slice(0, 2);
+						let idChar = createProjectTask._id.toString().slice(-4);
+						let taskId = nameChar + "-" + idChar;
+
+						let updateTaskId = await ProjectTask.findByIdAndUpdate(
+							{ _id: createProjectTask._id },
+							{ taskName: taskId },
+							{ new: true }
+						);
 
 						if (upadteProject && createProjectTask) {
-							console.log("17");
 							await session.commitTransaction();
 							session.endSession();
 							await emails.onBoadingSuccess(getuser);

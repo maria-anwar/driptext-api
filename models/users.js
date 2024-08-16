@@ -18,7 +18,8 @@ module.exports = (mongoose) => {
 				required: true,
 				default: "Y",
 				enum: ["Y", "N"] // Optional: restrict to only 'Y' or 'N' values
-			}
+			},
+			projects: [{ type: Schema.Types.ObjectId, ref: "Project" }]
 		},
 		{
 			toJSON: {
