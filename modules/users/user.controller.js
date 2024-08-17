@@ -136,7 +136,7 @@ exports.create = async (req, res) => {
 						}
 
 						let createProject = await Projects.create(projectObj);
-						let nameChar = createProject.projectName.slice(0, 2);
+						let nameChar = createProject.projectName.slice(0, 2).toUpperCase();
 						let idChar = createProject._id.toString().slice(-4);
 						let projectId = nameChar + "-" + idChar;
 
@@ -272,7 +272,7 @@ exports.create = async (req, res) => {
 									new: true
 								}
 							);
-							let nameChar = createProject.projectName.slice(0, 2);
+							let nameChar = createProject.projectName.slice(0, 2).toUpperCase();
 							let idChar = createProject._id.toString().slice(-4);
 							let projectId = nameChar + "-" + idChar;
 
@@ -393,7 +393,7 @@ exports.create = async (req, res) => {
 
 						let createProject = await Projects.create(projectObj);
 
-						let nameChar = createProject.projectName.slice(0, 2);
+						let nameChar = createProject.projectName.slice(0, 2).toUpperCase();
 						let idChar = createProject._id.toString().slice(-4);
 						let projectId = nameChar + "-" + idChar;
 
@@ -617,7 +617,7 @@ exports.onboarding = async (req, res) => {
 
 						let createProjectTask = await ProjectTask.create(proectTaskObj);
 
-						let nameChar = upadteProject.projectName.slice(0, 2);
+						let nameChar = upadteProject.projectName.slice(0, 2).toUpperCase();
 						let idChar = createProjectTask._id.toString().slice(-4);
 						let taskId = nameChar + "-" + idChar;
 
@@ -684,7 +684,7 @@ exports.onboarding = async (req, res) => {
 						);
 
 						let createProjectTask = await ProjectTask.create(proectTaskObj);
-						let nameChar = upadteProject.projectName.slice(0, 2);
+						let nameChar = upadteProject.projectName.slice(0, 2).toUpperCase();
 						let idChar = createProjectTask._id.toString().slice(-4);
 						let taskId = nameChar + "-" + idChar;
 
