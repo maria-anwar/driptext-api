@@ -255,11 +255,9 @@ exports.create = async (req, res) => {
 								createBilling = await Billing.create(billingResponse);
 							}
 
-							let createProject = await Projects.findOneAndUpdate(
-								{ user: user._id, projectName: projectObj.projectName },
-								projectObj,
-								{ new: true }
-							);
+							let createProject = await Projects.findOneAndUpdate({ projectName: projectObj.projectName }, projectObj, {
+								new: true
+							});
 							let nameChar = createProject.projectName.slice(0, 2);
 							let idChar = createProject._id.toString().slice(-4);
 							let projectId = nameChar + "-" + idChar;
