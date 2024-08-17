@@ -313,131 +313,133 @@ exports.create = async (req, res) => {
 							});
 						});
 				}
-			} else if (alredyExist && alredyExist.role.title === "Client") {
-				//alreexist && client role
+			}
+			// else if (alredyExist && alredyExist.role.title === "Client") {
+			// 	//alreexist && client role
 
-				const userRole = await Roles.findOne({ _id: userObj.role });
-				if (userRole.title !== "Client") {
-					res.status(403).send({ message: "You have to buy Subscription." });
-				}
-				userObj.password = alredyExist.password;
-				Users.findByIdAndUpdate({ _id: alredyExist._id }, userObj, { new: true })
-					.then(async (user) => {
-						var userPlanObj = {};
+			// 	const userRole = await Roles.findOne({ _id: userObj.role });
+			// 	if (userRole.title !== "Client") {
+			// 		res.status(403).send({ message: "You have to buy Subscription." });
+			// 	}
+			// 	userObj.password = alredyExist.password;
+			// 	Users.findByIdAndUpdate({ _id: alredyExist._id }, userObj, { new: true })
+			// 		.then(async (user) => {
+			// 			var userPlanObj = {};
 
-						var projectObj = {
-							projectName: req.body.projectName,
-							keywords: req.body.keywords ? req.body.keywords : null,
-							user: user._id,
-							task: 0
-						};
+			// 			var projectObj = {
+			// 				projectName: req.body.projectName,
+			// 				keywords: req.body.keywords ? req.body.keywords : null,
+			// 				user: user._id,
+			// 				task: 0
+			// 			};
 
-						if (req.body.planId) {
-							userPlanObj = {
-								user: user._id,
-								plan: req.body.planId,
-								subPlan: req.body.subPlanId
-							};
-						} else {
-							userPlanObj = {
-								user: user._id
-							};
-						}
-						let subscriptionItems;
-						let paymentMethod;
-						let billingResponse;
-						if (billResponse !== "" && billResponse !== null) {
-							subscriptionItems = {
-								item_price_id: billResponse.subscription.subscription_items[0].item_price_id,
-								item_type: billResponse.subscription.subscription_items[0].item_type,
-								quantity: billResponse.subscription.subscription_items[0].quantity,
-								unit_price: billResponse.subscription.subscription_items[0].unit_price,
-								amount: billResponse.subscription.subscription_items[0].amount,
-								current_term_start: billResponse.subscription.subscription_items[0].current_term_start,
-								current_term_end: billResponse.subscription.subscription_items[0].current_term_end,
-								next_billing_at: billResponse.subscription.subscription_items[0].next_billing_at,
-								free_quantity: billResponse.subscription.subscription_items[0].free_quantity
-							};
+			// 			if (req.body.planId) {
+			// 				userPlanObj = {
+			// 					user: user._id,
+			// 					plan: req.body.planId,
+			// 					subPlan: req.body.subPlanId
+			// 				};
+			// 			} else {
+			// 				userPlanObj = {
+			// 					user: user._id
+			// 				};
+			// 			}
+			// 			let subscriptionItems;
+			// 			let paymentMethod;
+			// 			let billingResponse;
+			// 			if (billResponse !== "" && billResponse !== null) {
+			// 				subscriptionItems = {
+			// 					item_price_id: billResponse.subscription.subscription_items[0].item_price_id,
+			// 					item_type: billResponse.subscription.subscription_items[0].item_type,
+			// 					quantity: billResponse.subscription.subscription_items[0].quantity,
+			// 					unit_price: billResponse.subscription.subscription_items[0].unit_price,
+			// 					amount: billResponse.subscription.subscription_items[0].amount,
+			// 					current_term_start: billResponse.subscription.subscription_items[0].current_term_start,
+			// 					current_term_end: billResponse.subscription.subscription_items[0].current_term_end,
+			// 					next_billing_at: billResponse.subscription.subscription_items[0].next_billing_at,
+			// 					free_quantity: billResponse.subscription.subscription_items[0].free_quantity
+			// 				};
 
-							paymentMethod = {
-								type: billResponse.customer.payment_method.type,
-								reference_id: billResponse.customer.payment_method.reference_id,
-								gateway: billResponse.customer.payment_method.gateway,
-								gateway_account_id: billResponse.customer.payment_method.gateway_account_id,
-								status: billResponse.customer.payment_method.status
-							};
+			// 				paymentMethod = {
+			// 					type: billResponse.customer.payment_method.type,
+			// 					reference_id: billResponse.customer.payment_method.reference_id,
+			// 					gateway: billResponse.customer.payment_method.gateway,
+			// 					gateway_account_id: billResponse.customer.payment_method.gateway_account_id,
+			// 					status: billResponse.customer.payment_method.status
+			// 				};
 
-							billingResponse = {
-								userId: user._id,
-								subscriptionId: billResponse.subscription.id,
-								subscriptionStatus: billResponse.subscription.status,
-								subscriptionItem: [{ subscriptionItems }],
-								customer_id: billResponse.customer.id,
-								customer_first_name: billResponse.customer.first_name,
-								customer_last_name: billResponse.customer.last_name,
-								customer_email: billResponse.customer.email,
-								payment_method: paymentMethod
-							};
-						}
+			// 				billingResponse = {
+			// 					userId: user._id,
+			// 					subscriptionId: billResponse.subscription.id,
+			// 					subscriptionStatus: billResponse.subscription.status,
+			// 					subscriptionItem: [{ subscriptionItems }],
+			// 					customer_id: billResponse.customer.id,
+			// 					customer_first_name: billResponse.customer.first_name,
+			// 					customer_last_name: billResponse.customer.last_name,
+			// 					customer_email: billResponse.customer.email,
+			// 					payment_method: paymentMethod
+			// 				};
+			// 			}
 
-						let createProject = await Projects.create(projectObj);
+			// 			let createProject = await Projects.create(projectObj);
 
-						let nameChar = createProject.projectName.slice(0, 2);
-						let idChar = createProject._id.toString().slice(-4);
-						let projectId = nameChar + "-" + idChar;
+			// 			let nameChar = createProject.projectName.slice(0, 2);
+			// 			let idChar = createProject._id.toString().slice(-4);
+			// 			let projectId = nameChar + "-" + idChar;
 
-						let updateProjectId = await Projects.findByIdAndUpdate(
-							{ _id: createProject._id },
-							{ projectId: projectId },
-							{ new: true }
-						);
+			// 			let updateProjectId = await Projects.findByIdAndUpdate(
+			// 				{ _id: createProject._id },
+			// 				{ projectId: projectId },
+			// 				{ new: true }
+			// 			);
 
-						let pushProjectId = await Users.findByIdAndUpdate(
-							{ _id: alredyExist._id },
-							{ $push: { projects: createProject._id } },
-							{ new: true }
-						);
-						userPlanObj.projectId = createProject._id;
+			// 			let pushProjectId = await Users.findByIdAndUpdate(
+			// 				{ _id: alredyExist._id },
+			// 				{ $push: { projects: createProject._id } },
+			// 				{ new: true }
+			// 			);
+			// 			userPlanObj.projectId = createProject._id;
 
-						let createUserPlan = await UserPlan.create(userPlanObj);
-						let createBilling = await Billing.create(billingResponse);
+			// 			let createUserPlan = await UserPlan.create(userPlanObj);
+			// 			let createBilling = await Billing.create(billingResponse);
 
-						if (createUserPlan && createProject && createBilling) {
-							const clientData = {
-								clientName: `${req.body.firstName} ${req.body.lastName}`,
-								clientEmail: `${req.body.email}`,
-								subscriptionStatus: `${billResponse.subscription.status}`,
-								subscriptionStartDate: `${billResponse.subscription.subscription_items[0].current_term_start}`,
-								subscriptionEndDate: `${billResponse.subscription.subscription_items[0].current_term_end}`,
-								paymentMethodType: `${billResponse.customer.payment_method.type}`,
-								amount: `${billResponse.subscription.subscription_items[0].unit_price}`
-							};
-							// Send email
-							emails
-								.sendBillingInfo(clientData.clientEmail, "Your Billing Information", clientData)
-								.then((res) => {
-									console.log("billing email success: ", res);
-								})
-								.catch((err) => {
-									console.log("billing email error: ", err);
-								});
+			// 			if (createUserPlan && createProject && createBilling) {
+			// 				const clientData = {
+			// 					clientName: `${req.body.firstName} ${req.body.lastName}`,
+			// 					clientEmail: `${req.body.email}`,
+			// 					subscriptionStatus: `${billResponse.subscription.status}`,
+			// 					subscriptionStartDate: `${billResponse.subscription.subscription_items[0].current_term_start}`,
+			// 					subscriptionEndDate: `${billResponse.subscription.subscription_items[0].current_term_end}`,
+			// 					paymentMethodType: `${billResponse.customer.payment_method.type}`,
+			// 					amount: `${billResponse.subscription.subscription_items[0].unit_price}`
+			// 				};
+			// 				// Send email
+			// 				emails
+			// 					.sendBillingInfo(clientData.clientEmail, "Your Billing Information", clientData)
+			// 					.then((res) => {
+			// 						console.log("billing email success: ", res);
+			// 					})
+			// 					.catch((err) => {
+			// 						console.log("billing email error: ", err);
+			// 					});
 
-							await emails.AwsEmailPassword(user);
+			// 				await emails.AwsEmailPassword(user);
 
-							await session.commitTransaction();
-							session.endSession();
-							res.send({ message: "User Added", data: user, project: createProject });
-						}
-					})
-					.catch(async (err) => {
-						// emails.errorEmail(req, err);
-						await session.abortTransaction();
-						session.endSession();
-						res.status(500).send({
-							message: err.message || "Some error occurred while creating the User."
-						});
-					});
-			} else {
+			// 				await session.commitTransaction();
+			// 				session.endSession();
+			// 				res.send({ message: "User Added", data: user, project: createProject });
+			// 			}
+			// 		})
+			// 		.catch(async (err) => {
+			// 			// emails.errorEmail(req, err);
+			// 			await session.abortTransaction();
+			// 			session.endSession();
+			// 			res.status(500).send({
+			// 				message: err.message || "Some error occurred while creating the User."
+			// 			});
+			// 		});
+			// }
+			else {
 				res.status(401).send({ message: "UnAuthorized for this action." });
 			}
 		}
