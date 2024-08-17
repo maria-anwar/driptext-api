@@ -678,7 +678,7 @@ exports.onboarding = async (req, res) => {
 								duration: userPlan.subPlan.duration,
 								numberOfTasks: userPlan.plan.texts,
 								projectStatus: projectStatus,
-								tasks: taskCount
+								tasks: taskCount + 1
 							},
 							{ new: true }
 						);
