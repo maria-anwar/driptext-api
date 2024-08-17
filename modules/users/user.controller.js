@@ -48,7 +48,7 @@ exports.create = async (req, res) => {
 			const userObj = {
 				firstName: req.body.firstName?.trim(),
 				lastName: req.body.lastName?.trim(),
-				email: req.body.email,
+				email: req.body.email.trim(),
 				country: req.body.country ? req.body.country : null,
 				vatIdNo: req.body.vatId ? req.body.vatId : null,
 				companyName: req.body.companyName ? req.body.companyName : null,
@@ -189,10 +189,10 @@ exports.create = async (req, res) => {
 			} else if (alredyExist && (alredyExist.role.title == "Leads" || alredyExist.role.title == "leads")) {
 				const userRole = await Roles.findOne({ _id: userObj.role });
 				if (userRole.title !== "Client") {
-					res.status(403).send({ message: "You are a registered user.Buy Subscription." });
+					res.status(403).send({ message: "You are a registered user, Buy Subscription." });
 				} else {
 					userObj.password = alredyExist.password;
-					Users.findOneAndUpdate({ _id: alredyExist._id.toString() }, userObj, { new: true })
+					Users.findByIdAndUpdate({ _id: alredyExist._id.toString() }, userObj, { new: true })
 						.then(async (user) => {
 							var userPlanObj = {};
 
@@ -316,7 +316,7 @@ exports.create = async (req, res) => {
 					res.status(403).send({ message: "You have to buy Subscription." });
 				}
 				userObj.password = alredyExist.password;
-				Users.findOneAndUpdate({ _id: alredyExist._id }, userObj, { new: true })
+				Users.findByIdAndUpdate({ _id: alredyExist._id }, userObj, { new: true })
 					.then(async (user) => {
 						var userPlanObj = {};
 
