@@ -195,11 +195,23 @@ exports.create = async (req, res) => {
 					Users.findByIdAndUpdate({ _id: alredyExist._id.toString() }, userObj, { new: true })
 						.then(async (user) => {
 							console.log(user);
+
+							if (req.body.planId) {
+								userPlanObj = {
+									user: user._id,
+									plan: req.body.planId,
+									subPlan: req.body.subPlanId
+								};
+							} else {
+								userPlanObj = {
+									user: user._id
+								};
+							}
+							let createUserPlan = await UserPlan.findOneAndUpdate({ user: user._id }, userPlanObj, { new: true });
+
 							var userPlanObj = {};
 							let userPlan = await UserPlan.findOne({
-								user: user._id,
-								plan: req.body.planId,
-								subPlan: req.body.subPlanId
+								_id: createUserPlan._id
 							})
 								.populate("plan")
 								.populate("subPlan");
@@ -213,17 +225,6 @@ exports.create = async (req, res) => {
 								// tasks: taskCount
 							};
 
-							if (req.body.planId) {
-								userPlanObj = {
-									user: user._id,
-									plan: req.body.planId,
-									subPlan: req.body.subPlanId
-								};
-							} else {
-								userPlanObj = {
-									user: user._id
-								};
-							}
 							let subscriptionItems;
 							let paymentMethod;
 							let billingResponse;
@@ -282,7 +283,6 @@ exports.create = async (req, res) => {
 							// 	{ $push: { projects: createProject._id } },
 							// 	{ new: true }
 							// );
-							let createUserPlan = await UserPlan.findOneAndUpdate({ user: user._id }, userPlanObj, { new: true });
 							if (createBilling !== "") {
 								const clientData = {
 									clientName: `${req.body.firstName} ${req.body.lastName}`,
