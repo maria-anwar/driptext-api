@@ -39,9 +39,9 @@ exports.create = async (req, res) => {
 		if (error) {
 			// emails.errorEmail(req, error);
 
-			// const message = error.details[0].message.replace(/"/g, "");
+			const message = error.details[0].message.replace(/"/g, "");
 			res.status(401).send({
-				message: "Some Error"
+				message: "Some Error" + message
 			});
 		} else {
 			const billResponse = req.body.response;
@@ -309,7 +309,7 @@ exports.create = async (req, res) => {
 							await session.abortTransaction();
 							session.endSession();
 							res.status(500).send({
-								message: err.message || "Some error occurred while creating the Quiz."
+								message: err.message || "Some error occurred while creating the User."
 							});
 						});
 				}
@@ -434,7 +434,7 @@ exports.create = async (req, res) => {
 						await session.abortTransaction();
 						session.endSession();
 						res.status(500).send({
-							message: err.message || "Some error occurred while creating the Quiz."
+							message: err.message || "Some error occurred while creating the User."
 						});
 					});
 			} else {
