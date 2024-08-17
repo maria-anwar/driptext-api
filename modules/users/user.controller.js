@@ -194,6 +194,7 @@ exports.create = async (req, res) => {
 					userObj.password = alredyExist.password;
 					Users.findByIdAndUpdate({ _id: alredyExist._id.toString() }, userObj, { new: true })
 						.then(async (user) => {
+							console.log(user);
 							var userPlanObj = {};
 
 							var projectObj = {
@@ -254,7 +255,11 @@ exports.create = async (req, res) => {
 								createBilling = await Billing.create(billingResponse);
 							}
 
-							let createProject = await Projects.findOneAndUpdate({ user: user._id }, projectObj, { new: true });
+							let createProject = await Projects.findOneAndUpdate(
+								{ user: user._id, projectName: projectObj.projectName },
+								projectObj,
+								{ new: true }
+							);
 							let nameChar = createProject.projectName.slice(0, 2);
 							let idChar = createProject._id.toString().slice(-4);
 							let projectId = nameChar + "-" + idChar;
