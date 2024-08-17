@@ -26,7 +26,7 @@ exports.create = async (req, res) => {
 			email: Joi.string().email().required(),
 			roleId: Joi.string().required(),
 			country: Joi.string().optional().allow(null).allow(""),
-			vatId: Joi.string().optional().allow(null).allow(""),
+			vatId: Joi.number().optional().allow(null).allow(""),
 			companyName: Joi.string().optional().allow(null).allow(""),
 			planId: Joi.string().optional().allow(null).allow(""),
 			subPlanId: Joi.string().optional().allow(null).allow(""),
