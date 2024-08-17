@@ -262,7 +262,7 @@ exports.create = async (req, res) => {
 							await Projects.findByIdAndUpdate({ _id: createProject._id }, { projectId: projectId }, { new: true });
 
 							await Users.findByIdAndUpdate(
-								{ _id: alredyExist },
+								{ _id: alredyExist._id },
 								{ $push: { projects: createProject._id } },
 								{ new: true }
 							);
