@@ -196,12 +196,21 @@ exports.create = async (req, res) => {
 						.then(async (user) => {
 							console.log(user);
 							var userPlanObj = {};
+							let userPlan = await UserPlan.findOne({
+								user: user._id,
+								plan: req.body.planId,
+								subPlan: req.body.subPlanId
+							})
+								.populate("plan")
+								.populate("subPlan");
 
 							var projectObj = {
 								projectName: req.body.projectName,
 								keywords: req.body.keywords ? req.body.keywords : null,
 								user: user._id,
-								tasks: 0
+								duration: userPlan.subPlan.duration,
+								numberOfTasks: userPlan.plan.texts
+								// tasks: taskCount
 							};
 
 							if (req.body.planId) {
