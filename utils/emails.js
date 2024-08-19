@@ -376,4 +376,53 @@ Email.onBoadingSuccess = async (user) => {
   }
 };
 
+Email.onBoardingRequest = async (user, project) => {
+  try {
+    // const data = fs.readFileSync("./templates/awsPasswordUpdateEmail.html", "utf8");
+    // const filePath = path.join(__dirname, "templates", "awsPasswordUpdateEmail.html");
+    const filePath = path.join(
+      __dirname,
+      "..",
+      "templates",
+      "requestOnBoarding.html"
+    );
+    console.log(filePath);
+    const data = fs.readFileSync(filePath, "utf8");
+    let text = data;
+    // console.log(text);
+    // const forgetPasswordToken = jwt.signToken({
+    //   userId: user.id,
+    //   roleId: user.role,
+    //   email: user.email,
+    // });
+
+    // const link = `https://driptext-app.vercel.app/auth/forgetkey/${forgetPasswordToken}`;
+    // text = text.replace("[USER_NAME]", `${user.firstName} ${user.lastName}`);
+    // text = text.replace("[BUTTON_LINK_1]", link);
+    console.log("projectName: ", `${project.projectName}`);
+    text = text.replace(/{{project\.domain}}/g, `${project.projectName}`);
+
+    const params = {
+      Source: `DripText <noreply@driptext.de>`,
+      Destination: {
+        ToAddresses: [user.email],
+      },
+      Message: {
+        Subject: {
+          Data: "Herzlich Willkommen bei DripText!",
+        },
+        Body: {
+          Html: {
+            Data: text,
+          },
+        },
+      },
+    };
+    await ses.sendEmail(params).promise();
+    console.log("on boarding request sent");
+  } catch (error) {
+    throw error;
+  }
+};
+
 module.exports = Email;

@@ -140,6 +140,13 @@ exports.create = async (req, res) => {
 						userPlanObj.projectId = createProject._id;
 						let createUserPlan = await UserPlan.create(userPlanObj);
 
+						emails.onBoardingRequest(user, createProject).then((res) => {
+							console.log("request on boarding sent")
+
+						}).catch((err) => {
+							console.log("could not sent on boarding email")
+						})
+
 						if (createUserPlan && createProject) {
 							if (createBilling !== "") {
 								const clientData = {
