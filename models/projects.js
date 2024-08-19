@@ -5,6 +5,7 @@ module.exports = (mongoose) => {
 	const ProjectSchema = new Schema(
 		{
 			id: { type: Number, unique: true },
+			projectId: { type: String, required: false },
 			projectName: { type: String, required: true, unique: false },
 			tasks: { type: Number, unique: false, required: false },
 			speech: { type: String, required: false, unique: false },
