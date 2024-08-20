@@ -147,12 +147,14 @@ exports.create = async (req, res) => {
 
 						let createUserPlan = await UserPlan.create(userPlanObj);
 
-						emails.onBoardingRequest(user, createProject).then((res) => {
-							console.log("request on boarding sent")
-
-						}).catch((err) => {
-							console.log("could not sent on boarding email")
-						})
+						emails
+							.onBoardingRequest(user, createProject)
+							.then((res) => {
+								console.log("request on boarding sent");
+							})
+							.catch((err) => {
+								console.log("could not sent on boarding email");
+							});
 
 						if (createUserPlan && createProject) {
 							if (createBilling !== "") {
@@ -623,6 +625,11 @@ exports.onboarding = async (req, res) => {
 						);
 
 						let createProjectTask = await ProjectTask.create(proectTaskObj);
+						await Projects.findByIdAndUpdate(
+							projectId,
+							{ $push: { projectTask: createProjectTask._id } },
+							{ new: true }
+						);
 
 						let nameChar = upadteProject.projectName.slice(0, 2).toUpperCase();
 						let idChar = createProjectTask._id.toString().slice(-4);
@@ -691,6 +698,12 @@ exports.onboarding = async (req, res) => {
 						);
 
 						let createProjectTask = await ProjectTask.create(proectTaskObj);
+						await Projects.findByIdAndUpdate(
+							projectId,
+							{ $push: { projectTask: createProjectTask._id } },
+							{ new: true }
+						);
+
 						let nameChar = upadteProject.projectName.slice(0, 2).toUpperCase();
 						let idChar = createProjectTask._id.toString().slice(-4);
 						let taskId = nameChar + "-" + idChar;

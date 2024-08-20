@@ -15,6 +15,8 @@ module.exports = (mongoose) => {
 			numberOfTasks: { type: String, required: false, unique: false },
 			projectStatus: { type: String, required: false, default: "Not initalized", unique: false },
 			user: { type: Schema.Types.ObjectId, ref: "User", required: true },
+			projectTasks: [{ type: Schema.Types.ObjectId, ref: "Project" }],
+
 			isActive: {
 				type: String,
 				required: true,
