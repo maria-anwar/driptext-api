@@ -4,20 +4,20 @@ module.exports = (mongoose) => {
 
 	const ProjectTaskSchema = new Schema(
 		{
-			taskName: { type: String, unique: true },
+			taskName: { type: String, unique: true, default: null },
 			status: {
 				type: String,
 				required: true,
 				default: "Ready to Start"
 			},
-			keywords: { type: String, required: false, unique: false },
-			dueDate: { type: String, required: false, unique: false },
-			topic: { type: String, required: false, unique: false },
-			type: { type: String, required: false, unique: false },
-			desiredNumberOfWords: { type: String, required: false, unique: false },
-			actualNumberOfWords: { type: String, required: false, unique: false },
-			googleLink: { type: String, required: false, unique: false },
-			comments: { type: String, required: false, unique: false },
+			keywords: { type: String, required: false, unique: false, default: null },
+			dueDate: { type: String, required: false, unique: false, default: null },
+			topic: { type: String, required: false, unique: false, default: null },
+			type: { type: String, required: false, unique: false, default: null },
+			desiredNumberOfWords: { type: String, required: false, unique: false, default: null },
+			actualNumberOfWords: { type: String, required: false, unique: false, default: null },
+			googleLink: { type: String, required: false, unique: false, default: null },
+			comments: { type: String, required: false, unique: false, default: null },
 			published: { type: Boolean, required: false, default: false },
 			assignedTexter: {
 				type: Schema.Types.ObjectId,

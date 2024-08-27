@@ -51,6 +51,9 @@ class Server {
     cron.schedule("0 */2 * * *", () => {
       cornJobs.onBoardingReminder();
     });
+    cron.schedule("0 0 * * *", () => {
+      cornJobs.subscriptonCheck();
+    });
   }
 
   async appExecute() {

@@ -1,3 +1,4 @@
+"use strict";
 const Joi = require("@hapi/joi");
 const mongoose = require("mongoose");
 const db = require("../../models");
@@ -7,6 +8,7 @@ const crypto = require("../../utils/crypto");
 const fs = require("fs");
 const handlebars = require("handlebars");
 const { alternatives } = require("joi");
+const dayjs = require("dayjs");
 
 const Users = db.User;
 const Roles = db.Role;
@@ -14,795 +16,1268 @@ const UserPlan = db.UserPlan;
 const Projects = db.Project;
 const ProjectTask = db.ProjectTask;
 const Company = db.Company;
-const Billing = db.Billing;
+const Plans = db.Plan;
+const SubPlans = db.SubPlan;
+// const Billing = db.Billing;
+const Subscription = db.Subscription;
 
 exports.create = async (req, res) => {
-	try {
-		const joiSchema = Joi.object({
-			firstName: Joi.string().required(),
-			lastName: Joi.string().required(),
-			projectName: Joi.string().required(),
-			keywords: Joi.string().optional().allow("").allow(null),
-			email: Joi.string().email().required(),
-			roleId: Joi.string().required(),
-			country: Joi.string().optional().allow(null).allow(""),
-			vatId: Joi.number().optional().allow(null).allow(""),
-			companyName: Joi.string().optional().allow(null).allow(""),
-			planId: Joi.string().optional().allow(null).allow(""),
-			subPlanId: Joi.string().optional().allow(null).allow(""),
-			password: Joi.string().optional().allow(null).allow(""),
-			isSubscribed: Joi.string().optional().allow("").allow(null),
-			response: Joi.object().optional().allow("").allow(null)
-		});
-		const { error, value } = joiSchema.validate(req.body);
+  try {
+    const joiSchema = Joi.object({
+      firstName: Joi.string().required(),
+      lastName: Joi.string().required(),
+      projectName: Joi.string().required(),
+      keywords: Joi.string().optional().allow("").allow(null),
+      email: Joi.string().email().required(),
+      roleId: Joi.string().required(),
+      country: Joi.string().optional().allow(null).allow(""),
+      vatId: Joi.number().optional().allow(null).allow(""),
+      companyName: Joi.string().optional().allow(null).allow(""),
+      planId: Joi.string().optional().allow(null).allow(""),
+      subPlanId: Joi.string().optional().allow(null).allow(""),
+      password: Joi.string().optional().allow(null).allow(""),
+      isSubscribed: Joi.string().optional().allow("").allow(null),
+      response: Joi.object().optional().allow("").allow(null),
+      vatType: Joi.object().optional().allow("").allow(null),
+    });
+    const { error, value } = joiSchema.validate(req.body);
 
-		if (error) {
-			// emails.errorEmail(req, error);
+    if (error) {
+      // emails.errorEmail(req, error);
 
-			const message = error.details[0].message.replace(/"/g, "");
-			res.status(401).send({
-				message: "Some Error" + message
-			});
-		} else {
-			const billResponse = req.body.response;
-			const userObj = {
-				firstName: req.body.firstName?.trim(),
-				lastName: req.body.lastName?.trim(),
-				email: req.body.email.trim(),
-				country: req.body.country ? req.body.country : null,
-				vatIdNo: req.body.vatId ? req.body.vatId : null,
-				companyName: req.body.companyName ? req.body.companyName : null,
-				password: req.body.password ? req.body.password : "123456@123456",
-				role: req.body.roleId,
-				isSubscribed: req.body.isSubscribed ? req.body.isSubscribed : "N"
-			};
-			const session = await mongoose.startSession();
-			session.startTransaction();
+      const message = error.details[0].message.replace(/"/g, "");
+      res.status(401).send({
+        message: "Some Error" + message,
+      });
+    } else {
+      const billResponse = req.body.response;
+      const userObj = {
+        firstName: req.body.firstName?.trim(),
+        lastName: req.body.lastName?.trim(),
+        email: req.body.email.trim(),
+        country: req.body.country ? req.body.country : null,
+        vatIdNo: req.body.vatId ? req.body.vatId : null,
+        companyName: req.body.companyName ? req.body.companyName : null,
+        password: req.body.password ? req.body.password : "123456@123456",
+        role: req.body.roleId,
+        isSubscribed: req.body.isSubscribed ? req.body.isSubscribed : "N",
+      };
+      const session = await mongoose.startSession();
+      session.startTransaction();
 
-			let alredyExist = await Users.findOne({ email: userObj.email }).populate("role");
+      let alredyExist = await Users.findOne({ email: userObj.email }).populate(
+        "role"
+      );
 
-			let userRole = await Roles.findOne({ _id: userObj.role });
-			if (userRole.title == "Client" && !req.body.planId && !req.body.subPlanId) {
-				await session.commitTransaction();
-				session.endSession();
-				res.status(403).send({
-					message: "Plan and SubPlan ID's are required for the client role"
-				});
-				return 1;
-			}
+      let userRole = await Roles.findOne({ _id: userObj.role });
+      if (
+        userRole.title == "Client" &&
+        !req.body.planId &&
+        !req.body.subPlanId
+      ) {
+        await session.commitTransaction();
+        session.endSession();
+        res.status(403).send({
+          message: "Plan and SubPlan ID's are required for the client role",
+        });
+        return 1;
+      }
 
-			if (!alredyExist) {
-				Users.create(userObj)
-					.then(async (user) => {
-						var userPlanObj = {};
+      if (!alredyExist) {
+        console.log("inside first if");
+        Users.create(userObj)
+          .then(async (user) => {
+            console.log("user created....");
+            var userPlanObj = {};
 
-						var projectObj = {
-							projectName: req.body.projectName,
-							keywords: req.body.keywords ? req.body.keywords : null,
-							user: user._id,
-							tasks: 0
-						};
+            var projectObj = {
+              projectName: req.body.projectName,
+              keywords: req.body.keywords ? req.body.keywords : null,
+              user: user._id,
+              tasks: 0,
+            };
 
-						if (req.body.planId) {
-							userPlanObj = {
-								user: user._id,
-								plan: req.body.planId,
-								subPlan: req.body.subPlanId
-							};
-						} else {
-							console.log("7");
-							userPlanObj = {
-								user: user._id
-							};
-						}
+            if (req.body.planId) {
+              userPlanObj = {
+                user: user._id,
+                // plan: req.body.planId,
+                // subPlan: req.body.subPlanId,
+              };
+            } else {
+              console.log("7");
+              userPlanObj = {
+                user: user._id,
+              };
+            }
 
-						let subscriptionItems;
-						let paymentMethod;
-						let billingResponse;
-						let createBilling = "";
-						if (req.body.response) {
-							subscriptionItems = {
-								item_price_id: billResponse.subscription.subscription_items[0].item_price_id,
-								item_type: billResponse.subscription.subscription_items[0].item_type,
-								quantity: billResponse.subscription.subscription_items[0].quantity,
-								unit_price: billResponse.subscription.subscription_items[0].unit_price,
-								amount: billResponse.subscription.subscription_items[0].amount,
-								current_term_start: billResponse.subscription.subscription_items[0].current_term_start,
-								current_term_end: billResponse.subscription.subscription_items[0].current_term_end,
-								next_billing_at: billResponse.subscription.subscription_items[0].next_billing_at,
-								free_quantity: billResponse.subscription.subscription_items[0].free_quantity
-							};
+            let subscriptionItems;
+            let paymentMethod;
+            let billingResponse;
+            let createBilling = "";
+            // let activatedAt = "";
+            let startAt = "";
+            let endAt = "";
+            // let nextBillingAt = "";
+            let subscription = "";
+            if (req.body.response) {
+              subscriptionItems = {
+                item_price_id:
+                  billResponse.subscription.subscription_items[0].item_price_id,
+                item_type:
+                  billResponse.subscription.subscription_items[0].item_type,
+                quantity:
+                  billResponse.subscription.subscription_items[0].quantity,
+                unit_price:
+                  billResponse.subscription.subscription_items[0].unit_price,
+                amount: billResponse.subscription.subscription_items[0].amount,
+                current_term_start:
+                  billResponse.subscription.subscription_items[0]
+                    .current_term_start,
+                current_term_end:
+                  billResponse.subscription.subscription_items[0]
+                    .current_term_end,
 
-							paymentMethod = {
-								type: billResponse.customer.payment_method.type,
-								reference_id: billResponse.customer.payment_method.reference_id,
-								gateway: billResponse.customer.payment_method.gateway,
-								gateway_account_id: billResponse.customer.payment_method.gateway_account_id,
-								status: billResponse.customer.payment_method.status
-							};
+                free_quantity:
+                  billResponse.subscription.subscription_items[0].free_quantity,
+              };
 
-							billingResponse = {
-								userId: user._id,
-								subscriptionId: billResponse.subscription.id,
-								subscriptionStatus: billResponse.subscription.status,
-								subscriptionItem: [subscriptionItems],
-								customer_id: billResponse.customer.id,
-								customer_first_name: billResponse.customer.first_name,
-								customer_last_name: billResponse.customer.last_name,
-								customer_email: billResponse.customer.email,
-								payment_method: paymentMethod
-							};
-							createBilling = await Billing.create(billingResponse);
-						}
+              paymentMethod = {
+                type: billResponse.customer.payment_method.type,
+                reference_id: billResponse.customer.payment_method.reference_id,
+                gateway: billResponse.customer.payment_method.gateway,
+                gateway_account_id:
+                  billResponse.customer.payment_method.gateway_account_id,
+                status: billResponse.customer.payment_method.status,
+              };
 
-						let createProject = await Projects.create(projectObj);
-						let nameChar = createProject.projectName.slice(0, 2).toUpperCase();
-						let idChar = createProject._id.toString().slice(-4);
-						let projectId = nameChar + "-" + idChar;
+              billingResponse = {
+                userId: user._id,
+                subscriptionId: billResponse.subscription.id,
+                subscriptionStatus: billResponse.subscription.status,
+                subscriptionItem: [subscriptionItems],
+                customer_id: billResponse.customer.id,
+                customer_first_name: billResponse.customer.first_name,
+                customer_last_name: billResponse.customer.last_name,
+                customer_email: billResponse.customer.email,
+                payment_method: paymentMethod,
+              };
+              // createBilling = await Billing.create(billingResponse);
+              startAt = dayjs(
+                billResponse.subscription.subscription_items[0]
+                  .current_term_start * 1000
+              );
+              endAt = dayjs(
+                billResponse.subscription.subscription_items[0]
+                  .current_term_end * 1000
+              );
+              subscription = await Subscription.create({
+                startDate: dayjs(startAt).format("YYYY-MM-DD"),
+                endDate: dayjs(endAt).format("YYYY-MM-DD"),
+                subscriptionItem: subscriptionItems,
+                paymentMethod: paymentMethod,
+              });
+            }
 
-						await Projects.findByIdAndUpdate(createProject._id, { projectId: projectId }, { new: true });
-						await Users.findByIdAndUpdate(user._id, { $push: { projects: createProject._id } }, { new: true });
+            let createProject = await Projects.create(projectObj);
+            let nameChar = createProject.projectName.slice(0, 2).toUpperCase();
+            let idChar = createProject._id.toString().slice(-4);
+            let projectId = nameChar + "-" + idChar;
 
-						userPlanObj.projectId = createProject._id;
+            await Users.findByIdAndUpdate(
+              user._id,
+              { $push: { projects: createProject._id } },
+              { new: true }
+            );
 
-						let createUserPlan = await UserPlan.create(userPlanObj);
+            userPlanObj.project = createProject._id;
+            console.log("user plan obj: ", userPlanObj);
+            let createUserPlan = "";
+            if (subscription) {
+              let plan = await Plans.findOne({ _id: req.body.planId });
+              //   console.log("plan: ", plan);
+              let subPlan = await SubPlans.findOne({ _id: req.body.subPlanId });
+              // let endMonthDate = ""
+              // let tempEndMonthDate = dayjs(subscription.startDate).add(1, "month")
+              // if(dayjs(subscription))
+              //   console.log("sub plan: ", subPlan);
+              createUserPlan = await UserPlan.create({
+                ...userPlanObj,
+                plan: req.body.planId,
+                subPlan: req.body.subPlanId,
+                startDate: subscription.startDate,
+                endDate: subscription.endDate,
+                totalTexts: plan.texts * subPlan.duration,
+                textsRemaining: plan.texts * subPlan.duration,
+                duration: subPlan.duration,
+                endMonthDate: dayjs(subscription.startDate).add(1, "month"),
+                tasksPerMonth: plan.texts,
+                subscription: subscription._id,
+              });
+            } else {
+              createUserPlan = await UserPlan.create({
+                ...userPlanObj,
+                totalTexts: 1,
+                textsRemaining: 1,
+                tasksPerMonth: 1,
+              });
+            }
 
-						emails
-							.onBoardingRequest(user, createProject)
-							.then((res) => {
-								console.log("request on boarding sent");
-							})
-							.catch((err) => {
-								console.log("could not sent on boarding email");
-							});
+            console.log("create user plan: ", createUserPlan);
 
-						if (createUserPlan && createProject) {
-							if (createBilling !== "") {
-								const clientData = {
-									clientName: `${req.body.firstName} ${req.body.lastName}`,
-									clientEmail: `${req.body.email}`,
-									subscriptionStatus: `${billResponse.subscription.status}`,
-									subscriptionStartDate: `${billResponse.subscription.subscription_items[0].current_term_start}`,
-									subscriptionEndDate: `${billResponse.subscription.subscription_items[0].current_term_end}`,
-									paymentMethodType: `${billResponse.customer.payment_method.type}`,
-									amount: `${billResponse.subscription.subscription_items[0].unit_price}`
-								};
-								// Send email
-								emails
-									.sendBillingInfo(clientData.clientEmail, "Your Billing Information", clientData)
-									.then((res) => {
-										console.log("billing email success: ", res);
-									})
-									.catch((err) => {
-										console.log("billing email error: ", err);
-									});
-							}
-							await emails.AwsEmailPassword(user);
-							let getuser = await Users.findOne({ _id: user._id })
-								.select("firstName lastName email role password")
-								.populate({ path: "role", select: "title" });
+            await Projects.findByIdAndUpdate(
+              createProject._id,
+              { projectId: projectId, plan: createUserPlan._id },
+              { new: true }
+            );
 
-							await session.commitTransaction();
-							session.endSession();
-							res.status(200).send({ message: "User Added", data: getuser, project: createProject });
-						}
-					})
-					.catch(async (err) => {
-						// emails.errorEmail(req, err);
-						await session.abortTransaction();
-						session.endSession();
-						res.status(500).send({
-							message: err.message || "Some error occurred while creating the Quiz."
-						});
-					});
-			} else if (alredyExist && (alredyExist.role.title == "Leads" || alredyExist.role.title == "leads")) {
-				const userRole = await Roles.findOne({ _id: userObj.role });
-				if (userRole.title !== "Client") {
-					res.status(403).send({ message: "You are a registered user, Buy Subscription." });
-				} else {
-					userObj.password = alredyExist.password;
-					Users.findByIdAndUpdate({ _id: alredyExist._id.toString() }, userObj, { new: true })
-						.then(async (user) => {
-							console.log(user);
+            emails
+              .onBoardingRequest(user, createProject)
+              .then((res) => {
+                console.log("request on boarding sent");
+              })
+              .catch((err) => {
+                console.log("could not sent on boarding email");
+              });
 
-							if (req.body.planId) {
-								userPlanObj = {
-									user: user._id,
-									plan: req.body.planId,
-									subPlan: req.body.subPlanId
-								};
-							} else {
-								userPlanObj = {
-									user: user._id
-								};
-							}
-							let createUserPlan = await UserPlan.findOneAndUpdate({ user: user._id }, userPlanObj, { new: true });
+            if (createUserPlan && createProject) {
+              if (subscription !== "") {
+                const clientData = {
+                  clientName: `${req.body.firstName} ${req.body.lastName}`,
+                  clientEmail: `${req.body.email}`,
+                  subscriptionStatus: `${billResponse.subscription.status}`,
+                  subscriptionStartDate: `${billResponse.subscription.subscription_items[0].current_term_start}`,
+                  subscriptionEndDate: `${billResponse.subscription.subscription_items[0].current_term_end}`,
+                  paymentMethodType: `${billResponse.customer.payment_method.type}`,
+                  amount: `${billResponse.subscription.subscription_items[0].unit_price}`,
+                };
+                // Send email
+                emails
+                  .sendBillingInfo(
+                    clientData.clientEmail,
+                    "Your Billing Information",
+                    clientData
+                  )
+                  .then((res) => {
+                    console.log("billing email success: ", res);
+                  })
+                  .catch((err) => {
+                    console.log("billing email error: ", err);
+                  });
+              }
+              await emails.AwsEmailPassword(user);
+              let getuser = await Users.findOne({ _id: user._id })
+                .select("firstName lastName email role password")
+                .populate({ path: "role", select: "title" });
 
-							var userPlanObj = {};
-							let userPlan = await UserPlan.findOne({
-								_id: createUserPlan._id
-							})
-								.populate("plan")
-								.populate("subPlan");
+              await session.commitTransaction();
+              session.endSession();
+              res.status(200).send({
+                message: "User Added",
+                data: getuser,
+                project: createProject,
+              });
+              return;
+            }
+          })
+          .catch(async (err) => {
+            // emails.errorEmail(req, err);
+            await session.abortTransaction();
+            session.endSession();
+            res.status(500).send({
+              message:
+                err.message || "Some error occurred while creating the Quiz.",
+            });
+          });
+      } else if (
+        alredyExist &&
+        (alredyExist.role.title == "Leads" || alredyExist.role.title == "leads")
+      ) {
+        console.log("inside second if...");
+        const userRole = await Roles.findOne({ _id: userObj.role });
+        if (userRole.title !== "Client") {
+          res
+            .status(403)
+            .send({ message: "You are a already registered user" });
+        } else {
+          if (!req.body.planId || !req.body.subPlanId) {
+            res.status(500).send({ message: "User already exists" });
+            return;
+          }
+          userObj.password = alredyExist.password;
+          Users.findByIdAndUpdate(
+            { _id: alredyExist._id.toString() },
+            userObj,
+            { new: true }
+          )
+            .then(async (user) => {
+              //   console.log(user);
 
-							var projectObj = {
-								projectName: req.body.projectName,
-								keywords: req.body.keywords ? req.body.keywords : null,
-								user: user._id,
-								duration: userPlan.subPlan.duration,
-								numberOfTasks: userPlan.plan.texts
-								// tasks: taskCount
-							};
+              //   if (req.body.planId) {
+              //     userPlanObj = {
+              //       user: user._id,
+              //       plan: req.body.planId,
+              //       subPlan: req.body.subPlanId,
+              //     };
+              //   } else {
+              //     userPlanObj = {
+              //       user: user._id,
+              //     };
+              //   }
+              //   let createUserPlan = await UserPlan.findOneAndUpdate(
+              //     { user: user._id },
+              //     userPlanObj,
+              //     { new: true }
+              //   );
 
-							let subscriptionItems;
-							let paymentMethod;
-							let billingResponse;
-							let createBilling = "";
+              //   var userPlanObj = {};
+              //   let userPlan = await UserPlan.findOne({
+              //     _id: createUserPlan._id,
+              //   })
+              //     .populate("plan")
+              //     .populate("subPlan");
 
-							if (req.body.response) {
-								subscriptionItems = {
-									item_price_id: billResponse.subscription.subscription_items[0].item_price_id,
-									item_type: billResponse.subscription.subscription_items[0].item_type,
-									quantity: billResponse.subscription.subscription_items[0].quantity,
-									unit_price: billResponse.subscription.subscription_items[0].unit_price,
-									amount: billResponse.subscription.subscription_items[0].amount,
-									current_term_start: billResponse.subscription.subscription_items[0].current_term_start,
-									current_term_end: billResponse.subscription.subscription_items[0].current_term_end,
-									next_billing_at: billResponse.subscription.subscription_items[0].next_billing_at,
-									free_quantity: billResponse.subscription.subscription_items[0].free_quantity
-								};
+              var projectObj = {
+                projectName: req.body.projectName,
+                keywords: req.body.keywords ? req.body.keywords : null,
+                user: user._id,
+                //   duration: userPlan.subPlan.duration,
+                //   numberOfTasks: userPlan.plan.texts,
+                //   tasks: taskCount
+              };
 
-								paymentMethod = {
-									type: billResponse.customer.payment_method.type,
-									reference_id: billResponse.customer.payment_method.reference_id,
-									gateway: billResponse.customer.payment_method.gateway,
-									gateway_account_id: billResponse.customer.payment_method.gateway_account_id,
-									status: billResponse.customer.payment_method.status
-								};
+              const project = await Projects.findOne({
+                user: user._id,
+                projectName: req.body.projectName.trim(),
+              }).populate({ path: "plan" });
 
-								billingResponse = {
-									userId: user._id,
-									subscriptionId: billResponse.subscription.id,
-									subscriptionStatus: billResponse.subscription.status,
-									subscriptionItem: [subscriptionItems],
-									customer_id: billResponse.customer.id,
-									customer_first_name: billResponse.customer.first_name,
-									customer_last_name: billResponse.customer.last_name,
-									customer_email: billResponse.customer.email,
-									payment_method: paymentMethod
-								};
-								createBilling = await Billing.create(billingResponse);
-							}
+              if (
+                project &&
+                project.plan &&
+                project.plan.subscription &&
+                (dayjs(new Date()).isSame(
+                  dayjs(project.plan.subscription.endDate, "day")
+                ) ||
+                  dayjs(new Date()).isBefore(
+                    dayjs(project.plan.subscription.endDate, "day")
+                  ))
+              ) {
+                res.status(500).send({
+                  message: "This Project's subscription already exists",
+                });
+                return;
+              }
 
-							let createProject = await Projects.findOneAndUpdate(
-								{ user: user._id, projectName: projectObj.projectName },
-								projectObj,
-								{
-									new: true
-								}
-							);
-							let nameChar = createProject.projectName.slice(0, 2).toUpperCase();
-							let idChar = createProject._id.toString().slice(-4);
-							let projectId = nameChar + "-" + idChar;
+              let subscriptionItems;
+              let paymentMethod;
+              let billingResponse;
+              let createBilling = "";
+              let subscription = "";
+              let startAt = "";
+              let endAt = "";
 
-							await Projects.findByIdAndUpdate({ _id: createProject._id }, { projectId: projectId }, { new: true });
+              if (req.body.response) {
+                subscriptionItems = {
+                  item_price_id:
+                    billResponse.subscription.subscription_items[0]
+                      .item_price_id,
+                  item_type:
+                    billResponse.subscription.subscription_items[0].item_type,
+                  quantity:
+                    billResponse.subscription.subscription_items[0].quantity,
+                  unit_price:
+                    billResponse.subscription.subscription_items[0].unit_price,
+                  amount:
+                    billResponse.subscription.subscription_items[0].amount,
+                  current_term_start:
+                    billResponse.subscription.subscription_items[0]
+                      .current_term_start,
+                  current_term_end:
+                    billResponse.subscription.subscription_items[0]
+                      .current_term_end,
+                  next_billing_at:
+                    billResponse.subscription.subscription_items[0]
+                      .next_billing_at,
+                  free_quantity:
+                    billResponse.subscription.subscription_items[0]
+                      .free_quantity,
+                };
 
-							// await Users.findByIdAndUpdate(
-							// 	{ _id: alredyExist._id },
-							// 	{ $push: { projects: createProject._id } },
-							// 	{ new: true }
-							// );
-							if (createBilling !== "") {
-								const clientData = {
-									clientName: `${req.body.firstName} ${req.body.lastName}`,
-									clientEmail: `${req.body.email}`,
-									subscriptionStatus: `${billResponse.subscription.status}`,
-									subscriptionStartDate: `${billResponse.subscription.subscription_items[0].current_term_start}`,
-									subscriptionEndDate: `${billResponse.subscription.subscription_items[0].current_term_end}`,
-									paymentMethodType: `${billResponse.customer.payment_method.type}`,
-									amount: `${billResponse.subscription.subscription_items[0].unit_price}`
-								};
-								// Send email
-								emails
-									.sendBillingInfo(clientData.clientEmail, "Your Billing Information", clientData)
-									.then((res) => {
-										console.log("billing email success: ", res);
-									})
-									.catch((err) => {
-										console.log("billing email error: ", err);
-									});
-							}
-							if (createUserPlan && createProject) {
-								emails.AwsEmailPassword(user);
+                paymentMethod = {
+                  type: billResponse.customer.payment_method.type,
+                  reference_id:
+                    billResponse.customer.payment_method.reference_id,
+                  gateway: billResponse.customer.payment_method.gateway,
+                  gateway_account_id:
+                    billResponse.customer.payment_method.gateway_account_id,
+                  status: billResponse.customer.payment_method.status,
+                };
 
-								let getuser = await Users.findOne({ _id: user._id })
-									.select("firstName lastName email role password")
-									.populate({ path: "role", select: "title" });
+                billingResponse = {
+                  userId: user._id,
+                  subscriptionId: billResponse.subscription.id,
+                  subscriptionStatus: billResponse.subscription.status,
+                  subscriptionItem: [subscriptionItems],
+                  customer_id: billResponse.customer.id,
+                  customer_first_name: billResponse.customer.first_name,
+                  customer_last_name: billResponse.customer.last_name,
+                  customer_email: billResponse.customer.email,
+                  payment_method: paymentMethod,
+                };
+                // createBilling = await Billing.create(billingResponse);
+                startAt = dayjs(
+                  billResponse.subscription.subscription_items[0]
+                    .current_term_start * 1000
+                );
+                endAt = dayjs(
+                  billResponse.subscription.subscription_items[0]
+                    .current_term_end * 1000
+                );
+                subscription = await Subscription.create({
+                  startDate: dayjs(startAt).format("YYYY-MM-DD"),
+                  endDate: dayjs(endAt).format("YYYY-MM-DD"),
+                  subscriptionItem: subscriptionItems,
+                  paymentMethod: paymentMethod,
+                });
+              }
 
-								await session.commitTransaction();
-								session.endSession();
-								res.status(200).send({ message: "User Added", data: getuser, project: createProject });
-							}
-						})
-						.catch(async (err) => {
-							// emails.errorEmail(req, err);
-							await session.abortTransaction();
-							session.endSession();
-							res.status(500).send({
-								message: err.message || "Some error occurred while creating the User."
-							});
-						});
-				}
-			} else if (alredyExist && alredyExist.role.title === "Client") {
-				//alreexist && client role
+              let final_project = "";
+              if (project) {
+                console.log("project already exists");
+                let plan = await Plans.findOne({ _id: req.body.planId });
+                console.log("plan: ", plan);
+                let subPlan = await SubPlans.findOne({
+                  _id: req.body.subPlanId,
+                });
+                console.log("sub plan: ", subPlan);
+                const prevUserPlan = await UserPlan.findOne({
+                  project: project._id,
+                });
 
-				const userRole = await Roles.findOne({ _id: userObj.role });
-				if (userRole.title !== "Client") {
-					res.status(403).send({ message: "You have to buy Subscription." });
-				}
-				userObj.password = alredyExist.password;
-				Users.findByIdAndUpdate({ _id: alredyExist._id }, userObj, { new: true })
-					.then(async (user) => {
-						var userPlanObj = {};
+                const updatePlan = await UserPlan.findOneAndUpdate(
+                  { project: project._id },
+                  {
+                    // ...projectObj,
+                    plan: req.body.planId,
+                    subPlan: req.body.subPlanId,
+                    startDate: subscription.startDate,
+                    endDate: subscription.endDate,
+                    totalTexts: project.plan.totalTexts + plan.texts * subPlan.duration,
+                    textsRemaining: project.plan.textsRemaining + plan.texts * subPlan.duration,
+                    duration: subPlan.duration,
+                    endMonthDate: dayjs(subscription.startDate).add(1, "month"),
+                    tasksPerMonth: plan.texts + prevUserPlan.tasksPerMonth,
+                    subscription: subscription._id,
+                    user: user._id,
+                  },
+                  { new: true }
+                );
+                final_project = project;
+              } else {
+                console.log("creating new project");
+                let plan = await Plans.findOne({ _id: req.body.planId });
+                // console.log("plan: ", plan);
+                let subPlan = await SubPlans.findOne({
+                  _id: req.body.subPlanId,
+                });
+                // console.log("sub plan: ", subPlan);
+                console.log("project obj: ", projectObj);
+                const newProject = await Projects.create({
+                  ...projectObj,
+                });
+                const userPlan = await UserPlan.create({
+                  plan: req.body.planId,
+                  subPlan: req.body.subPlanId,
+                  startDate: subscription.startDate,
+                  endDate: subscription.endDate,
+                  totalTexts: plan.texts * subPlan.duration,
+                  textsRemaining: plan.texts * subPlan.duration,
+                  duration: subPlan.duration,
+                  endMonthDate: dayjs(subscription.startDate).add(1, "month"),
+                  tasksPerMonth: plan.texts,
+                  subscription: subscription._id,
+                  user: user._id,
+                  project: newProject._id,
+                });
+                const updatedProject = await Projects.findOneAndUpdate(
+                  { _id: newProject._id },
+                  {
+                    plan: userPlan._id,
+                  },
+                  { new: true }
+                );
+                final_project = updatedProject;
+                await Users.findByIdAndUpdate(
+                  { _id: alredyExist._id },
+                  { $push: { projects: final_project._id } },
+                  { new: true }
+                );
+              }
 
-						var projectObj = {
-							projectName: req.body.projectName,
-							keywords: req.body.keywords ? req.body.keywords : null,
-							user: user._id,
-							task: 0
-						};
+              //   let createProject = await Projects.findOneAndUpdate(
+              //     { user: user._id, projectName: projectObj.projectName },
+              //     projectObj,
+              //     {
+              //       new: true,
+              //     }
+              //   );
+              let nameChar = final_project.projectName
+                .slice(0, 2)
+                .toUpperCase();
+              let idChar = final_project._id.toString().slice(-4);
+              let projectId = nameChar + "-" + idChar;
 
-						if (req.body.planId) {
-							userPlanObj = {
-								user: user._id,
-								plan: req.body.planId,
-								subPlan: req.body.subPlanId
-							};
-						} else {
-							userPlanObj = {
-								user: user._id
-							};
-						}
-						let subscriptionItems;
-						let paymentMethod;
-						let billingResponse;
-						if (billResponse !== "" && billResponse !== null) {
-							subscriptionItems = {
-								item_price_id: billResponse.subscription.subscription_items[0].item_price_id,
-								item_type: billResponse.subscription.subscription_items[0].item_type,
-								quantity: billResponse.subscription.subscription_items[0].quantity,
-								unit_price: billResponse.subscription.subscription_items[0].unit_price,
-								amount: billResponse.subscription.subscription_items[0].amount,
-								current_term_start: billResponse.subscription.subscription_items[0].current_term_start,
-								current_term_end: billResponse.subscription.subscription_items[0].current_term_end,
-								next_billing_at: billResponse.subscription.subscription_items[0].next_billing_at,
-								free_quantity: billResponse.subscription.subscription_items[0].free_quantity
-							};
+              await Projects.findByIdAndUpdate(
+                { _id: final_project._id },
+                { projectId: projectId },
+                { new: true }
+              );
 
-							paymentMethod = {
-								type: billResponse.customer.payment_method.type,
-								reference_id: billResponse.customer.payment_method.reference_id,
-								gateway: billResponse.customer.payment_method.gateway,
-								gateway_account_id: billResponse.customer.payment_method.gateway_account_id,
-								status: billResponse.customer.payment_method.status
-							};
+              // await Users.findByIdAndUpdate(
+              //   { _id: alredyExist._id },
+              //   { $push: { projects: final_project._id } },
+              //   { new: true }
+              // );
+              if (subscription !== "") {
+                const clientData = {
+                  clientName: `${req.body.firstName} ${req.body.lastName}`,
+                  clientEmail: `${req.body.email}`,
+                  subscriptionStatus: `${billResponse.subscription.status}`,
+                  subscriptionStartDate: `${billResponse.subscription.subscription_items[0].current_term_start}`,
+                  subscriptionEndDate: `${billResponse.subscription.subscription_items[0].current_term_end}`,
+                  paymentMethodType: `${billResponse.customer.payment_method.type}`,
+                  amount: `${billResponse.subscription.subscription_items[0].unit_price}`,
+                };
+                // Send email
+                emails
+                  .sendBillingInfo(
+                    clientData.clientEmail,
+                    "Your Billing Information",
+                    clientData
+                  )
+                  .then((res) => {
+                    console.log("billing email success: ", res);
+                  })
+                  .catch((err) => {
+                    console.log("billing email error: ", err);
+                  });
+              }
+              if (final_project) {
+                emails.AwsEmailPassword(user);
 
-							billingResponse = {
-								userId: user._id,
-								subscriptionId: billResponse.subscription.id,
-								subscriptionStatus: billResponse.subscription.status,
-								subscriptionItem: [{ subscriptionItems }],
-								customer_id: billResponse.customer.id,
-								customer_first_name: billResponse.customer.first_name,
-								customer_last_name: billResponse.customer.last_name,
-								customer_email: billResponse.customer.email,
-								payment_method: paymentMethod
-							};
-						}
+                let getuser = await Users.findOne({ _id: user._id })
+                  .select("firstName lastName email role password")
+                  .populate({ path: "role", select: "title" });
 
-						let createProject = await Projects.create(projectObj);
+                await session.commitTransaction();
+                session.endSession();
+                res.status(200).send({
+                  message: "User Added",
+                  data: getuser,
+                  project: final_project,
+                });
+                return;
+              }
+            })
+            .catch(async (err) => {
+              // emails.errorEmail(req, err);
+              await session.abortTransaction();
+              session.endSession();
+              res.status(500).send({
+                message:
+                  err.message || "Some error occurred while creating the User.",
+              });
+            });
+        }
+      } else if (alredyExist && alredyExist.role.title === "Client") {
+        //alreexist && client role
+        console.log("inside 3rd if ....");
 
-						let nameChar = createProject.projectName.slice(0, 2).toUpperCase();
-						let idChar = createProject._id.toString().slice(-4);
-						let projectId = nameChar + "-" + idChar;
+        const userRole = await Roles.findOne({ _id: userObj.role });
+        if (userRole.title !== "Client") {
+          res
+            .status(403)
+            .send({ message: "You are a already registered user" });
+          return;
+        }
+        if (!req.body.planId || !req.body.subPlanId) {
+          res.status(500).send({ message: "User already exists" });
+          return;
+        }
+        userObj.password = alredyExist.password;
+        Users.findByIdAndUpdate({ _id: alredyExist._id }, userObj, {
+          new: true,
+        })
+          .then(async (user) => {
+            var userPlanObj = {};
 
-						let updateProjectId = await Projects.findByIdAndUpdate(
-							{ _id: createProject._id },
-							{ projectId: projectId },
-							{ new: true }
-						);
+            var projectObj = {
+              projectName: req.body.projectName,
+              keywords: req.body.keywords ? req.body.keywords : null,
+              user: user._id,
+              //   task: 0,
+            };
 
-						let pushProjectId = await Users.findByIdAndUpdate(
-							{ _id: alredyExist._id },
-							{ $push: { projects: createProject._id } },
-							{ new: true }
-						);
-						userPlanObj.projectId = createProject._id;
+            if (req.body.planId) {
+              userPlanObj = {
+                user: user._id,
+                // plan: req.body.planId,
+                // subPlan: req.body.subPlanId,
+              };
+            } else {
+              userPlanObj = {
+                user: user._id,
+              };
+            }
 
-						let createUserPlan = await UserPlan.create(userPlanObj);
-						let createBilling = await Billing.create(billingResponse);
+            const project = await Projects.findOne({
+              user: user._id,
+              projectName: req.body.projectName.trim(),
+            }).populate({ path: "plan" });
 
-						if (createUserPlan && createProject && createBilling) {
-							const clientData = {
-								clientName: `${req.body.firstName} ${req.body.lastName}`,
-								clientEmail: `${req.body.email}`,
-								subscriptionStatus: `${billResponse.subscription.status}`,
-								subscriptionStartDate: `${billResponse.subscription.subscription_items[0].current_term_start}`,
-								subscriptionEndDate: `${billResponse.subscription.subscription_items[0].current_term_end}`,
-								paymentMethodType: `${billResponse.customer.payment_method.type}`,
-								amount: `${billResponse.subscription.subscription_items[0].unit_price}`
-							};
-							// Send email
-							emails
-								.sendBillingInfo(clientData.clientEmail, "Your Billing Information", clientData)
-								.then((res) => {
-									console.log("billing email success: ", res);
-								})
-								.catch((err) => {
-									console.log("billing email error: ", err);
-								});
+            //   console.log("before if", project.plan.subscription, "user id: ", user._id)
+            //   console.log("project: ", project)
 
-							await emails.AwsEmailPassword(user);
+            if (
+              project &&
+              project.plan &&
+              project.plan.subscription &&
+              (dayjs(new Date()).isSame(
+                dayjs(project.plan.subscription.endDate, "day")
+              ) ||
+                dayjs(new Date()).isBefore(
+                  dayjs(project.plan.subscription.endDate, "day")
+                ))
+            ) {
+              // console.log("inside check if")
+              res.status(500).send({
+                message: "This Project's subscription already exists",
+              });
+              return;
+            }
 
-							await session.commitTransaction();
-							session.endSession();
-							res.send({ message: "User Added", data: user, project: createProject });
-						}
-					})
-					.catch(async (err) => {
-						// emails.errorEmail(req, err);
-						await session.abortTransaction();
-						session.endSession();
-						res.status(500).send({
-							message: err.message || "Some error occurred while creating the User."
-						});
-					});
-			} else {
-				res.status(401).send({ message: "UnAuthorized for this action." });
-			}
-		}
-	} catch (err) {
-		emails.errorEmail(req, err);
-		res.status(500).send({
-			message: err.message || "Some error occurred."
-		});
-	}
+            //   console.log("after if")
+
+            let subscriptionItems;
+            let paymentMethod;
+            let billingResponse;
+            let subscription = "";
+            let startAt = "";
+            let endAt = "";
+            if (billResponse !== "" && billResponse !== null) {
+              subscriptionItems = {
+                item_price_id:
+                  billResponse.subscription.subscription_items[0].item_price_id,
+                item_type:
+                  billResponse.subscription.subscription_items[0].item_type,
+                quantity:
+                  billResponse.subscription.subscription_items[0].quantity,
+                unit_price:
+                  billResponse.subscription.subscription_items[0].unit_price,
+                amount: billResponse.subscription.subscription_items[0].amount,
+                current_term_start:
+                  billResponse.subscription.subscription_items[0]
+                    .current_term_start,
+                current_term_end:
+                  billResponse.subscription.subscription_items[0]
+                    .current_term_end,
+                next_billing_at:
+                  billResponse.subscription.subscription_items[0]
+                    .next_billing_at,
+                free_quantity:
+                  billResponse.subscription.subscription_items[0].free_quantity,
+              };
+
+              paymentMethod = {
+                type: billResponse.customer.payment_method.type,
+                reference_id: billResponse.customer.payment_method.reference_id,
+                gateway: billResponse.customer.payment_method.gateway,
+                gateway_account_id:
+                  billResponse.customer.payment_method.gateway_account_id,
+                status: billResponse.customer.payment_method.status,
+              };
+
+              billingResponse = {
+                userId: user._id,
+                subscriptionId: billResponse.subscription.id,
+                subscriptionStatus: billResponse.subscription.status,
+                subscriptionItem: [{ subscriptionItems }],
+                customer_id: billResponse.customer.id,
+                customer_first_name: billResponse.customer.first_name,
+                customer_last_name: billResponse.customer.last_name,
+                customer_email: billResponse.customer.email,
+                payment_method: paymentMethod,
+              };
+              startAt = dayjs(
+                billResponse.subscription.subscription_items[0]
+                  .current_term_start * 1000
+              );
+              endAt = dayjs(
+                billResponse.subscription.subscription_items[0]
+                  .current_term_end * 1000
+              );
+              subscription = await Subscription.create({
+                startDate: dayjs(startAt).format("YYYY-MM-DD"),
+                endDate: dayjs(endAt).format("YYYY-MM-DD"),
+                subscriptionItem: subscriptionItems,
+                paymentMethod: paymentMethod,
+              });
+            }
+
+            let final_project = "";
+            if (project) {
+              console.log("project already exists", project);
+              let plan = await Plans.findOne({ _id: req.body.planId });
+              //   console.log("plan: ", plan);
+              let subPlan = await SubPlans.findOne({
+                _id: req.body.subPlanId,
+              });
+              //   console.log("sub plan: ", subPlan);
+              console.log(
+                "test number: ",
+                project.plan.totalTexts + Number(plan.texts * subPlan.duration)
+              );
+              const prevUserPlan = await UserPlan.findOne({
+                project: project._id,
+              });
+              const updatePlan = await UserPlan.findOneAndUpdate(
+                { project: project._id },
+                {
+                  // ...projectObj,
+                  plan: req.body.planId,
+                  subPlan: req.body.subPlanId,
+                  startDate: subscription.startDate,
+                  endDate: subscription.endDate,
+                  totalTexts: Number(
+                    project.plan.totalTexts +
+                      Number(plan.texts * subPlan.duration)
+                  ),
+                  textsRemaining: Number(
+                    project.plan.textsRemaining +
+                      Number(plan.texts * subPlan.duration)
+                  ),
+                  duration: subPlan.duration,
+                  endMonthDate: dayjs(subscription.startDate).add(1, "month"),
+                  tasksPerMonth: plan.texts + prevUserPlan.tasksPerMonth,
+                  subscription: subscription._id,
+                  user: user._id,
+                },
+                { new: true }
+              );
+              console.log("updated plan: ", updatePlan);
+              final_project = project;
+            } else {
+              console.log("creating new project");
+              let plan = await Plans.findOne({ _id: req.body.planId });
+              // console.log("plan: ", plan);
+              let subPlan = await SubPlans.findOne({
+                _id: req.body.subPlanId,
+              });
+              // console.log("sub plan: ", subPlan);
+              console.log("project obj: ", projectObj);
+              const newProject = await Projects.create({
+                ...projectObj,
+              });
+              const userPlan = await UserPlan.create({
+                plan: req.body.planId,
+                subPlan: req.body.subPlanId,
+                startDate: subscription.startDate,
+                endDate: subscription.endDate,
+                totalTexts: plan.texts * subPlan.duration,
+                textsRemaining: plan.texts * subPlan.duration,
+                duration: subPlan.duration,
+                endMonthDate: dayjs(subscription.startDate).add(1, "month"),
+                tasksPerMonth: plan.texts,
+                subscription: subscription._id,
+                user: user._id,
+                project: newProject._id,
+              });
+              console.log("userplan id: ", userPlan);
+              const updatedProject = await Projects.findOneAndUpdate(
+                { _id: newProject._id },
+                {
+                  plan: userPlan._id,
+                },
+                { new: true }
+              );
+              final_project = updatedProject;
+              let pushProjectId = await Users.findByIdAndUpdate(
+                { _id: alredyExist._id },
+                { $push: { projects: final_project._id } },
+                { new: true }
+              );
+            }
+
+            // let createProject = await Projects.create(projectObj);
+
+            let nameChar = final_project.projectName.slice(0, 2).toUpperCase();
+            let idChar = final_project._id.toString().slice(-4);
+            let projectId = nameChar + "-" + idChar;
+
+            let updateProjectId = await Projects.findByIdAndUpdate(
+              { _id: final_project._id },
+              { projectId: projectId },
+              { new: true }
+            );
+
+            // let pushProjectId = await Users.findByIdAndUpdate(
+            //   { _id: alredyExist._id },
+            //   { $push: { projects: final_project._id } },
+            //   { new: true }
+            // );
+            // userPlanObj.projectId = createProject._id;
+
+            // let createUserPlan = await UserPlan.create(userPlanObj);
+            // let createBilling = await Billing.create(billingResponse);
+
+            if (final_project && subscription) {
+              const clientData = {
+                clientName: `${req.body.firstName} ${req.body.lastName}`,
+                clientEmail: `${req.body.email}`,
+                subscriptionStatus: `${billResponse.subscription.status}`,
+                subscriptionStartDate: `${billResponse.subscription.subscription_items[0].current_term_start}`,
+                subscriptionEndDate: `${billResponse.subscription.subscription_items[0].current_term_end}`,
+                paymentMethodType: `${billResponse.customer.payment_method.type}`,
+                amount: `${billResponse.subscription.subscription_items[0].unit_price}`,
+              };
+              // Send email
+              emails
+                .sendBillingInfo(
+                  clientData.clientEmail,
+                  "Your Billing Information",
+                  clientData
+                )
+                .then((res) => {
+                  console.log("billing email success: ", res);
+                })
+                .catch((err) => {
+                  console.log("billing email error: ", err);
+                });
+
+              await emails.AwsEmailPassword(user);
+
+              await session.commitTransaction();
+              session.endSession();
+              res.send({
+                message: "User Added",
+                data: user,
+                project: final_project,
+              });
+
+              return;
+            }
+          })
+          .catch(async (err) => {
+            // emails.errorEmail(req, err);
+            await session.abortTransaction();
+            session.endSession();
+            res.status(500).send({
+              message:
+                err.message || "Some error occurred while creating the User.",
+            });
+          });
+      } else {
+        res.status(401).send({ message: "UnAuthorized for this action." });
+        return;
+      }
+    }
+  } catch (err) {
+    emails.errorEmail(req, err);
+    res.status(500).send({
+      message: err.message || "Some error occurred.",
+    });
+  }
 };
 exports.update = async (req, res) => {
-	try {
-		const joiSchema = Joi.object({
-			// userId: Joi.string().required(),
-			firstName: Joi.string().required(),
-			lastName: Joi.string().required()
-		});
-		const { error, value } = joiSchema.validate(req.body);
+  try {
+    const joiSchema = Joi.object({
+      // userId: Joi.string().required(),
+      firstName: Joi.string().required(),
+      lastName: Joi.string().required(),
+    });
+    const { error, value } = joiSchema.validate(req.body);
 
-		if (error) {
-			emails.errorEmail(req, error);
+    if (error) {
+      emails.errorEmail(req, error);
 
-			const message = error.details[0].message.replace(/"/g, "");
-			res.status(401).send({
-				message: message
-			});
-		} else {
-			const userId = req.userId;
+      const message = error.details[0].message.replace(/"/g, "");
+      res.status(401).send({
+        message: message,
+      });
+    } else {
+      const userId = req.userId;
 
-			const user = {
-				firstName: req.body.firstName?.trim(),
-				lastName: req.body.lastName?.trim()
-			};
+      const user = {
+        firstName: req.body.firstName?.trim(),
+        lastName: req.body.lastName?.trim(),
+      };
 
-			var updateUser = await Users.findOneAndUpdate({ _id: userId, isActive: "Y" }, user, { new: true });
-			if (updateUser) {
-				res.status(200).send({
-					message: "User updated successfully.",
-					data: updateUser
-				});
-			} else {
-				res.status(500).send({
-					message: "Failed to update user."
-				});
-			}
-		}
-	} catch (err) {
-		emails.errorEmail(req, err);
-		res.status(500).send({
-			message: err.message || "Some error occurred."
-		});
-	}
+      var updateUser = await Users.findOneAndUpdate(
+        { _id: userId, isActive: "Y" },
+        user,
+        { new: true }
+      );
+      if (updateUser) {
+        res.status(200).send({
+          message: "User updated successfully.",
+          data: updateUser,
+        });
+      } else {
+        res.status(500).send({
+          message: "Failed to update user.",
+        });
+      }
+    }
+  } catch (err) {
+    emails.errorEmail(req, err);
+    res.status(500).send({
+      message: err.message || "Some error occurred.",
+    });
+  }
 };
 
 exports.onboarding = async (req, res) => {
-	const session = await mongoose.startSession();
-	session.startTransaction();
-	try {
-		const joiSchema = Joi.object({
-			speech: Joi.string().required(),
-			prespective: Joi.string().required(),
-			projectName: Joi.string().required(),
-			projectId: Joi.string().required(),
-			userId: Joi.string().optional().allow("").allow(null),
-			companyBackgorund: Joi.string().optional().allow("").allow(null),
-			companyAttributes: Joi.string().optional().allow("").allow(null),
-			comapnyServices: Joi.string().optional().allow("").allow(null),
-			customerContent: Joi.string().optional().allow("").allow(null),
-			customerIntrest: Joi.string().optional().allow("").allow(null),
-			contentPurpose: Joi.string().optional().allow("").allow(null),
-			contentInfo: Joi.string().optional().allow("").allow(null)
-		});
-		const { error, value } = joiSchema.validate(req.body);
+  console.log("on boarding api called ... !!");
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const joiSchema = Joi.object({
+      speech: Joi.string().required(),
+      prespective: Joi.string().required(),
+      projectName: Joi.string().required(),
+      projectId: Joi.string().required(),
+      userId: Joi.string().required(),
+      companyBackgorund: Joi.string().optional().allow("").allow(null),
+      companyAttributes: Joi.string().optional().allow("").allow(null),
+      comapnyServices: Joi.string().optional().allow("").allow(null),
+      customerContent: Joi.string().optional().allow("").allow(null),
+      customerIntrest: Joi.string().optional().allow("").allow(null),
+      contentPurpose: Joi.string().optional().allow("").allow(null),
+      contentInfo: Joi.string().optional().allow("").allow(null),
+    });
+    const { error, value } = joiSchema.validate(req.body);
 
-		if (error) {
-			// emails.errorEmail(req, error);
+    if (error) {
+      // emails.errorEmail(req, error);
 
-			const message = error.details[0].message.replace(/"/g, "");
-			res.status(401).send({
-				message: message
-			});
-		} else {
-			const userId = req.body.userId ? req.body.userId : null;
-			const projectId = req.body.projectId;
-			const projectName = req.body.projectName.trim();
-			const speech = req.body.speech.trim();
-			const prespective = req.body.prespective.trim();
+      const message = error.details[0].message.replace(/"/g, "");
+      res.status(401).send({
+        message: message,
+      });
+    } else {
+      const userId = req.body.userId ? req.body.userId : null;
+      const projectId = req.body.projectId;
+      const projectName = req.body.projectName.trim();
+      const speech = req.body.speech.trim();
+      const prespective = req.body.prespective.trim();
 
-			let companyInfoObj = {
-				companyBackgorund: req.body.companyBackgorund,
-				companyAttributes: req.body.companyAttributes,
-				comapnyServices: req.body.comapnyServices,
-				customerContent: req.body.customerContent,
-				customerIntrest: req.body.customerIntrest,
-				contentPurpose: req.body.contentPurpose,
-				contentInfo: req.body.contentInfo
-			};
+      let companyInfoObj = {
+        companyBackgorund: req.body.companyBackgorund,
+        companyAttributes: req.body.companyAttributes,
+        comapnyServices: req.body.comapnyServices,
+        customerContent: req.body.customerContent,
+        customerIntrest: req.body.customerIntrest,
+        contentPurpose: req.body.contentPurpose,
+        contentInfo: req.body.contentInfo,
+      };
 
-			var whereClause;
-			if (userId) {
-				whereClause = {
-					_id: userId,
-					isActive: "Y"
-				};
-			}
-			let getuser = await Users.findOne(whereClause).populate({
-				path: "role",
-				select: "title"
-			});
-			if (getuser) {
-				var role = getuser.role;
-				var project = await Projects.findOne({
-					_id: projectId,
-					user: userId
-				});
-				if (project) {
-					var project = await Projects.findOne({
-						_id: projectId,
-						user: userId
-					})
-						.populate({
-							path: "user",
-							select: "email role",
-							populate: { path: "role", select: "title" }
-						})
-						.select("id projectName keywords");
-				} else {
-					res.status(404).send({ message: "Project not found!" });
-				}
-			}
-			if (getuser && project) {
-				if ((role.title == "leads" || role.title == "Leads") && project.projectName == projectName) {
-					let taskCount = await ProjectTask.countDocuments({
-						project: projectId
-					});
-					if (taskCount == 0) {
-						let projectStatus;
-						let taskStatus;
-						if (speech !== "" && prespective !== "") {
-							projectStatus = "Free Trial";
-							taskStatus = "Ready to Start";
-						}
-						let proectTaskObj = {
-							keywords: project.keywords,
-							project: project._id,
-							desiredNumberOfWords: "1500",
-							status: taskStatus,
-							tasks: taskCount
-						};
-						companyInfoObj.user = project.user._id;
+      var whereClause;
+      if (userId) {
+        whereClause = {
+          _id: userId,
+          isActive: "Y",
+        };
+      }
+      let getuser = await Users.findOne(whereClause).populate({
+        path: "role",
+        select: "title",
+      });
+      if (getuser) {
+        var role = getuser.role;
+        var project = await Projects.findOne({
+          _id: projectId,
+          user: userId,
+        });
+        if (project) {
+          var project = await Projects.findOne({
+            _id: projectId,
+            user: userId,
+          })
+            .populate({
+              path: "user",
+              select: "email role",
+              populate: { path: "role", select: "title" },
+            })
+            .select("id projectName keywords");
 
-						let createCompany = await Company.create(companyInfoObj);
+          if (getuser && project) {
+            if (
+              (role.title == "leads" || role.title == "Leads") &&
+              project.projectName == projectName
+            ) {
+              let taskCount = await ProjectTask.countDocuments({
+                project: projectId,
+              });
+              if (taskCount == 0) {
+                let projectStatus;
+                let taskStatus;
+                // if (speech !== "" && prespective !== "") {
+                projectStatus = "Free Trial";
+                taskStatus = "Ready to Start";
+                // }
+                let proectTaskObj = {
+                  keywords: project.keywords,
+                  project: project._id,
+                  desiredNumberOfWords: "1500",
+                  status: taskStatus,
+                  //   tasks: taskCount,
+                };
+                companyInfoObj.user = project.user._id;
 
-						let upadteProject = await Projects.findOneAndUpdate(
-							{ _id: project._id },
-							{
-								speech: speech,
-								prespective: prespective,
-								projectStatus: projectStatus,
-								duration: "1",
-								numberOfTasks: "1",
-								tasks: 1
-							},
-							{ new: true }
-						);
+                let createCompany = await Company.create(companyInfoObj);
 
-						let createProjectTask = await ProjectTask.create(proectTaskObj);
-						await Projects.findByIdAndUpdate(
-							projectId,
-							{ $push: { projectTask: createProjectTask._id } },
-							{ new: true }
-						);
+                let upadteProject = await Projects.findOneAndUpdate(
+                  { _id: project._id },
+                  {
+                    speech: speech,
+                    prespective: prespective,
+                    projectStatus: projectStatus,
+                    onBoarding: true,
+                    // duration: "1",
+                    // numberOfTasks: "1",
+                    tasks: 1,
+                  },
+                  { new: true }
+                );
 
-						let nameChar = upadteProject.projectName.slice(0, 2).toUpperCase();
-						let idChar = createProjectTask._id.toString().slice(-4);
-						let taskId = nameChar + "-" + idChar;
+                let createProjectTask = await ProjectTask.create(proectTaskObj);
+                await Projects.findByIdAndUpdate(
+                  projectId,
+                  { $push: { projectTasks: createProjectTask._id } },
+                  { new: true }
+                );
 
-						let updateTaskId = await ProjectTask.findByIdAndUpdate(
-							{ _id: createProjectTask._id },
-							{ taskName: taskId },
-							{ new: true }
-						);
+                const updatedUserPlan = await UserPlan.findOneAndUpdate(
+                  { user: project.user._id, project: project._id },
+                  {
+                    $inc: {
+                      textsCount: 1,
+                      textsRemaining: -1,
+                      tasksPerMonthCount: 1,
+                    },
+                  },
+                  { new: true }
+                );
 
-						if (upadteProject && createProjectTask) {
-							await session.commitTransaction();
-							session.endSession();
-							await emails.onBoadingSuccess(getuser);
+                let nameChar = upadteProject.projectName
+                  .slice(0, 2)
+                  .toUpperCase();
+                let idChar = createProjectTask._id.toString().slice(-4);
+                let taskId = nameChar + "-" + idChar;
 
-							res.send({
-								message: "OnBoarding successful",
-								data: createProjectTask
-							});
-						}
-					} else {
-						res.status(403).send({ message: "As free trial gives only 1 task" });
-					}
-				} else if ((role.title == "leads" || role.title == "Leads") && project.projectName != projectName) {
-					res.status(403).send({
-						message: "You are Leads Role so you can not onboard another project/task"
-					});
-				} else if (role.title == "Client" && project.projectName == projectName) {
-					let taskCount = await ProjectTask.countDocuments({
-						project: project._id
-					});
+                let updateTaskId = await ProjectTask.findByIdAndUpdate(
+                  { _id: createProjectTask._id },
+                  { taskName: taskId },
+                  { new: true }
+                );
 
-					let userPlan = await UserPlan.findOne({ user: userId, projectId: projectId })
-						.populate("plan")
-						.populate("subPlan");
+                if (upadteProject && createProjectTask) {
+                  await session.commitTransaction();
+                  session.endSession();
+                  await emails.onBoadingSuccess(getuser);
 
-					if (taskCount <= userPlan.plan.texts - 1) {
-						let projectStatus;
-						let taskStatus;
-						if (speech !== "" && prespective !== "") {
-							projectStatus = "Ready";
-						}
+                  res.send({
+                    message: "OnBoarding successful",
+                    data: createProjectTask,
+                  });
+                }
+              } else {
+                res
+                  .status(403)
+                  .send({ message: "As free trial gives only 1 task" });
+              }
+            } else if (
+              (role.title == "leads" || role.title == "Leads") &&
+              project.projectName !== projectName
+            ) {
+              res.status(403).send({
+                message:
+                  "You are Leads Role so you can not onboard another project/task",
+              });
+            } else if (
+              role.title == "Client" &&
+              project.projectName == projectName
+            ) {
+              let taskCount = await ProjectTask.countDocuments({
+                project: project._id,
+              });
 
-						let proectTaskObj = {
-							keywords: project.keywords,
-							desiredNumberOfWords: userPlan.plan.desiredWords,
-							project: project._id
-						};
+              let userPlan = await UserPlan.findOne({
+                user: userId,
+                project: projectId,
+              });
 
-						companyInfoObj.user = project.user._id;
+              console.log("user plan: ", userPlan)
 
-						let createCompany = await Company.findOneAndUpdate({ user: userId }, companyInfoObj, { new: true });
+              if (!userPlan.subscription) {
+                res
+                  .status(500)
+                  .send({ message: "You don't have subscription" });
+                return;
+              }
 
-						let upadteProject = await Projects.findOneAndUpdate(
-							{ _id: project._id },
-							{
-								speech: speech,
-								prespective: prespective,
-								duration: userPlan.subPlan.duration,
-								numberOfTasks: userPlan.plan.texts,
-								projectStatus: projectStatus,
-								tasks: taskCount + 1
-							},
-							{ new: true }
-						);
+              if (
+                dayjs(new Date()).isAfter(
+                  dayjs(userPlan.endMonthDate, "day")
+                ) ||
+                userPlan.tasksPerMonthCount === userPlan.tasksPerMonth
+              ) {
+                res
+                  .status(500)
+                  .send({ message: "You have reached monthly limit" });
 
-						let createProjectTask = await ProjectTask.create(proectTaskObj);
-						await Projects.findByIdAndUpdate(
-							projectId,
-							{ $push: { projectTask: createProjectTask._id } },
-							{ new: true }
-						);
+                return;
+              }
+              if (userPlan.textsRemaining === 0) {
+                res
+                  .status(500)
+                  .send({ message: "Your subscription is expired" });
+                return;
+                
+              }
+              if (dayjs(new Date()).isAfter(dayjs(userPlan.endDate, "day"))) {
+                res
+                  .status(500)
+                  .send({ message: "Your subscription is expired" });
+                return;
+              }
 
-						let nameChar = upadteProject.projectName.slice(0, 2).toUpperCase();
-						let idChar = createProjectTask._id.toString().slice(-4);
-						let taskId = nameChar + "-" + idChar;
+              // if (taskCount <= userPlan.plan.texts - 1) {
+              let projectStatus;
+              let taskStatus;
+              if (speech !== "" && prespective !== "") {
+                projectStatus = "Ready";
+              }
 
-						let updateTaskId = await ProjectTask.findByIdAndUpdate(
-							{ _id: createProjectTask._id },
-							{ taskName: taskId },
-							{ new: true }
-						);
+              let proectTaskObj = {
+                keywords: project.keywords,
+                desiredNumberOfWords: userPlan.plan.desiredWords,
+                project: project._id,
+              };
 
-						if (upadteProject && createProjectTask) {
-							await session.commitTransaction();
-							session.endSession();
-							await emails.onBoadingSuccess(getuser);
+              companyInfoObj.user = project.user._id;
 
-							res.send({
-								message: "OnBoarding successful",
-								data: createProjectTask
-							});
-						}
-					} else {
-						res.status(403).send({
-							message: "You cannot create more Tasks because you have reached subscription limit."
-						});
-					}
-				} else {
-					res.status(403).send({
-						message: "Project not found!"
-					});
-				}
-			}
-			// else if (role && role.title == "Client") {
-			// 	let userPlan = await UserPlan.findOne({ user: userId })
-			// 		.populate({ path: "plan" })
-			// 		.populate({ path: "subPlan" });
+              let createCompany = await Company.findOneAndUpdate(
+                { user: userId },
+                companyInfoObj,
+                { new: true }
+              );
 
-			// 	companyInfoObj.user = userId;
+              let upadteProject = await Projects.findOneAndUpdate(
+                { _id: project._id },
+                {
+                  speech: speech,
+                  prespective: prespective,
+                  onBoarding: true,
+                  // duration: userPlan.subPlan.duration,
+                  // numberOfTasks: userPlan.plan.texts,
+                  projectStatus: projectStatus,
+                  // tasks: taskCount + 1,
+                },
+                { new: true }
+              );
 
-			// 	if (speech !== "" && prespective !== "") {
-			// 		projectStatus = "Ready";
-			// 	}
+              let createProjectTask = await ProjectTask.create(proectTaskObj);
+              await Projects.findByIdAndUpdate(
+                projectId,
+                { $push: { projectTasks: createProjectTask._id } },
+                { new: true }
+              );
 
-			// 	let createCompany = await Company.create(companyInfoObj);
+              await UserPlan.findOneAndUpdate(
+                { user: project.user._id, project: project._id },
+                {
+                  $inc: {
+                    textsCount: 1,
+                    textsRemaining: -1,
+                    tasksPerMonthCount: 1,
+                  },
+                },
+                { new: true }
+              );
 
-			// 	let createProject = await Projects.create({
-			// 		projectName: projectName,
-			// 		speech: speech,
-			// 		prespective: prespective,
-			// 		duration: userPlan.subPlan.duration,
-			// 		numberOfTasks: userPlan.plan.texts,
-			// 		projectStatus: projectStatus,
-			// 		tasks: 1,
-			// 		user: userId,
-			// 	});
+              let nameChar = upadteProject.projectName
+                .slice(0, 2)
+                .toUpperCase();
+              let idChar = createProjectTask._id.toString().slice(-4);
+              let taskId = nameChar + "-" + idChar;
 
-			// 	let proectTaskObj = {
-			// 		status: "Ready to Start",
-			// 		keywords: createProject.keywords ? createProject.keywords : null,
-			// 		desiredNumberOfWords: userPlan.plan.desiredWords,
-			// 		project: createProject._id,
-			// 	};
-			// 	let createProjectTask = await ProjectTask.create(proectTaskObj);
+              let updateTaskId = await ProjectTask.findByIdAndUpdate(
+                { _id: createProjectTask._id },
+                { taskName: taskId },
+                { new: true }
+              );
 
-			// 	if (createProject && createProjectTask) {
-			// 		await session.commitTransaction();
-			// 		session.endSession();
-			// 		await emails.onBoadingSuccess(getuser);
-			// 		res.send({
-			// 			message: "OnBoarding successful",
-			// 			data: createProjectTask,
-			// 		});
-			// 	}
-			// }
-			else if (role && role.title == "leads") {
-				await session.commitTransaction();
-				session.endSession();
-				res.status(403).send({ message: "As free trial gives only 1 task" });
-			} else {
-				await session.commitTransaction();
-				session.endSession();
-				res.status(401).send({ message: "You are not a valid user" });
-			}
-		}
-	} catch (err) {
-		// emails.errorEmail(req, err);
-		await session.abortTransaction();
-		session.endSession();
-		res.status(500).send({
-			message: err.message || "Some error occurred."
-		});
-	}
+              if (upadteProject && createProjectTask) {
+                await session.commitTransaction();
+                session.endSession();
+                await emails.onBoadingSuccess(getuser);
+
+                res.send({
+                  message: "OnBoarding successful",
+                  data: createProjectTask,
+                });
+              }
+              // } else {
+              //   res.status(403).send({
+              //     message:
+              //       "You cannot create more Tasks because you have reached subscription limit.",
+              //   });
+              // }
+            } else {
+              res.status(403).send({
+                message: "Project not found!",
+              });
+            }
+          } else if (role && role.title == "leads") {
+            await session.commitTransaction();
+            session.endSession();
+            res
+              .status(403)
+              .send({ message: "As free trial gives only 1 task" });
+            return;
+          } else {
+            await session.commitTransaction();
+            session.endSession();
+            res.status(401).send({ message: "You are not a valid user" });
+            return;
+          }
+        } else {
+          res.status(404).send({ message: "Project not found!" });
+          return;
+        }
+      } else {
+        await session.commitTransaction();
+        session.endSession();
+        res.status(401).send({ message: "You are not a valid user" });
+        return;
+      }
+    }
+  } catch (err) {
+    // emails.errorEmail(req, err);
+    await session.abortTransaction();
+    session.endSession();
+    res.status(500).send({
+      message: err.message || "Some error occurred.",
+    });
+  }
 };
 
 exports.findUserPlan = async (req, res) => {
-	UserPlan.find({ user: "66b8c02ac454e13575527fee" })
-		.then((response) => {
-			res.send(response);
-		})
-		.catch((err) => {
-			console.log(err);
-		});
+  UserPlan.find({ user: "66b8c02ac454e13575527fee" })
+    .then((response) => {
+      res.send(response);
+    })
+    .catch((err) => {
+      console.log(err);
+    });
 };

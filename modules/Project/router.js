@@ -12,4 +12,8 @@ router.post("/detail", (req, res) => {
 	projectController.detail(req, res);
 });
 
+router.post("/checkInsert", (req, res) => {
+  projectController.checkBeforeCreate(req, res);
+});
+
 module.exports = router;
