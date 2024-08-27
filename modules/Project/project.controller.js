@@ -87,8 +87,12 @@ exports.detail = async (req, res) => {
       const userId = req.body.userId;
 
       Users.find({ _id: userId })
-        .populate("projects")
-        .populate("plan")
+		  .populate({
+			  path: "projects",
+			  populate: {
+				  path: "plan"
+			  }
+		})
         .select("email firstName isSubScribed lastName")
         .then(async (response) => {
           res.send({ message: "List of the client projects", data: response });
