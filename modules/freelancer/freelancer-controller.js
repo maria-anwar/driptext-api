@@ -91,4 +91,32 @@ exports.create = async (req, res) => {
   }
 };
 
+exports.emailCheck = async (req, res) => {
+  const joiSchema = Joi.object({
+    // userId: Joi.string().required(),
+    email: Joi.string().required(),
+    // lastName: Joi.string().required(),
+  });
+  const { error, value } = joiSchema.validate(req.body);
+
+  if (error) {
+    emails.errorEmail(req, error);
+
+    const message = error.details[0].message.replace(/"/g, "");
+    res.status(401).send({
+      message: message,
+    });
+    return;
+  }
+  const isFreelancer = await Freelancers.findOne({ email: req.body.email });
+  if (isFreelancer) {
+    res.status(500).json({ message: "This email exists as freelancer" });
+    return;
+  }
+ 
+
+  res.status(200).json({ message: "success" });
+
+}
+
 

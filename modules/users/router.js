@@ -22,4 +22,9 @@ router.post("/userplan", (req, res) => {
 	usersController.findUserPlan(req, res);
 });
 
+router.post("/emailCheck", (req, res) => {
+	usersController.checkEmail(req, res);
+
+})
+
 module.exports = router;
