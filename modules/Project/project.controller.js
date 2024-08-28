@@ -11,7 +11,7 @@ const UserPlan = db.UserPlan;
 const Roles = db.Role;
 const Project = db.Project;
 const ProjectTask = db.ProjectTask;
-const Freelancers = db.Freelacer;
+const Freelancers = db.Freelancer;
 
 exports.create = async (req, res) => {
   try {
