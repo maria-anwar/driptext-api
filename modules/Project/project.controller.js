@@ -11,6 +11,7 @@ const UserPlan = db.UserPlan;
 const Roles = db.Role;
 const Project = db.Project;
 const ProjectTask = db.ProjectTask;
+const Freelancers = db.Freelacer;
 
 exports.create = async (req, res) => {
   try {
@@ -85,14 +86,22 @@ exports.detail = async (req, res) => {
       });
     } else {
       const userId = req.body.userId;
+      const isFreelancer = await Freelancers.findOne({ _id: userId });
+
+      if (isFreelancer) {
+        res
+          .status(500)
+          .json({ message: "This email already exists as freelancer" });
+        return;
+      }
 
       Users.find({ _id: userId })
-		  .populate({
-			  path: "projects",
-			  populate: {
-				  path: "plan"
-			  }
-		})
+        .populate({
+          path: "projects",
+          populate: {
+            path: "plan",
+          },
+        })
         .select("email firstName isSubScribed lastName")
         .then(async (response) => {
           res.send({ message: "List of the client projects", data: response });
@@ -112,8 +121,8 @@ exports.detail = async (req, res) => {
 };
 
 exports.checkBeforeCreate = async (req, res) => {
-	try {
-		const joiSchema = Joi.object({
+  try {
+    const joiSchema = Joi.object({
       userId: Joi.string().required(),
       projectName: Joi.string().required(),
     });
@@ -144,10 +153,7 @@ exports.checkBeforeCreate = async (req, res) => {
     }
 
     res.status(200).send({ message: "success" });
-	  
-	} catch (error) {
-		res.status(500).send({message: error.message || "Something went wrong"})
-		
+  } catch (error) {
+    res.status(500).send({ message: error.message || "Something went wrong" });
   }
-	
 };
