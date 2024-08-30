@@ -1165,6 +1165,7 @@ exports.onboarding = async (req, res) => {
                 keywords: project.keywords,
                 desiredNumberOfWords: userPlan.plan.desiredWords,
                 project: project._id,
+                
               };
 
               companyInfoObj.user = project.user._id;
@@ -1175,6 +1176,9 @@ exports.onboarding = async (req, res) => {
                 { new: true }
               );
 
+              
+
+              let createProjectTask = await ProjectTask.create(proectTaskObj);
               let upadteProject = await Projects.findOneAndUpdate(
                 { _id: project._id },
                 {
@@ -1184,12 +1188,10 @@ exports.onboarding = async (req, res) => {
                   // duration: userPlan.subPlan.duration,
                   // numberOfTasks: userPlan.plan.texts,
                   projectStatus: projectStatus,
-                  // tasks: taskCount + 1,
+                  tasks: taskCount + 1,
                 },
                 { new: true }
               );
-
-              let createProjectTask = await ProjectTask.create(proectTaskObj);
               await Projects.findByIdAndUpdate(
                 projectId,
                 { $push: { projectTasks: createProjectTask._id } },
@@ -1286,32 +1288,38 @@ exports.findUserPlan = async (req, res) => {
 };
 
 exports.checkEmail = async (req, res) => {
- const joiSchema = Joi.object({
+  try {
+    const joiSchema = Joi.object({
       // userId: Joi.string().required(),
       email: Joi.string().required(),
       // lastName: Joi.string().required(),
     });
     const { error, value } = joiSchema.validate(req.body);
 
-  if (error) {
-    emails.errorEmail(req, error);
+    if (error) {
+      emails.errorEmail(req, error);
 
-    const message = error.details[0].message.replace(/"/g, "");
-    res.status(401).send({
-      message: message,
-    });
-    return
-  }
-  const isFreelancer = await Freelancers.findOne({ email: req.body.email })
-  if (isFreelancer) {
-    res.status(500).json({ message: "This email exists as freelancer" })
-    return
-  }
-  const isUser = await Users.findOne({ email: req.body.email })
-  if (isUser) {
-    res.status(500).json({ message: "This email already exists" })
-    return
-  }
+      const message = error.details[0].message.replace(/"/g, "");
+      res.status(401).send({
+        message: message,
+      });
+      return;
+    }
+    const isFreelancer = await Freelancers.findOne({ email: req.body.email });
+    if (isFreelancer) {
+      res.status(500).json({ message: "This email exists as freelancer" });
+      return;
+    }
+    const isUser = await Users.findOne({ email: req.body.email });
+    if (isUser) {
+      res.status(500).json({ message: "This email already exists" });
+      return;
+    }
 
-  res.status(200).json({message: "success"})
+    res.status(200).json({ message: "success" });
+    
+  } catch (error) {
+    res.status(500).send({message: error.message || "Something went wrong"})
+  }
+ 
 }

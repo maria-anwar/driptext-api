@@ -10,10 +10,15 @@ module.exports = (mongoose) => {
 
       projectName: { type: String, required: true, unique: false },
       tasks: { type: Number, unique: false, required: false, default: 0 },
-        speech: { type: String, required: false, unique: false, default: null },
+      speech: { type: String, required: false, unique: false, default: null },
       keywords: { type: String, required: false, unique: false, default: null },
       //   duration: { type: String, required: false, unique: false },
-        perspective: { type: String, required: false, unique: false, default: null },
+      perspective: {
+        type: String,
+        required: false,
+        unique: false,
+        default: null,
+      },
       //   numberOfTasks: { type: String, required: false, unique: false, default: 0 },
       projectStatus: {
         type: String,
@@ -28,6 +33,30 @@ module.exports = (mongoose) => {
       plan: {
         type: Schema.Types.ObjectId,
         ref: "UserPlan",
+        required: false,
+        default: null,
+      },
+      texter: {
+        type: Schema.Types.ObjectId,
+        ref: "Freelancer",
+        required: false,
+        default: null,
+      },
+      lector: {
+        type: Schema.Types.ObjectId,
+        ref: "Freelancer",
+        required: false,
+        default: null,
+      },
+      seo: {
+        type: Schema.Types.ObjectId,
+        ref: "Freelancer",
+        required: false,
+        default: null,
+      },
+      metaLector: {
+        type: Schema.Types.ObjectId,
+        ref: "Freelancer",
         required: false,
         default: null,
       },
