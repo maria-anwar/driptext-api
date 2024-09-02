@@ -106,10 +106,10 @@ exports.getProjects = async (req, res) => {
 
 exports.projectDetail = async (req, res) => {
   try {
-    // if (!req.role || req.role.toLowerCase() !== "projectmanger") {
-    //   res.status(401).send({ message: "Your are not admin" });
-    //   return;
-    // }
+    if (!req.role || req.role.toLowerCase() !== "projectmanger") {
+      res.status(401).send({ message: "Your are not admin" });
+      return;
+    }
 
     const joiSchema = Joi.object({
       projectId: Joi.string().required(),
@@ -126,14 +126,15 @@ exports.projectDetail = async (req, res) => {
       return;
     }
 
-    const project = await Projects.findOne({ _id: req.body.projectId }).populate(["user","plan","projectTasks", "boardingInfo"])
+    const project = await Projects.findOne({
+      _id: req.body.projectId,
+    }).populate(["user", "plan", "projectTasks", "boardingInfo"]);
     if (!project) {
-      res.status(500).send({ message: "Project not found" })
-      return
+      res.status(500).send({ message: "Project not found" });
+      return;
     }
 
-    res.status(200).send({message: "success", project: project})
-
+    res.status(200).send({ message: "success", project: project });
   } catch (error) {
     res.status(500).send({ message: error.message || "Something went wrong" });
   }
@@ -145,8 +146,7 @@ exports.getFreelancers = async (req, res) => {
     //   res.status(401).send({ message: "Your are not admin" });
     //   return;
     // }
-
   } catch (error) {
-    res.status(500).send({message: error.message || "Something went wrong"})
+    res.status(500).send({ message: error.message || "Something went wrong" });
   }
-}
+};

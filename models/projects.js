@@ -27,7 +27,7 @@ module.exports = (mongoose) => {
       },
       user: { type: Schema.Types.ObjectId, ref: "User", required: true },
       projectTasks: [
-        { type: Schema.Types.ObjectId, ref: "Project", default: null },
+        { type: Schema.Types.ObjectId, ref: "ProjectTask", default: null },
       ],
       plan: {
         type: Schema.Types.ObjectId,
