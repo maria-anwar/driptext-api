@@ -142,10 +142,12 @@ exports.projectDetail = async (req, res) => {
 
 exports.getFreelancers = async (req, res) => {
   try {
-    // if (!req.role || req.role.toLowerCase() !== "projectmanger") {
-    //   res.status(401).send({ message: "Your are not admin" });
-    //   return;
-    // }
+    if (!req.role || req.role.toLowerCase() !== "projectmanger") {
+      res.status(401).send({ message: "Your are not admin" });
+      return;
+    }
+    const freelancers = await Freelancers.find()
+    res.status(200).send({message: "success", freelancers: freelancers})
   } catch (error) {
     res.status(500).send({ message: error.message || "Something went wrong" });
   }
