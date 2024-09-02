@@ -12,7 +12,7 @@ module.exports = (mongoose) => {
 			customerIntrest: { type: String, required: false },
 			contentPurpose: { type: String, required: false },
 			contentInfo: { type: String, required: false },
-			user: [{ type: Schema.Types.ObjectId, ref: "User", required: true }],
+			user: { type: Schema.Types.ObjectId, ref: "User", required: true },
 			isActive: {
 				type: String,
 				required: true,

@@ -464,8 +464,11 @@ exports.create = async (req, res) => {
                     subPlan: req.body.subPlanId,
                     startDate: subscription.startDate,
                     endDate: subscription.endDate,
-                    totalTexts: project.plan.totalTexts + plan.texts * subPlan.duration,
-                    textsRemaining: project.plan.textsRemaining + plan.texts * subPlan.duration,
+                    totalTexts:
+                      project.plan.totalTexts + plan.texts * subPlan.duration,
+                    textsRemaining:
+                      project.plan.textsRemaining +
+                      plan.texts * subPlan.duration,
                     duration: subPlan.duration,
                     endMonthDate: dayjs(subscription.startDate).add(1, "month"),
                     tasksPerMonth: plan.texts + prevUserPlan.tasksPerMonth,
@@ -1034,9 +1037,26 @@ exports.onboarding = async (req, res) => {
                   status: taskStatus,
                   //   tasks: taskCount,
                 };
-                companyInfoObj.user = project.user._id;
 
-                let createCompany = await Company.create(companyInfoObj);
+                let newOnBoarding = "";
+                if (project.boarding) {
+                  const updatedOnBoarding = await Company.findOneAndUpdate(
+                    { _id: project.boarding },
+                    { companyInfoObj },
+                    { new: true }
+                  );
+                  newOnBoarding = updatedOnBoarding;
+                }
+
+                if (!project.boarding) {
+                  //  companyInfoObj.user = project.user._id;
+                  let createCompany = await Company.create({
+                    ...companyInfoObj,
+                    user: project.user._id,
+                  });
+
+                  newOnBoarding = createCompany;
+                }
 
                 let upadteProject = await Projects.findOneAndUpdate(
                   { _id: project._id },
@@ -1045,6 +1065,7 @@ exports.onboarding = async (req, res) => {
                     prespective: prespective,
                     projectStatus: projectStatus,
                     onBoarding: true,
+                    boardingInfo: newOnBoarding._id,
                     // duration: "1",
                     // numberOfTasks: "1",
                     tasks: 1,
@@ -1119,7 +1140,7 @@ exports.onboarding = async (req, res) => {
                 project: projectId,
               });
 
-              console.log("user plan: ", userPlan)
+              console.log("user plan: ", userPlan);
 
               if (!userPlan.subscription) {
                 res
@@ -1145,7 +1166,6 @@ exports.onboarding = async (req, res) => {
                   .status(500)
                   .send({ message: "Your subscription is expired" });
                 return;
-                
               }
               if (dayjs(new Date()).isAfter(dayjs(userPlan.endDate, "day"))) {
                 res
@@ -1165,18 +1185,27 @@ exports.onboarding = async (req, res) => {
                 keywords: project.keywords,
                 desiredNumberOfWords: userPlan.plan.desiredWords,
                 project: project._id,
-                
               };
 
-              companyInfoObj.user = project.user._id;
+               let newOnBoarding = "";
+               if (project.boarding) {
+                 const updatedOnBoarding = await Company.findOneAndUpdate(
+                   { _id: project.boarding },
+                   { companyInfoObj },
+                   { new: true }
+                 );
+                 newOnBoarding = updatedOnBoarding;
+               }
 
-              let createCompany = await Company.findOneAndUpdate(
-                { user: userId },
-                companyInfoObj,
-                { new: true }
-              );
+               if (!project.boarding) {
+                 //  companyInfoObj.user = project.user._id;
+                 let createCompany = await Company.create({
+                   ...companyInfoObj,
+                   user: project.user._id,
+                 });
 
-              
+                 newOnBoarding = createCompany;
+               }
 
               let createProjectTask = await ProjectTask.create(proectTaskObj);
               let upadteProject = await Projects.findOneAndUpdate(
@@ -1185,6 +1214,7 @@ exports.onboarding = async (req, res) => {
                   speech: speech,
                   prespective: prespective,
                   onBoarding: true,
+                  boardingInfo: newOnBoarding._id,
                   // duration: userPlan.subPlan.duration,
                   // numberOfTasks: userPlan.plan.texts,
                   projectStatus: projectStatus,
@@ -1317,9 +1347,7 @@ exports.checkEmail = async (req, res) => {
     }
 
     res.status(200).json({ message: "success" });
-    
   } catch (error) {
-    res.status(500).send({message: error.message || "Something went wrong"})
+    res.status(500).send({ message: error.message || "Something went wrong" });
   }
- 
-}
+};

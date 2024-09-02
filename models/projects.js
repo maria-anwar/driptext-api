@@ -1,19 +1,18 @@
 module.exports = (mongoose) => {
-	const { Schema } = mongoose;
-	const AutoIncrement = require("mongoose-sequence")(mongoose);
+  const { Schema } = mongoose;
+  const AutoIncrement = require("mongoose-sequence")(mongoose);
 
-	const ProjectSchema = new Schema(
+  const ProjectSchema = new Schema(
     {
       id: { type: Number, unique: true },
       projectId: { type: String, required: false, default: null },
       onBoarding: { type: Boolean, required: false, default: false },
-
       projectName: { type: String, required: true, unique: false },
       tasks: { type: Number, unique: false, required: false, default: 0 },
       speech: { type: String, required: false, unique: false, default: null },
       keywords: { type: String, required: false, unique: false, default: null },
       //   duration: { type: String, required: false, unique: false },
-      perspective: {
+      prespective: {
         type: String,
         required: false,
         unique: false,
@@ -60,6 +59,12 @@ module.exports = (mongoose) => {
         required: false,
         default: null,
       },
+      boardingInfo: {
+        type: Schema.Types.ObjectId,
+        ref: "Company",
+        required: false,
+        default: null,
+      },
 
       isActive: {
         type: String,
@@ -72,7 +77,7 @@ module.exports = (mongoose) => {
       timestamps: true,
     }
   );
-	ProjectSchema.plugin(AutoIncrement, { inc_field: "id" });
+  ProjectSchema.plugin(AutoIncrement, { inc_field: "id" });
 
-	return mongoose.model("Project", ProjectSchema);
+  return mongoose.model("Project", ProjectSchema);
 };

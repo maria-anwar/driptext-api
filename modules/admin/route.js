@@ -11,7 +11,7 @@ router.post("/create", (req, res) => {
   adminController.create(req, res);
 });
 
-router.get("/getProjects", (req, res) => {
+router.get("/getProjects", jwt.protect, (req, res) => {
   adminController.getProjects(req, res)
 })
 

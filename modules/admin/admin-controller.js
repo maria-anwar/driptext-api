@@ -7,6 +7,7 @@ const Freelancers = db.Freelancer;
 const Users = db.User;
 const Roles = db.Role;
 const projectTasks = db.ProjectTask;
+const Projects = db.Project;
 exports.create = async (req, res) => {
   try {
     const joiSchema = Joi.object({
@@ -43,21 +44,21 @@ exports.create = async (req, res) => {
       return;
     }
     const session = await mongoose.startSession();
-      session.startTransaction();
+    session.startTransaction();
 
-      const body = {
-        firstName: req.body.firstName,
-        lastName: req.body.lastName,
-        email: req.body.email,
-        role: role._id,
-        password: "123456@123456",
-      };
+    const body = {
+      firstName: req.body.firstName,
+      lastName: req.body.lastName,
+      email: req.body.email,
+      role: role._id,
+      password: "123456@123456",
+    };
 
-      const admin = await Users.create(body)
+    const admin = await Users.create(body);
 
-       await session.commitTransaction();
-      session.endSession();
-      res.status(200).send({message: "success", admin: admin})
+    await session.commitTransaction();
+    session.endSession();
+    res.status(200).send({ message: "success", admin: admin });
   } catch (error) {
     res.status(500).send({ message: error.message || "Something went wrong" });
   }
@@ -65,28 +66,86 @@ exports.create = async (req, res) => {
 
 exports.getProjects = async (req, res) => {
   try {
-    const projects = await projectTasks.find({ published: true }).select("project status").populate({ path: "project", populate: "plan" })
-    
+    console.log("req.role: ", req.role);
+    if (!req.role || req.role.toLowerCase() !== "projectmanger") {
+      res.status(401).send({ message: "Your are not admin" });
+      return;
+    }
+    const projects = await projectTasks
+      .find({ published: true })
+      .select("project status")
+      .populate({ path: "project", populate: "plan" });
+
     let openTasks = 0;
     let finalTasks = 0;
     projects.forEach((item) => {
       if (item.status.toLowerCase() === "final") {
-        finalTasks = finalTasks + 1
+        finalTasks = finalTasks + 1;
       }
       if (item.status.toLowerCase() === "open") {
-        openTasks = openTasks + 1
+        openTasks = openTasks + 1;
       }
     });
-    
+
     const projectsData = projects.map((item) => {
       // const temp = {...item.project.toObject(), openTasks, finalTasks}
       return { ...item.project.toObject(), openTasks, finalTasks };
-    })
+    });
+    // Create a Map to filter out duplicates based on project._id
+    const uniqueProjectsData = [
+      ...new Map(
+        projectsData.map((item) => [item._id.toString(), item])
+      ).values(),
+    ];
 
-    
+    res.status(200).send({ message: "success", projects: uniqueProjectsData });
+  } catch (error) {
+    res.status(500).send({ message: error.message || "Something went wrong" });
+  }
+};
 
-    res.status(200).send({ message: "success", projects: projectsData });
-    
+exports.projectDetail = async (req, res) => {
+  try {
+    // if (!req.role || req.role.toLowerCase() !== "projectmanger") {
+    //   res.status(401).send({ message: "Your are not admin" });
+    //   return;
+    // }
+
+    const joiSchema = Joi.object({
+      projectId: Joi.string().required(),
+    });
+    const { error, value } = joiSchema.validate(req.body);
+
+    if (error) {
+      // emails.errorEmail(req, error);
+
+      const message = error.details[0].message.replace(/"/g, "");
+      res.status(401).send({
+        message: message,
+      });
+      return;
+    }
+
+    const project = await Projects.findOne({ _id: req.body.projectId }).populate(["user","plan","projectTasks", "boardingInfo"])
+    if (!project) {
+      res.status(500).send({ message: "Project not found" })
+      return
+    }
+
+    res.status(200).send({message: "success", project: project})
+
+  } catch (error) {
+    res.status(500).send({ message: error.message || "Something went wrong" });
+  }
+};
+
+exports.getFreelancers = async (req, res) => {
+  try {
+    // if (!req.role || req.role.toLowerCase() !== "projectmanger") {
+    //   res.status(401).send({ message: "Your are not admin" });
+    //   return;
+    // }
+
   } catch (error) {
     res.status(500).send({message: error.message || "Something went wrong"})
   }
