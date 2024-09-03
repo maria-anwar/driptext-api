@@ -126,10 +126,15 @@ exports.projectDetail = async (req, res) => {
       });
       return;
     }
-
+    // "user", "plan", "projectTasks", "boardingInfo";
     const project = await Projects.findOne({
       _id: req.body.projectId,
-    }).populate(["user", "plan", "projectTasks", "boardingInfo"]);
+    }).populate([
+      { path: "user" },
+      { path: "plan" },
+      { path: "projectTasks", match: { published: true } },
+      { path: "boardingInfo" },
+    ]);
     if (!project) {
       res.status(500).send({ message: "Project not found" });
       return;
@@ -221,12 +226,12 @@ exports.changeUserStatus = async (req, res) => {
       );
       if (freelancer) {
         res.status(200).send({ message: "success" });
-        return
+        return;
       }
 
       if (!freelancer) {
-        res.status(500).send({ message: "user not found" })
-        return
+        res.status(500).send({ message: "user not found" });
+        return;
       }
     }
   } catch (error) {
