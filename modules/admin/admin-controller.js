@@ -184,3 +184,52 @@ exports.getAllUsers = async (req, res) => {
     res.status(500).send({ message: error.message || "Something went wrong" });
   }
 };
+
+exports.changeUserStatus = async (req, res) => {
+  try {
+    if (!req.role || req.role.toLowerCase() !== "projectmanger") {
+      res.status(401).send({ message: "Your are not admin" });
+      return;
+    }
+    const joiSchema = Joi.object({
+      userId: Joi.string().required(),
+      isActive: Joi.boolean().required(),
+    });
+    const { error, value } = joiSchema.validate(req.body);
+
+    if (error) {
+      const message = error.details[0].message.replace(/"/g, "");
+      res.status(401).send({
+        message: message,
+      });
+      return;
+    }
+    const isActiveValue = req.body.isActive ? "Y" : "N";
+    const user = await Users.findOneAndUpdate(
+      { _id: req.body.userId },
+      { isActive: isActiveValue },
+      { new: true }
+    );
+    if (user) {
+      res.status(200).send({ message: "success" });
+      return;
+    } else {
+      const freelancer = await Freelancers.findOneAndUpdate(
+        { _id: req.body.userId },
+        { isActive: isActiveValue },
+        { new: true }
+      );
+      if (freelancer) {
+        res.status(200).send({ message: "success" });
+        return
+      }
+
+      if (!freelancer) {
+        res.status(500).send({ message: "user not found" })
+        return
+      }
+    }
+  } catch (error) {
+    res.status(200).send({ message: error.message || "Something went wrong" });
+  }
+};

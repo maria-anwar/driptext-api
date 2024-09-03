@@ -25,4 +25,8 @@ router.get("/getAllUsers", jwt.protect, (req, res) => {
   adminController.getAllUsers(req, res);
 });
 
+router.post("/updateUserStatus", jwt.protect, (req, res) => {
+  adminController.changeUserStatus(req, res);
+});
+
 module.exports = router;

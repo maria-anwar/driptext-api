@@ -1139,7 +1139,7 @@ exports.onboarding = async (req, res) => {
               let userPlan = await UserPlan.findOne({
                 user: userId,
                 project: projectId,
-              });
+              }).populate("plan");
 
               console.log("user plan: ", userPlan);
 
