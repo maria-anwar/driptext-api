@@ -74,7 +74,8 @@ exports.getProjects = async (req, res) => {
     const projects = await projectTasks
       .find({ published: true })
       .select("project status")
-      .populate({ path: "project", populate: "plan" });
+      .populate({ path: "project", populate: "plan" })
+      .populate({ path: "user", match: { isActive: "Y" } });
 
     let openTasks = 0;
     let finalTasks = 0;
@@ -146,8 +147,39 @@ exports.getFreelancers = async (req, res) => {
       res.status(401).send({ message: "Your are not admin" });
       return;
     }
+    const freelancers = await Freelancers.find();
+    res.status(200).send({ message: "success", freelancers: freelancers });
+  } catch (error) {
+    res.status(500).send({ message: error.message || "Something went wrong" });
+  }
+};
+
+exports.getAllUsers = async (req, res) => {
+  try {
+    if (!req.role || req.role.toLowerCase() !== "projectmanger") {
+      res.status(401).send({ message: "Your are not admin" });
+      return;
+    }
+
     const freelancers = await Freelancers.find()
-    res.status(200).send({message: "success", freelancers: freelancers})
+      .populate("role")
+      .select("firstName lastName email role isActive");
+    const users = await Users.find()
+      .populate("role")
+      .select("firstName lastName email role isActive");
+    // Merge the two arrays
+    const combinedArray = freelancers.concat(users);
+
+    // Shuffle the merged array using Fisher-Yates shuffle algorithm
+    for (let i = combinedArray.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [combinedArray[i], combinedArray[j]] = [
+        combinedArray[j],
+        combinedArray[i],
+      ];
+    }
+
+    res.status(200).send({ message: "Success", users: combinedArray });
   } catch (error) {
     res.status(500).send({ message: error.message || "Something went wrong" });
   }

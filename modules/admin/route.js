@@ -21,5 +21,8 @@ router.post("/getProjectDetail", jwt.protect, (req, res) => {
 router.get("/getFreelancers", jwt.protect, (req, res) => {
   adminController.getFreelancers(req, res);
 });
+router.get("/getAllUsers", jwt.protect, (req, res) => {
+  adminController.getAllUsers(req, res);
+});
 
 module.exports = router;

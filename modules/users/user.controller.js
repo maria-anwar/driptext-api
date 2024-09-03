@@ -1035,6 +1035,7 @@ exports.onboarding = async (req, res) => {
                   project: project._id,
                   desiredNumberOfWords: "1500",
                   status: taskStatus,
+                  user: userId,
                   //   tasks: taskCount,
                 };
 
@@ -1185,6 +1186,7 @@ exports.onboarding = async (req, res) => {
                 keywords: project.keywords,
                 desiredNumberOfWords: userPlan.plan.desiredWords,
                 project: project._id,
+                user: userId
               };
 
                let newOnBoarding = "";
