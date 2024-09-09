@@ -13,6 +13,8 @@ const projectTasks = db.ProjectTask;
 const Projects = db.Project;
 const UserPlan = db.UserPlan;
 const ProjectTask = db.ProjectTask;
+const Company = db.Company;
+
 
 exports.create = async (req, res) => {
   try {
