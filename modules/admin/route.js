@@ -29,4 +29,16 @@ router.post("/updateUserStatus", jwt.protect, (req, res) => {
   adminController.changeUserStatus(req, res);
 });
 
+router.post("/addTask", jwt.protect, (req, res) => {
+  adminController.addTask(req, res);
+});
+
+router.post("/assignFreelancersByProject", jwt.protect, (req, res) => {
+  adminController.assignFreelancersByProject(req, res);
+});
+
+router.post("/assignFreelancerByTask", jwt.protect, (req, res) => {
+  adminController.assignFreelancersByProject(req, res);
+});
+
 module.exports = router;

@@ -249,9 +249,14 @@ exports.changeUserStatus = async (req, res) => {
 
 exports.addTask = async (req, res) => {
   console.log("on boarding api called ... !!");
+   if (!req.role || req.role.toLowerCase() !== "projectmanger") {
+     res.status(401).send({ message: "Your are not admin" });
+     return;
+   }
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
+   
     const joiSchema = Joi.object({
       dueDate: Joi.date().required(),
       topic: Joi.string().required(),
@@ -597,6 +602,10 @@ exports.addTask = async (req, res) => {
 
 exports.assignFreelancersByProject = async (req, res) => {
   try {
+     if (!req.role || req.role.toLowerCase() !== "projectmanger") {
+       res.status(401).send({ message: "Your are not admin" });
+       return;
+     }
     const joiSchema = Joi.object({
       projectId: Joi.string().required(),
       freelancerId: Joi.string().required(),
@@ -709,6 +718,10 @@ exports.assignFreelancersByProject = async (req, res) => {
 
 exports.assignFreelancerByTask = async (req, res) => {
   try {
+     if (!req.role || req.role.toLowerCase() !== "projectmanger") {
+       res.status(401).send({ message: "Your are not admin" });
+       return;
+     }
     const joiSchema = Joi.object({
       taskId: Joi.string().required(),
       freelancerId: Joi.string().required(),
