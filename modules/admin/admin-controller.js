@@ -367,9 +367,9 @@ exports.addTask = async (req, res) => {
                 let upadteProject = await Projects.findOneAndUpdate(
                   { _id: project._id },
                   {
-                    speech: speech,
-                    prespective: prespective,
-                    projectStatus: projectStatus,
+                    // speech: speech,
+                    // prespective: prespective,
+                    // projectStatus: projectStatus,
                     onBoarding: true,
                     // boardingInfo: newOnBoarding._id,
                     // duration: "1",
@@ -483,9 +483,9 @@ exports.addTask = async (req, res) => {
               // if (taskCount <= userPlan.plan.texts - 1) {
               let projectStatus;
               let taskStatus;
-              if (speech !== "" && prespective !== "") {
-                projectStatus = "Ready";
-              }
+              // if (speech !== "" && prespective !== "") {
+              //   projectStatus = "Ready";
+              // }
 
               let createCompany = await Company.create({
                 ...companyInfoObj,
@@ -505,13 +505,13 @@ exports.addTask = async (req, res) => {
               let upadteProject = await Projects.findOneAndUpdate(
                 { _id: project._id },
                 {
-                  speech: speech,
-                  prespective: prespective,
+                  // speech: speech,
+                  // prespective: prespective,
                   onBoarding: true,
                   // boardingInfo: newOnBoarding._id,
                   // duration: userPlan.subPlan.duration,
                   // numberOfTasks: userPlan.plan.texts,
-                  projectStatus: projectStatus,
+                  // projectStatus: projectStatus,
                   tasks: taskCount + 1,
                 },
                 { new: true }
