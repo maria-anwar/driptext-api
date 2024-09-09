@@ -969,6 +969,7 @@ exports.onboarding = async (req, res) => {
       res.status(401).send({
         message: message,
       });
+      return
     } else {
       const userId = req.body.userId ? req.body.userId : null;
       const projectId = req.body.projectId;
@@ -1030,34 +1031,21 @@ exports.onboarding = async (req, res) => {
                 projectStatus = "Free Trial";
                 taskStatus = "Ready to Start";
                 // }
+
+                let createCompany = await Company.create({
+                  ...companyInfoObj,
+                  user: project.user._id,
+                });
+
                 let proectTaskObj = {
                   keywords: project.keywords,
                   project: project._id,
                   desiredNumberOfWords: "1500",
                   status: taskStatus,
                   user: userId,
+                  onBoarding: createCompany._id,
                   //   tasks: taskCount,
                 };
-
-                let newOnBoarding = "";
-                if (project.boarding) {
-                  const updatedOnBoarding = await Company.findOneAndUpdate(
-                    { _id: project.boarding },
-                    { companyInfoObj },
-                    { new: true }
-                  );
-                  newOnBoarding = updatedOnBoarding;
-                }
-
-                if (!project.boarding) {
-                  //  companyInfoObj.user = project.user._id;
-                  let createCompany = await Company.create({
-                    ...companyInfoObj,
-                    user: project.user._id,
-                  });
-
-                  newOnBoarding = createCompany;
-                }
 
                 let upadteProject = await Projects.findOneAndUpdate(
                   { _id: project._id },
@@ -1066,7 +1054,7 @@ exports.onboarding = async (req, res) => {
                     prespective: prespective,
                     projectStatus: projectStatus,
                     onBoarding: true,
-                    boardingInfo: newOnBoarding._id,
+                    // boardingInfo: newOnBoarding._id,
                     // duration: "1",
                     // numberOfTasks: "1",
                     tasks: 1,
@@ -1182,32 +1170,20 @@ exports.onboarding = async (req, res) => {
                 projectStatus = "Ready";
               }
 
-              let proectTaskObj = {
-                keywords: project.keywords,
-                desiredNumberOfWords: userPlan.plan.desiredWords,
-                project: project._id,
-                user: userId
-              };
+             
 
-               let newOnBoarding = "";
-               if (project.boarding) {
-                 const updatedOnBoarding = await Company.findOneAndUpdate(
-                   { _id: project.boarding },
-                   { companyInfoObj },
-                   { new: true }
-                 );
-                 newOnBoarding = updatedOnBoarding;
-               }
+              let createCompany = await Company.create({
+                ...companyInfoObj,
+                user: project.user._id,
+              });
 
-               if (!project.boarding) {
-                 //  companyInfoObj.user = project.user._id;
-                 let createCompany = await Company.create({
-                   ...companyInfoObj,
-                   user: project.user._id,
-                 });
-
-                 newOnBoarding = createCompany;
-               }
+               let proectTaskObj = {
+                 keywords: project.keywords,
+                 desiredNumberOfWords: userPlan.plan.desiredWords,
+                 project: project._id,
+                 user: userId,
+                 onBoarding: createCompany._id
+               };
 
               let createProjectTask = await ProjectTask.create(proectTaskObj);
               let upadteProject = await Projects.findOneAndUpdate(
@@ -1216,7 +1192,7 @@ exports.onboarding = async (req, res) => {
                   speech: speech,
                   prespective: prespective,
                   onBoarding: true,
-                  boardingInfo: newOnBoarding._id,
+                  // boardingInfo: newOnBoarding._id,
                   // duration: userPlan.subPlan.duration,
                   // numberOfTasks: userPlan.plan.texts,
                   projectStatus: projectStatus,

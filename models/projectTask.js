@@ -24,7 +24,7 @@ module.exports = (mongoose) => {
         type: String,
         required: false,
         unique: false,
-        default: null,
+        default: 0,
       },
       googleLink: {
         type: String,
@@ -35,6 +35,7 @@ module.exports = (mongoose) => {
       comments: { type: String, required: false, unique: false, default: null },
       published: { type: Boolean, required: false, default: false },
       readyToWork: { type: Boolean, required: false, default: false },
+      onBoarding: { type: Schema.Types.ObjectId, ref: "Company", required: false, default: null },
       user: { type: Schema.Types.ObjectId, ref: "User", required: true },
       texter: {
         type: Schema.Types.ObjectId,

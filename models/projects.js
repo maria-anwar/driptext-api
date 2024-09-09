@@ -59,12 +59,12 @@ module.exports = (mongoose) => {
         required: false,
         default: null,
       },
-      boardingInfo: {
-        type: Schema.Types.ObjectId,
-        ref: "Company",
-        required: false,
-        default: null,
-      },
+      // boardingInfo: {
+      //   type: Schema.Types.ObjectId,
+      //   ref: "Company",
+      //   required: false,
+      //   default: null,
+      // },
 
       isActive: {
         type: String,
