@@ -37,8 +37,8 @@ router.post("/assignFreelancersByProject", jwt.protect, (req, res) => {
   adminController.assignFreelancersByProject(req, res);
 });
 
-router.post("/assignFreelancerByTask", jwt.protect, (req, res) => {
-  adminController.assignFreelancersByProject(req, res);
+router.post("/assignFreelancersByTask", jwt.protect, (req, res) => {
+  adminController.assignFreelancerByTask(req, res);
 });
 
 module.exports = router;
