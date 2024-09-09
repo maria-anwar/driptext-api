@@ -265,7 +265,7 @@ exports.addTask = async (req, res) => {
       topic: Joi.string().required(),
       keyword: Joi.string().required(),
       keywordType: Joi.string().required(),
-      wordCount: Joi.number().required(),
+      // wordCount: Joi.number().required(),
       comment: Joi.string().optional().allow("").allow(null),
       projectName: Joi.string().required(),
       projectId: Joi.string().required(),
@@ -356,7 +356,9 @@ exports.addTask = async (req, res) => {
                 });
 
                 let proectTaskObj = {
-                  keywords: project.keywords,
+                  keywords: req.body.keyword,
+                  type: req.body.keywordType,
+                  dueDate: req.body.dueDate,
                   project: project._id,
                   desiredNumberOfWords: "1500",
                   status: taskStatus,
@@ -495,7 +497,9 @@ exports.addTask = async (req, res) => {
               });
 
               let proectTaskObj = {
-                keywords: project.keywords,
+                keywords: req.body.keyword,
+                type: req.body.keywordType,
+                dueDate: req.body.dueDate,
                 desiredNumberOfWords: userPlan.plan.desiredWords,
                 project: project._id,
                 user: userId,
