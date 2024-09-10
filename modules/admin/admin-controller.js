@@ -769,7 +769,7 @@ exports.assignFreelancerByTask = async (req, res) => {
     }
 
     const freelancer = await Freelancers.findOne({
-      _id: req.boby.freelancerId,
+      _id: req.body.freelancerId,
     });
     if (!freelancer) {
       res.status(404).send({ message: "freelancer nor found" });
