@@ -2,7 +2,7 @@ const Joi = require("@hapi/joi");
 const db = require("../../models");
 const mongoose = require("mongoose");
 const emails = require("../../utils/emails");
-const dayjs = require("dayjs")
+const dayjs = require("dayjs");
 
 // const { RDS } = require("aws-sdk");
 
@@ -14,7 +14,6 @@ const Projects = db.Project;
 const UserPlan = db.UserPlan;
 const ProjectTask = db.ProjectTask;
 const Company = db.Company;
-
 
 exports.create = async (req, res) => {
   try {
@@ -252,14 +251,13 @@ exports.changeUserStatus = async (req, res) => {
 
 exports.addTask = async (req, res) => {
   console.log("on boarding api called ... !!");
-   if (!req.role || req.role.toLowerCase() !== "projectmanger") {
-     res.status(401).send({ message: "Your are not admin" });
-     return;
-   }
+  if (!req.role || req.role.toLowerCase() !== "projectmanger") {
+    res.status(401).send({ message: "Your are not admin" });
+    return;
+  }
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
-   
     const joiSchema = Joi.object({
       dueDate: Joi.date().required(),
       topic: Joi.string().required(),
@@ -431,7 +429,7 @@ exports.addTask = async (req, res) => {
                   .status(403)
                   .send({ message: "As free trial gives only 1 task" });
 
-                return
+                return;
               }
             } else if (
               (role.title == "leads" || role.title == "Leads") &&
@@ -441,7 +439,7 @@ exports.addTask = async (req, res) => {
                 message:
                   "This user is in Leads Role so you can not onboard another project/task",
               });
-              return
+              return;
             } else if (
               role.title == "Client" &&
               project.projectName == projectName
@@ -579,7 +577,7 @@ exports.addTask = async (req, res) => {
               res.status(403).send({
                 message: "Project not found!",
               });
-              return
+              return;
             }
           } else if (role && role.title == "leads") {
             await session.commitTransaction();
@@ -616,11 +614,14 @@ exports.addTask = async (req, res) => {
 };
 
 exports.assignFreelancersByProject = async (req, res) => {
+  console.log("inside freelancers by project api");
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
-     if (!req.role || req.role.toLowerCase() !== "projectmanger") {
-       res.status(401).send({ message: "Your are not admin" });
-       return;
-     }
+    if (!req.role || req.role.toLowerCase() !== "projectmanger") {
+      res.status(401).send({ message: "Your are not admin" });
+      return;
+    }
     const joiSchema = Joi.object({
       projectId: Joi.string().required(),
       freelancerId: Joi.string().required(),
@@ -633,28 +634,33 @@ exports.assignFreelancersByProject = async (req, res) => {
       // emails.errorEmail(req, error);
 
       const message = error.details[0].message.replace(/"/g, "");
+      await session.abortTransaction();
+      session.endSession();
       res.status(401).send({
         message: message,
       });
       return;
     }
-    // const session = await mongoose.startSession();
-    // session.startTransaction();
+
     const project = await Projects.findOne({
       _id: req.body.projectId,
     }).populate("projectTasks");
     if (!project) {
+      await session.abortTransaction();
+      session.endSession();
       res.status(404).send({ message: "project not found" });
       return;
     }
     const freelancer = await Freelancers.findOne({
-      _id: req.boby.freelancerId,
+      _id: req.body.freelancerId,
     });
     if (!freelancer) {
+      await session.abortTransaction();
+      session.endSession();
       res.status(404).send({ message: "freelancer nor found" });
+
       return;
     }
-    
 
     // Texter
     if (req.body.role.toLowerCase() === "texter") {
@@ -722,8 +728,8 @@ exports.assignFreelancersByProject = async (req, res) => {
       }
     }
 
-    // await session.commitTransaction();
-    // session.endSession();
+    await session.commitTransaction();
+    session.endSession();
     res.status(200).send({ message: "success" });
   } catch (error) {
     await session.abortTransaction();
@@ -734,10 +740,10 @@ exports.assignFreelancersByProject = async (req, res) => {
 
 exports.assignFreelancerByTask = async (req, res) => {
   try {
-     if (!req.role || req.role.toLowerCase() !== "projectmanger") {
-       res.status(401).send({ message: "Your are not admin" });
-       return;
-     }
+    if (!req.role || req.role.toLowerCase() !== "projectmanger") {
+      res.status(401).send({ message: "Your are not admin" });
+      return;
+    }
     const joiSchema = Joi.object({
       taskId: Joi.string().required(),
       freelancerId: Joi.string().required(),
@@ -780,26 +786,24 @@ exports.assignFreelancerByTask = async (req, res) => {
     }
 
     // Lector
-     if (req.body.role.toLowerCase() === "lector") {
-       const updatedTask = await ProjectTask.findOneAndUpdate(
-         { _id: req.body.taskId },
-         { lector: req.body.freelancerId },
-         { new: true }
-       );
-     }
-    
+    if (req.body.role.toLowerCase() === "lector") {
+      const updatedTask = await ProjectTask.findOneAndUpdate(
+        { _id: req.body.taskId },
+        { lector: req.body.freelancerId },
+        { new: true }
+      );
+    }
+
     // SEO-Optimizer
-     if (req.body.role.toLowerCase() === "seo-optimizer") {
-       const updatedTask = await ProjectTask.findOneAndUpdate(
-         { _id: req.body.taskId },
-         { seo: req.body.freelancerId },
-         { new: true }
-       );
-     }
-    res.status(200).send({message: "success"})
+    if (req.body.role.toLowerCase() === "seo-optimizer") {
+      const updatedTask = await ProjectTask.findOneAndUpdate(
+        { _id: req.body.taskId },
+        { seo: req.body.freelancerId },
+        { new: true }
+      );
+    }
+    res.status(200).send({ message: "success" });
   } catch (error) {
     res.status(500).send({ message: error.message || "Something went wrong" });
   }
 };
-
-
