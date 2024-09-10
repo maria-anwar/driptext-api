@@ -638,6 +638,8 @@ exports.assignFreelancersByProject = async (req, res) => {
       });
       return;
     }
+    // const session = await mongoose.startSession();
+    // session.startTransaction();
     const project = await Projects.findOne({
       _id: req.body.projectId,
     }).populate("projectTasks");
@@ -652,8 +654,7 @@ exports.assignFreelancersByProject = async (req, res) => {
       res.status(404).send({ message: "freelancer nor found" });
       return;
     }
-    const session = await mongoose.startSession();
-    session.startTransaction();
+    
 
     // Texter
     if (req.body.role.toLowerCase() === "texter") {
@@ -721,8 +722,8 @@ exports.assignFreelancersByProject = async (req, res) => {
       }
     }
 
-    await session.commitTransaction();
-    session.endSession();
+    // await session.commitTransaction();
+    // session.endSession();
     res.status(200).send({ message: "success" });
   } catch (error) {
     await session.abortTransaction();
