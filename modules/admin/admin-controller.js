@@ -428,6 +428,8 @@ exports.addTask = async (req, res) => {
                 res
                   .status(403)
                   .send({ message: "As free trial gives only 1 task" });
+
+                return
               }
             } else if (
               (role.title == "leads" || role.title == "Leads") &&
@@ -437,6 +439,7 @@ exports.addTask = async (req, res) => {
                 message:
                   "This user is in Leads Role so you can not onboard another project/task",
               });
+              return
             } else if (
               role.title == "Client" &&
               project.projectName == projectName
@@ -572,6 +575,7 @@ exports.addTask = async (req, res) => {
               res.status(403).send({
                 message: "Project not found!",
               });
+              return
             }
           } else if (role && role.title == "leads") {
             await session.commitTransaction();
