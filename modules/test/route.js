@@ -11,6 +11,9 @@ router.get("/test", (req, res) => {
   testController.test(req, res);
 });
 
+router.get("/createFolder", (req, res) => {
+  testController.createFolder(req, res);
+});
 
 
 module.exports = router;

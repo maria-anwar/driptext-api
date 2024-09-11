@@ -9,6 +9,7 @@ const fs = require("fs");
 const handlebars = require("handlebars");
 const { alternatives } = require("joi");
 const dayjs = require("dayjs");
+const { createFolder } = require("../../utils/googleService/actions");
 
 const Users = db.User;
 const Roles = db.Role;
@@ -226,10 +227,16 @@ exports.create = async (req, res) => {
             }
 
             console.log("create user plan: ", createUserPlan);
+            const folderObj = await createFolder(projectId);
 
             await Projects.findByIdAndUpdate(
               createProject._id,
-              { projectId: projectId, plan: createUserPlan._id },
+              {
+                projectId: projectId,
+                plan: createUserPlan._id,
+                folderLink: folderObj.folderLink,
+                folderId: folderObj.folderId,
+              },
               { new: true }
             );
 
@@ -504,6 +511,7 @@ exports.create = async (req, res) => {
                   user: user._id,
                   project: newProject._id,
                 });
+
                 const updatedProject = await Projects.findOneAndUpdate(
                   { _id: newProject._id },
                   {
@@ -531,10 +539,11 @@ exports.create = async (req, res) => {
                 .toUpperCase();
               let idChar = final_project._id.toString().slice(-4);
               let projectId = nameChar + "-" + idChar;
+              const folderObj = await createFolder(projectId);
 
               await Projects.findByIdAndUpdate(
                 { _id: final_project._id },
-                { projectId: projectId },
+                { projectId: projectId, folderLink: folderObj.folderLink, folderId: folderObj.folderId },
                 { new: true }
               );
 
@@ -818,10 +827,11 @@ exports.create = async (req, res) => {
             let nameChar = final_project.projectName.slice(0, 2).toUpperCase();
             let idChar = final_project._id.toString().slice(-4);
             let projectId = nameChar + "-" + idChar;
+            const folderObj = await createFolder(projectId);
 
             let updateProjectId = await Projects.findByIdAndUpdate(
               { _id: final_project._id },
-              { projectId: projectId },
+              { projectId: projectId, folderLink: folderObj.folderLink, folderId: folderObj.folderId },
               { new: true }
             );
 
@@ -969,7 +979,7 @@ exports.onboarding = async (req, res) => {
       res.status(401).send({
         message: message,
       });
-      return
+      return;
     } else {
       const userId = req.body.userId ? req.body.userId : null;
       const projectId = req.body.projectId;
@@ -1170,20 +1180,18 @@ exports.onboarding = async (req, res) => {
                 projectStatus = "Ready";
               }
 
-             
-
               let createCompany = await Company.create({
                 ...companyInfoObj,
                 user: project.user._id,
               });
 
-               let proectTaskObj = {
-                 keywords: project.keywords,
-                 desiredNumberOfWords: userPlan.plan.desiredWords,
-                 project: project._id,
-                 user: userId,
-                 onBoarding: createCompany._id
-               };
+              let proectTaskObj = {
+                keywords: project.keywords,
+                desiredNumberOfWords: userPlan.plan.desiredWords,
+                project: project._id,
+                user: userId,
+                onBoarding: createCompany._id,
+              };
 
               let createProjectTask = await ProjectTask.create(proectTaskObj);
               let upadteProject = await Projects.findOneAndUpdate(

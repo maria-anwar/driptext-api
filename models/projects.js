@@ -11,6 +11,9 @@ module.exports = (mongoose) => {
       tasks: { type: Number, unique: false, required: false, default: 0 },
       speech: { type: String, required: false, unique: false, default: null },
       keywords: { type: String, required: false, unique: false, default: null },
+      folderLink: { type: String, required: false, unique: false, default: null },
+      folderId: { type: String, required: false, unique: false, default: null },
+
       //   duration: { type: String, required: false, unique: false },
       prespective: {
         type: String,
