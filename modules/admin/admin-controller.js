@@ -844,7 +844,7 @@ exports.updateAdminProfile = async (req, res) => {
       return
     }
 
-    const updatedAdmin = await Users.findOneAndUpdate({ _id: id }, {
+    const updatedAdmin = await Users.findOneAndUpdate({ _id: req.body.id }, {
       firstName: req.body.firstName.trim(),
       lastName: req.body.lastName.trim(),
       email: req.body.email.trim()
