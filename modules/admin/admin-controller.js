@@ -807,3 +807,46 @@ exports.assignFreelancerByTask = async (req, res) => {
     res.status(500).send({ message: error.message || "Something went wrong" });
   }
 };
+
+exports.updateAdminProfile = async (req, res) => {
+  try {
+    if (!req.role || req.role.toLowerCase() !== "projectmanger") {
+      res.status(401).send({ message: "Your are not admin" });
+      return;
+    }
+    const joiSchema = Joi.object({
+      id: Joi.string().required(),
+      firstName: Joi.string().required(),
+      lastName: Joi.string().required(),
+      email: Joi.string().required(),
+    });
+    const { error, value } = joiSchema.validate(req.body);
+
+    if (error) {
+      // emails.errorEmail(req, error);
+
+      const message = error.details[0].message.replace(/"/g, "");
+      res.status(401).send({
+        message: message,
+      });
+      return;
+    }
+
+    const alreadyExists = await Users.findOne({ email: req.body.email.trim(), _id: { $ne: req.body.id } })
+    if (alreadyExists) {
+      res.status(500).send({ message: "Email already exists" })
+      return
+    }
+
+    const updatedAdmin = await Users.findOneAndUpdate({ _id: id }, {
+      firstName: req.body.firstName.trim(),
+      lastName: req.body.lastName.trim(),
+      email: req.body.email.trim()
+    }, { new: true })
+    
+    res.status(200).send({message: "success", data: updatedAdmin})
+
+  } catch (error) {
+    res.status(500).send({ message: error.message || "something went wrong" });
+  }
+};

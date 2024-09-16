@@ -227,15 +227,15 @@ exports.create = async (req, res) => {
             }
 
             console.log("create user plan: ", createUserPlan);
-            const folderObj = await createFolder(projectId);
+            // const folderObj = await createFolder(projectId);
 
             await Projects.findByIdAndUpdate(
               createProject._id,
               {
                 projectId: projectId,
                 plan: createUserPlan._id,
-                folderLink: folderObj.folderLink,
-                folderId: folderObj.folderId,
+                folderLink: null,
+                folderId: null,
               },
               { new: true }
             );
@@ -539,11 +539,11 @@ exports.create = async (req, res) => {
                 .toUpperCase();
               let idChar = final_project._id.toString().slice(-4);
               let projectId = nameChar + "-" + idChar;
-              const folderObj = await createFolder(projectId);
+              // const folderObj = await createFolder(projectId);
 
               await Projects.findByIdAndUpdate(
                 { _id: final_project._id },
-                { projectId: projectId, folderLink: folderObj.folderLink, folderId: folderObj.folderId },
+                { projectId: projectId, folderLink: null, folderId: null },
                 { new: true }
               );
 
@@ -827,11 +827,11 @@ exports.create = async (req, res) => {
             let nameChar = final_project.projectName.slice(0, 2).toUpperCase();
             let idChar = final_project._id.toString().slice(-4);
             let projectId = nameChar + "-" + idChar;
-            const folderObj = await createFolder(projectId);
+            // const folderObj = await createFolder(projectId);
 
             let updateProjectId = await Projects.findByIdAndUpdate(
               { _id: final_project._id },
-              { projectId: projectId, folderLink: folderObj.folderLink, folderId: folderObj.folderId },
+              { projectId: projectId, folderLink: null, folderId: null },
               { new: true }
             );
 
