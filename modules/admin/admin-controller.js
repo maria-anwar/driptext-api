@@ -832,6 +832,12 @@ exports.updateAdminProfile = async (req, res) => {
       return;
     }
 
+    const isFreelancer = await Freelancers.findOne({ email: req.body.email })
+    if (isFreelancer) {
+      res.status(500).send({ message: "This email already exists as freelancer" })
+      return
+    }
+
     const alreadyExists = await Users.findOne({ email: req.body.email.trim(), _id: { $ne: req.body.id } })
     if (alreadyExists) {
       res.status(500).send({ message: "Email already exists" })
