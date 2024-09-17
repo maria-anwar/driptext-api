@@ -1,7 +1,7 @@
 // require("dotenv").config();
 const { google } = require("googleapis");
 const path = require("path");
-require("dotenv").config({ path: path.resolve(__dirname, ".env.production") });
+require("dotenv").config({ path: path.resolve(process.cwd(), ".env.production") });
 
 // Prepare the credentials dynamically using environment variables
 const credentials = {
@@ -11,12 +11,16 @@ const credentials = {
   private_key: process.env.PRIVATE_KEY, // Ensure proper newlines in the private key
   client_email: process.env.CLIENT_EMAIL,
   client_id: process.env.CLIENT_ID,
-  auth_uri: process.env.AUTH_URI,
-  token_uri: process.env.TOKEN_URI,
+  auth_uri: process.env.AUTH_URL,
+  token_uri: process.env.TOKEN_URL,
   auth_provider_x509_cert_url: process.env.AUTH_PROVIDER_x509_CERT_URL,
   client_x509_cert_url: process.env.CLIENT_x509_CERT_URL,
   universe_domain: process.env.UNIVERSE_DOMAIN,
 };
+
+console.log("path.resolve: ", path.resolve(process.cwd()));
+
+console.log("credentials: ", credentials)
 // Initialize Google Auth and Drive/Docs API instances
 const auth = new google.auth.GoogleAuth({
   credentials,
