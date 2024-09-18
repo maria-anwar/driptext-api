@@ -14,6 +14,8 @@ module.exports = (mongoose) => {
       dueDate: { type: String, required: false, unique: false, default: null },
       topic: { type: String, required: false, unique: false, default: null },
       type: { type: String, required: false, unique: false, default: null },
+      fileLink: { type: String, required: false, unique: false, default: null },
+      fileId: { type: String, required: false, unique: false, default: null },
       desiredNumberOfWords: {
         type: String,
         required: false,
@@ -35,7 +37,12 @@ module.exports = (mongoose) => {
       comments: { type: String, required: false, unique: false, default: null },
       published: { type: Boolean, required: false, default: false },
       readyToWork: { type: Boolean, required: false, default: false },
-      onBoarding: { type: Schema.Types.ObjectId, ref: "Company", required: false, default: null },
+      onBoarding: {
+        type: Schema.Types.ObjectId,
+        ref: "Company",
+        required: false,
+        default: null,
+      },
       user: { type: Schema.Types.ObjectId, ref: "User", required: true },
       texter: {
         type: Schema.Types.ObjectId,

@@ -29,3 +29,40 @@ exports.createFolder = async (folderName) => {
     folderLink,
   };
 };
+
+exports.createTaskFile = async (folderId, taskName) => {
+  const fileMetadata = {
+    name: taskName,
+    mimeType: "application/vnd.google-apps.document",
+    parents: [folderId], // Place the file inside the project folder
+  };
+
+  const file = await drive.files.create({
+    resource: fileMetadata,
+    fields: "id, webViewLink",
+  });
+
+  const fileId = file.data.id;
+  const fileLink = file.data.webViewLink;
+
+  await drive.permissions.create({
+    fileId: folderId,
+    resource: {
+      role: "writer", // Anyone can read the folder
+      type: "anyone", // Available to anyone
+    },
+  });
+
+  // Save fileId and fileLink in MongoDB associated with the task
+  return { fileId, fileLink };
+};
+
+exports.getFileCount = async (folderId) => {
+  const res = await drive.files.list({
+    q: `'${folderId}' in parents and trashed=false`,
+    fields: 'files(id)', // We only need the file IDs, not the full file details
+  });
+
+  const files = res.data.files;
+  return files.length;
+}

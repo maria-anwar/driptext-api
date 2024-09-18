@@ -9,7 +9,7 @@ const fs = require("fs");
 const handlebars = require("handlebars");
 const { alternatives } = require("joi");
 const dayjs = require("dayjs");
-const { createFolder } = require("../../utils/googleService/actions");
+const { createFolder, createTaskFile, getFileCount } = require("../../utils/googleService/actions");
 
 const Users = db.User;
 const Roles = db.Role;
@@ -1073,6 +1073,15 @@ exports.onboarding = async (req, res) => {
                 );
 
                 let createProjectTask = await ProjectTask.create(proectTaskObj);
+                const totalFiles = await getFileCount(project.folderId)
+                const fileName = `${project.id}-${
+                  totalFiles + 1
+                  }-${createProjectTask.keywords || "No Keywords"}`;
+                const fileObj = await createTaskFile(project.folderId, fileName)
+                const updateProjectTask = await ProjectTask.findOneAndUpdate({ _id: createProjectTask._id }, {
+                  fileLink: fileObj.fileLink,
+                  fileId: fileObj.fileId
+                },{new: true})
                 await Projects.findByIdAndUpdate(
                   projectId,
                   { $push: { projectTasks: createProjectTask._id } },
@@ -1194,6 +1203,19 @@ exports.onboarding = async (req, res) => {
               };
 
               let createProjectTask = await ProjectTask.create(proectTaskObj);
+               const totalFiles = await getFileCount(project.folderId);
+               const fileName = `${project.id}-${totalFiles + 1}-${
+                 createProjectTask.keywords || "No Keywords"
+               }`;
+               const fileObj = await createTaskFile(project.folderId, fileName);
+               const updateProjectTask = await ProjectTask.findOneAndUpdate(
+                 { _id: createProjectTask._id },
+                 {
+                   fileLink: fileObj.fileLink,
+                   fileId: fileObj.fileId,
+                 },
+                 { new: true }
+               );
               let upadteProject = await Projects.findOneAndUpdate(
                 { _id: project._id },
                 {
