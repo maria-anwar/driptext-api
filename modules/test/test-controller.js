@@ -13,12 +13,19 @@ const Roles = db.Role;
 const Billings = db.Billing.Billings;
 exports.test = async (req, res) => {
     try {
-        const billing = await Billings.find({});
+       const resFiles = await drive.files.list({
+         q: `'1PeXpVoYnRHlTziBM9EPbMAALDdEb8-Kd' in parents and trashed=false`,
+         fields: "files(id)", // We only need the file IDs, not the full file details
+       });
 
-        res.status(200).json({data: billing})
+      console.log("res files: ", resFiles)
+       const files = resFiles.data.files;
+      //  return files.length;
+
+        res.status(200).json({ message: "success", data: files.length });
         
     } catch (error) {
-        res.status(500).json({error: error})
+        res.status(500).json({error: error.message ||"Something went wrong"})
     }
 
 }

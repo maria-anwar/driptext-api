@@ -18,9 +18,9 @@ const credentials = {
   universe_domain: process.env.UNIVERSE_DOMAIN,
 };
 
-console.log("path.resolve: ", path.resolve(process.cwd()));
+// console.log("path.resolve: ", path.resolve(process.cwd()));
 
-console.log("credentials: ", credentials)
+// console.log("credentials: ", credentials)
 // Initialize Google Auth and Drive/Docs API instances
 const auth = new google.auth.GoogleAuth({
   credentials,

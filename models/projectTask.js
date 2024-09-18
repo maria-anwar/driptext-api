@@ -4,7 +4,7 @@ module.exports = (mongoose) => {
 
   const ProjectTaskSchema = new Schema(
     {
-      taskName: { type: String, unique: true, default: null },
+      taskName: { type: String, unique: false, default: null },
       status: {
         type: String,
         required: true,

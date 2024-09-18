@@ -58,11 +58,13 @@ exports.createTaskFile = async (folderId, taskName) => {
 };
 
 exports.getFileCount = async (folderId) => {
+  console.log("inside file count- folder id: ", folderId)
   const res = await drive.files.list({
     q: `'${folderId}' in parents and trashed=false`,
     fields: 'files(id)', // We only need the file IDs, not the full file details
   });
 
   const files = res.data.files;
+  console.log("files: ", files)
   return files.length;
 }

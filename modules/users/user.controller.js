@@ -1024,7 +1024,7 @@ exports.onboarding = async (req, res) => {
               select: "email role",
               populate: { path: "role", select: "title" },
             })
-            .select("id projectName keywords");
+            .select("id projectName keywords folderId");
 
           if (getuser && project) {
             if (
@@ -1073,14 +1073,17 @@ exports.onboarding = async (req, res) => {
                 );
 
                 let createProjectTask = await ProjectTask.create(proectTaskObj);
+                console.log("before creating file")
                 const totalFiles = await getFileCount(project.folderId)
                 const fileName = `${project.id}-${
                   totalFiles + 1
                   }-${createProjectTask.keywords || "No Keywords"}`;
                 const fileObj = await createTaskFile(project.folderId, fileName)
+                console.log("after creating file")
                 const updateProjectTask = await ProjectTask.findOneAndUpdate({ _id: createProjectTask._id }, {
                   fileLink: fileObj.fileLink,
-                  fileId: fileObj.fileId
+                  fileId: fileObj.fileId,
+                  taskName: fileName,
                 },{new: true})
                 await Projects.findByIdAndUpdate(
                   projectId,
@@ -1203,6 +1206,7 @@ exports.onboarding = async (req, res) => {
               };
 
               let createProjectTask = await ProjectTask.create(proectTaskObj);
+              console.log("before creating file")
                const totalFiles = await getFileCount(project.folderId);
                const fileName = `${project.id}-${totalFiles + 1}-${
                  createProjectTask.keywords || "No Keywords"
@@ -1213,9 +1217,11 @@ exports.onboarding = async (req, res) => {
                  {
                    fileLink: fileObj.fileLink,
                    fileId: fileObj.fileId,
+                   tasktName: fileName
                  },
                  { new: true }
                );
+              console.log("after creating file")
               let upadteProject = await Projects.findOneAndUpdate(
                 { _id: project._id },
                 {
