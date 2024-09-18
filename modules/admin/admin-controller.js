@@ -14,6 +14,12 @@ const Projects = db.Project;
 const UserPlan = db.UserPlan;
 const ProjectTask = db.ProjectTask;
 const Company = db.Company;
+const {
+  createFolder,
+  createTaskFile,
+  getFileCount,
+} = require("../../utils/googleService/actions");
+
 
 exports.create = async (req, res) => {
   try {
@@ -330,7 +336,7 @@ exports.addTask = async (req, res) => {
               select: "email role",
               populate: { path: "role", select: "title" },
             })
-            .select("id projectName keywords");
+            .select("id projectName keywords folderId");
 
           if (getuser && project) {
             if (
@@ -384,6 +390,24 @@ exports.addTask = async (req, res) => {
                 );
 
                 let createProjectTask = await ProjectTask.create(proectTaskObj);
+                 const totalFiles = await getFileCount(project.folderId);
+                 const fileName = `${project.id}-${totalFiles + 1}-${
+                   createProjectTask.keywords || "No Keywords"
+                 }`;
+                 const fileObj = await createTaskFile(
+                   project.folderId,
+                   fileName
+                 );
+                 console.log("after creating file");
+                 const updateProjectTask = await ProjectTask.findOneAndUpdate(
+                   { _id: createProjectTask._id },
+                   {
+                     fileLink: fileObj.fileLink,
+                     fileId: fileObj.fileId,
+                     taskName: fileName,
+                   },
+                   { new: true }
+                 );
                 await Projects.findByIdAndUpdate(
                   projectId,
                   { $push: { projectTasks: createProjectTask._id } },
@@ -513,6 +537,21 @@ exports.addTask = async (req, res) => {
               };
 
               let createProjectTask = await ProjectTask.create(proectTaskObj);
+               const totalFiles = await getFileCount(project.folderId);
+               const fileName = `${project.id}-${totalFiles + 1}-${
+                 createProjectTask.keywords || "No Keywords"
+               }`;
+               const fileObj = await createTaskFile(project.folderId, fileName);
+               console.log("after creating file");
+               const updateProjectTask = await ProjectTask.findOneAndUpdate(
+                 { _id: createProjectTask._id },
+                 {
+                   fileLink: fileObj.fileLink,
+                   fileId: fileObj.fileId,
+                   taskName: fileName,
+                 },
+                 { new: true }
+               );
               let upadteProject = await Projects.findOneAndUpdate(
                 { _id: project._id },
                 {
