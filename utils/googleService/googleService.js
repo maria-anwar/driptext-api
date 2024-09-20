@@ -25,11 +25,16 @@ const credentials = {
 const auth = new google.auth.GoogleAuth({
   credentials,
   // keyFile: path.resolve(__dirname, "./googleService_credentials.json"), // Update with your service account key file path
-  scopes: ["https://www.googleapis.com/auth/drive"],
+  scopes: [
+    "https://www.googleapis.com/auth/drive",
+    "https://www.googleapis.com/auth/documents",
+    "https://www.googleapis.com/auth/spreadsheets",
+  ],
 });
 
 const drive = google.drive({ version: "v3", auth });
 const docs = google.docs({ version: "v1", auth });
+const sheets = google.sheets({ version: "v4", auth }); 
 
 // Export drive and docs so that they can be used in other files
-module.exports = { drive, docs };
+module.exports = { drive, docs, sheets };

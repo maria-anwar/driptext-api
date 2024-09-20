@@ -18,8 +18,9 @@ const {
   createFolder,
   createTaskFile,
   getFileCount,
+  findOrCreateFolderInParent,
+  exportTasksToSheetInFolder,
 } = require("../../utils/googleService/actions");
-
 
 exports.create = async (req, res) => {
   try {
@@ -390,24 +391,24 @@ exports.addTask = async (req, res) => {
                 );
 
                 let createProjectTask = await ProjectTask.create(proectTaskObj);
-                 const totalFiles = await getFileCount(project.folderId);
-                 const fileName = `${project.id}-${totalFiles + 1}-${
-                   createProjectTask.keywords || "No Keywords"
-                 }`;
-                 const fileObj = await createTaskFile(
-                   project.folderId,
-                   fileName
-                 );
-                 console.log("after creating file");
-                 const updateProjectTask = await ProjectTask.findOneAndUpdate(
-                   { _id: createProjectTask._id },
-                   {
-                     fileLink: fileObj.fileLink,
-                     fileId: fileObj.fileId,
-                     taskName: fileName,
-                   },
-                   { new: true }
-                 );
+                const totalFiles = await getFileCount(project.folderId);
+                const fileName = `${project.id}-${totalFiles + 1}-${
+                  createProjectTask.keywords || "No Keywords"
+                }`;
+                const fileObj = await createTaskFile(
+                  project.folderId,
+                  fileName
+                );
+                console.log("after creating file");
+                const updateProjectTask = await ProjectTask.findOneAndUpdate(
+                  { _id: createProjectTask._id },
+                  {
+                    fileLink: fileObj.fileLink,
+                    fileId: fileObj.fileId,
+                    taskName: fileName,
+                  },
+                  { new: true }
+                );
                 await Projects.findByIdAndUpdate(
                   projectId,
                   { $push: { projectTasks: createProjectTask._id } },
@@ -537,21 +538,21 @@ exports.addTask = async (req, res) => {
               };
 
               let createProjectTask = await ProjectTask.create(proectTaskObj);
-               const totalFiles = await getFileCount(project.folderId);
-               const fileName = `${project.id}-${totalFiles + 1}-${
-                 createProjectTask.keywords || "No Keywords"
-               }`;
-               const fileObj = await createTaskFile(project.folderId, fileName);
-               console.log("after creating file");
-               const updateProjectTask = await ProjectTask.findOneAndUpdate(
-                 { _id: createProjectTask._id },
-                 {
-                   fileLink: fileObj.fileLink,
-                   fileId: fileObj.fileId,
-                   taskName: fileName,
-                 },
-                 { new: true }
-               );
+              const totalFiles = await getFileCount(project.folderId);
+              const fileName = `${project.id}-${totalFiles + 1}-${
+                createProjectTask.keywords || "No Keywords"
+              }`;
+              const fileObj = await createTaskFile(project.folderId, fileName);
+              console.log("after creating file");
+              const updateProjectTask = await ProjectTask.findOneAndUpdate(
+                { _id: createProjectTask._id },
+                {
+                  fileLink: fileObj.fileLink,
+                  fileId: fileObj.fileId,
+                  taskName: fileName,
+                },
+                { new: true }
+              );
               let upadteProject = await Projects.findOneAndUpdate(
                 { _id: project._id },
                 {
@@ -871,27 +872,88 @@ exports.updateAdminProfile = async (req, res) => {
       return;
     }
 
-    const isFreelancer = await Freelancers.findOne({ email: req.body.email })
+    const isFreelancer = await Freelancers.findOne({ email: req.body.email });
     if (isFreelancer) {
-      res.status(500).send({ message: "This email already exists as freelancer" })
-      return
+      res
+        .status(500)
+        .send({ message: "This email already exists as freelancer" });
+      return;
     }
 
-    const alreadyExists = await Users.findOne({ email: req.body.email.trim(), _id: { $ne: req.body.id } })
+    const alreadyExists = await Users.findOne({
+      email: req.body.email.trim(),
+      _id: { $ne: req.body.id },
+    });
     if (alreadyExists) {
-      res.status(500).send({ message: "Email already exists" })
-      return
+      res.status(500).send({ message: "Email already exists" });
+      return;
     }
 
-    const updatedAdmin = await Users.findOneAndUpdate({ _id: req.body.id }, {
-      firstName: req.body.firstName.trim(),
-      lastName: req.body.lastName.trim(),
-      email: req.body.email.trim()
-    }, { new: true })
-    
-    res.status(200).send({message: "success", data: updatedAdmin})
+    const updatedAdmin = await Users.findOneAndUpdate(
+      { _id: req.body.id },
+      {
+        firstName: req.body.firstName.trim(),
+        lastName: req.body.lastName.trim(),
+        email: req.body.email.trim(),
+      },
+      { new: true }
+    );
 
+    res.status(200).send({ message: "success", data: updatedAdmin });
   } catch (error) {
     res.status(500).send({ message: error.message || "something went wrong" });
+  }
+};
+
+exports.projectTasksExport = async (req, res) => {
+  try {
+    if (!req.role || req.role.toLowerCase() !== "projectmanger") {
+      res.status(401).send({ message: "Your are not admin" });
+      return;
+    }
+
+    const joiSchema = Joi.object({
+      projectId: Joi.string().required()
+    })
+
+     const { error, value } = joiSchema.validate(req.body);
+
+     if (error) {
+       // emails.errorEmail(req, error);
+
+       const message = error.details[0].message.replace(/"/g, "");
+       res.status(401).send({
+         message: message,
+       });
+       return;
+     }
+    
+    const project = await Projects.findOne({ _id: req.body.projectId }).populate({
+      path: "projectTasks", match: { published: true }, populate: {
+        path: "onBoarding",
+        model:"Company"
+    } })
+    if (!project) {
+      res.status(500).send({ message: "project not found" })
+      return
+    }
+
+     // Specify the parent folder ID (where the new folder will be created)
+     const parentFolderId = project.folderId;
+
+     // Create a new folder in the specified parent folder
+     const newFolderId = await findOrCreateFolderInParent(
+       parentFolderId,
+       "Task Export Links"
+     );
+
+     // Create a Google Sheet inside the newly created folder and get the export URL
+     const { exportUrl } = await exportTasksToSheetInFolder(project.projectTasks, newFolderId);
+
+     // Send the export URL to the frontend for download
+     res.status(200).send({ exportUrl });
+
+  } catch (error) {
+    res.status(500).send({ message: error.message || "Something went wrong" });
   }
 };

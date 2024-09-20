@@ -44,4 +44,8 @@ router.post("/updateAdminProfile", jwt.protect, (req, res) => {
   adminController.updateAdminProfile(req, res);
 });
 
+router.post("/exportTasks", jwt.protect, (req, res) => {
+  adminController.projectTasksExport(req, res);
+});
+
 module.exports = router;
