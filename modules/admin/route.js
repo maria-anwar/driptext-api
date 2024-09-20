@@ -6,6 +6,8 @@ const fileUpload = require("../../utils/fileUpload");
 const { upload } = fileUpload("users");
 const adminController = require("./admin-controller");
 const jwt = require("../../utils/jwt");
+const multer = require("multer");
+const csvUpload = multer({ dest: "csvuploads/" });
 
 router.post("/create", (req, res) => {
   adminController.create(req, res);
@@ -47,5 +49,9 @@ router.post("/updateAdminProfile", jwt.protect, (req, res) => {
 router.post("/exportTasks", jwt.protect, (req, res) => {
   adminController.projectTasksExport(req, res);
 });
+
+// router.post("/importTasks", jwt.protect, csvUpload.single("file"), (req, res) => {
+//   adminController.importProjectTasks(req, res);
+// });
 
 module.exports = router;

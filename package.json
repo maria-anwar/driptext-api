@@ -18,6 +18,7 @@
 		"chargebee": "^2.38.0",
 		"cors": "^2.8.5",
 		"crypto-js": "^4.2.0",
+		"csv-parser": "^3.0.0",
 		"dayjs": "^1.11.13",
 		"device-detector-js": "^3.0.3",
 		"dotenv": "^16.4.5",

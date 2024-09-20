@@ -3,6 +3,9 @@ const db = require("../../models");
 const mongoose = require("mongoose");
 const emails = require("../../utils/emails");
 const dayjs = require("dayjs");
+const csvParser = require("csv-parser");
+const fs = require("fs");
+const path = require("path");
 
 // const { RDS } = require("aws-sdk");
 
@@ -953,6 +956,78 @@ exports.projectTasksExport = async (req, res) => {
      // Send the export URL to the frontend for download
      res.status(200).send({ exportUrl });
 
+  } catch (error) {
+    res.status(500).send({ message: error.message || "Something went wrong" });
+  }
+};
+
+exports.importProjectTasks = async (req, res) => {
+  try {
+    if (!req.role || req.role.toLowerCase() !== "projectmanger") {
+      res.status(401).send({ message: "You are not authorized" });
+      return;
+    }
+
+    const joiSchema = Joi.object({
+      projectId: Joi.string().required(),
+    });
+
+    const { error, value } = joiSchema.validate(req.body);
+    if (error) {
+      const message = error.details[0].message.replace(/"/g, "");
+      res.status(400).send({ message });
+      return;
+    }
+
+    // Check if a file was uploaded
+    if (!req.file) {
+      return res.status(400).send({ message: "No file uploaded" });
+    }
+
+    const project = await Projects.findOne({ _id: req.body.projectId });
+    if (!project) {
+      res.status(404).send({ message: "Project not found" });
+      return;
+    }
+
+    const filePath = path.resolve(__dirname, req.file.path);
+    const tasks = [];
+
+    // Parse the CSV file and extract task data
+    fs.createReadStream(filePath)
+      .pipe(csvParser())
+      .on("data", (row) => {
+        // Assuming the CSV has 'name', 'description', and 'status' columns
+        const task = {
+          name: row.name,
+          description: row.description,
+          status: row.status,
+        };
+        tasks.push(task);
+      })
+      .on("end", async () => {
+        try {
+          console.log("file tasks: ", tasks)
+          // // Bulk add the tasks to the project
+          // project.projectTasks.push(...tasks);
+          // await project.save();
+
+          // // Delete the uploaded CSV file after processing
+          // fs.unlinkSync(filePath);
+
+          res.status(200).send({
+            message: "Tasks imported successfully",
+            // tasks,
+          });
+        } catch (error) {
+          console.error("Error saving tasks:", error);
+          res.status(500).send({ message: "Failed to save tasks" });
+        }
+      })
+      .on("error", (error) => {
+        console.error("Error parsing CSV file:", error);
+        res.status(500).send({ message: "Error parsing CSV file" });
+      });
   } catch (error) {
     res.status(500).send({ message: error.message || "Something went wrong" });
   }
