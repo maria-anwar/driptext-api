@@ -50,8 +50,8 @@ router.post("/exportTasks", jwt.protect, (req, res) => {
   adminController.projectTasksExport(req, res);
 });
 
-// router.post("/importTasks", jwt.protect, csvUpload.single("file"), (req, res) => {
-//   adminController.importProjectTasks(req, res);
-// });
+router.post("/importTasks", jwt.protect, csvUpload.single("file"), (req, res) => {
+  adminController.importProjectTasks(req, res);
+});
 
 module.exports = router;

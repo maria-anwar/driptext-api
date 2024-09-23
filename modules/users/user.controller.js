@@ -1008,6 +1008,7 @@ exports.onboarding = async (req, res) => {
         path: "role",
         select: "title",
       });
+      
       if (getuser) {
         var role = getuser.role;
         var project = await Projects.findOne({

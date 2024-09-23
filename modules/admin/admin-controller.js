@@ -916,46 +916,53 @@ exports.projectTasksExport = async (req, res) => {
     }
 
     const joiSchema = Joi.object({
-      projectId: Joi.string().required()
-    })
+      projectId: Joi.string().required(),
+    });
 
-     const { error, value } = joiSchema.validate(req.body);
+    const { error, value } = joiSchema.validate(req.body);
 
-     if (error) {
-       // emails.errorEmail(req, error);
+    if (error) {
+      // emails.errorEmail(req, error);
 
-       const message = error.details[0].message.replace(/"/g, "");
-       res.status(401).send({
-         message: message,
-       });
-       return;
-     }
-    
-    const project = await Projects.findOne({ _id: req.body.projectId }).populate({
-      path: "projectTasks", match: { published: true }, populate: {
-        path: "onBoarding",
-        model:"Company"
-    } })
-    if (!project) {
-      res.status(500).send({ message: "project not found" })
-      return
+      const message = error.details[0].message.replace(/"/g, "");
+      res.status(401).send({
+        message: message,
+      });
+      return;
     }
 
-     // Specify the parent folder ID (where the new folder will be created)
-     const parentFolderId = project.folderId;
+    const project = await Projects.findOne({
+      _id: req.body.projectId,
+    }).populate({
+      path: "projectTasks",
+      match: { published: true },
+      populate: {
+        path: "onBoarding",
+        model: "Company",
+      },
+    });
+    if (!project) {
+      res.status(500).send({ message: "project not found" });
+      return;
+    }
 
-     // Create a new folder in the specified parent folder
-     const newFolderId = await findOrCreateFolderInParent(
-       parentFolderId,
-       "Task Export Links"
-     );
+    // Specify the parent folder ID (where the new folder will be created)
+    const parentFolderId = project.folderId;
 
-     // Create a Google Sheet inside the newly created folder and get the export URL
-     const { exportUrl } = await exportTasksToSheetInFolder(project.projectTasks, newFolderId);
+    // Create a new folder in the specified parent folder
+    const newFolderId = await findOrCreateFolderInParent(
+      parentFolderId,
+      "Task Export Links"
+    );
 
-     // Send the export URL to the frontend for download
-     res.status(200).send({ exportUrl });
+    // Create a Google Sheet inside the newly created folder and get the export URL
+    const { exportUrl } = await exportTasksToSheetInFolder(
+      project.projectTasks,
+      newFolderId
+    );
 
+    // Send the export URL to the frontend for download
+    res.status(200).send({ exportUrl });
   } catch (error) {
     res.status(500).send({ message: error.message || "Something went wrong" });
   }
@@ -967,6 +974,248 @@ exports.importProjectTasks = async (req, res) => {
       res.status(401).send({ message: "You are not authorized" });
       return;
     }
+
+    // const addTask = async (user, project) => {
+    //   let role = user.role
+    //   const companyInfoObj = {}
+    //   if (
+    //     (role.title == "leads" || role.title == "Leads")
+    //   ) {
+    //     let taskCount = await ProjectTask.countDocuments({
+    //       project: project._id,
+    //     });
+    //     if (taskCount == 0) {
+    //       let projectStatus;
+    //       let taskStatus;
+    //       // if (speech !== "" && prespective !== "") {
+    //       projectStatus = "Free Trial";
+    //       taskStatus = "Ready to Start";
+    //       // }
+
+    //       let createCompany = await Company.create({
+    //         ...companyInfoObj,
+    //         user: project.user._id,
+    //       });
+
+    //       let proectTaskObj = {
+    //         keywords: project.keywords,
+    //         project: project._id,
+    //         desiredNumberOfWords: "1500",
+    //         status: taskStatus,
+    //         user: user._id,
+    //         onBoarding: createCompany._id,
+    //         //   tasks: taskCount,
+    //       };
+
+    //       let upadteProject = await Projects.findOneAndUpdate(
+    //         { _id: project._id },
+    //         {
+    //           // speech: speech,
+    //           // prespective: prespective,
+    //           projectStatus: projectStatus,
+    //           onBoarding: true,
+    //           // boardingInfo: newOnBoarding._id,
+    //           // duration: "1",
+    //           // numberOfTasks: "1",
+    //           tasks: 1,
+    //         },
+    //         { new: true }
+    //       );
+
+    //       let createProjectTask = await ProjectTask.create(proectTaskObj);
+    //       console.log("before creating file");
+    //       const totalFiles = await getFileCount(project.folderId);
+    //       const fileName = `${project.id}-${totalFiles + 1}-${
+    //         createProjectTask.keywords || "No Keywords"
+    //       }`;
+    //       const fileObj = await createTaskFile(project.folderId, fileName);
+    //       console.log("after creating file");
+    //       const updateProjectTask = await ProjectTask.findOneAndUpdate(
+    //         { _id: createProjectTask._id },
+    //         {
+    //           fileLink: fileObj.fileLink,
+    //           fileId: fileObj.fileId,
+    //           taskName: fileName,
+    //         },
+    //         { new: true }
+    //       );
+    //       await Projects.findByIdAndUpdate(
+    //         projectId,
+    //         { $push: { projectTasks: createProjectTask._id } },
+    //         { new: true }
+    //       );
+
+    //       const updatedUserPlan = await UserPlan.findOneAndUpdate(
+    //         { user: project.user._id, project: project._id },
+    //         {
+    //           $inc: {
+    //             textsCount: 1,
+    //             textsRemaining: -1,
+    //             tasksPerMonthCount: 1,
+    //           },
+    //         },
+    //         { new: true }
+    //       );
+
+    //       let nameChar = upadteProject.projectName.slice(0, 2).toUpperCase();
+    //       let idChar = createProjectTask._id.toString().slice(-4);
+    //       let taskId = nameChar + "-" + idChar;
+
+    //       let updateTaskId = await ProjectTask.findByIdAndUpdate(
+    //         { _id: createProjectTask._id },
+    //         { taskName: taskId },
+    //         { new: true }
+    //       );
+
+    //       if (upadteProject && createProjectTask) {
+    //         await session.commitTransaction();
+    //         session.endSession();
+    //         await emails.onBoadingSuccess(getuser);
+
+    //         res.send({
+    //           message: "OnBoarding successful",
+    //           data: createProjectTask,
+    //         });
+    //       }
+    //     } else {
+    //       res.status(403).send({ message: "As free trial gives only 1 task" });
+    //       return
+    //     }
+    //   } else if (role.title == "Client" && project.projectName == projectName) {
+    //     let taskCount = await ProjectTask.countDocuments({
+    //       project: project._id,
+    //     });
+
+    //     let userPlan = await UserPlan.findOne({
+    //       user: user._id,
+    //       project: project._id,
+    //     }).populate("plan");
+
+    //     // console.log("user plan: ", userPlan);
+
+    //     if (!userPlan.subscription) {
+    //       res.status(500).send({ message: "Client don't have subscription" });
+    //       return;
+    //     }
+
+    //     if (
+    //       dayjs(new Date()).isAfter(dayjs(userPlan.endMonthDate, "day")) ||
+    //       userPlan.tasksPerMonthCount === userPlan.tasksPerMonth
+    //     ) {
+    //       res.status(500).send({ message: "Client have reached monthly limit" });
+
+    //       return;
+    //     }
+    //     if (userPlan.textsRemaining === 0) {
+    //       res.status(500).send({ message: "Client's subscription is expired" });
+    //       return;
+    //     }
+    //     if (dayjs(new Date()).isAfter(dayjs(userPlan.endDate, "day"))) {
+    //       res.status(500).send({ message: "Client's subscription is expired" });
+    //       return;
+    //     }
+
+    //     // if (taskCount <= userPlan.plan.texts - 1) {
+    //     let projectStatus;
+    //     let taskStatus;
+    //     if (speech !== "" && prespective !== "") {
+    //       projectStatus = "Ready";
+    //     }
+
+    //     let createCompany = await Company.create({
+    //       ...companyInfoObj,
+    //       user: project.user._id,
+    //     });
+
+    //     let proectTaskObj = {
+    //       keywords: project.keywords,
+    //       desiredNumberOfWords: userPlan.plan.desiredWords,
+    //       project: project._id,
+    //       user: user._id,
+    //       onBoarding: createCompany._id,
+    //     };
+
+    //     let createProjectTask = await ProjectTask.create(proectTaskObj);
+    //     console.log("before creating file");
+    //     const totalFiles = await getFileCount(project.folderId);
+    //     const fileName = `${project.id}-${totalFiles + 1}-${
+    //       createProjectTask.keywords || "No Keywords"
+    //     }`;
+    //     const fileObj = await createTaskFile(project.folderId, fileName);
+    //     const updateProjectTask = await ProjectTask.findOneAndUpdate(
+    //       { _id: createProjectTask._id },
+    //       {
+    //         fileLink: fileObj.fileLink,
+    //         fileId: fileObj.fileId,
+    //         tasktName: fileName,
+    //       },
+    //       { new: true }
+    //     );
+    //     console.log("after creating file");
+    //     let upadteProject = await Projects.findOneAndUpdate(
+    //       { _id: project._id },
+    //       {
+    //         // speech: speech,
+    //         // prespective: prespective,
+    //         onBoarding: true,
+    //         // boardingInfo: newOnBoarding._id,
+    //         // duration: userPlan.subPlan.duration,
+    //         // numberOfTasks: userPlan.plan.texts,
+    //         projectStatus: projectStatus,
+    //         tasks: taskCount + 1,
+    //       },
+    //       { new: true }
+    //     );
+    //     await Projects.findByIdAndUpdate(
+    //       projectId,
+    //       { $push: { projectTasks: createProjectTask._id } },
+    //       { new: true }
+    //     );
+
+    //     await UserPlan.findOneAndUpdate(
+    //       { user: project.user._id, project: project._id },
+    //       {
+    //         $inc: {
+    //           textsCount: 1,
+    //           textsRemaining: -1,
+    //           tasksPerMonthCount: 1,
+    //         },
+    //       },
+    //       { new: true }
+    //     );
+
+    //     let nameChar = upadteProject.projectName.slice(0, 2).toUpperCase();
+    //     let idChar = createProjectTask._id.toString().slice(-4);
+    //     let taskId = nameChar + "-" + idChar;
+
+    //     let updateTaskId = await ProjectTask.findByIdAndUpdate(
+    //       { _id: createProjectTask._id },
+    //       { taskName: taskId },
+    //       { new: true }
+    //     );
+
+    //     if (upadteProject && createProjectTask) {
+    //       await session.commitTransaction();
+    //       session.endSession();
+    //       await emails.onBoadingSuccess(getuser);
+
+    //       res.send({
+    //         message: "OnBoarding successful",
+    //         data: createProjectTask,
+    //       });
+    //     }
+    //     // } else {
+    //     //   res.status(403).send({
+    //     //     message:
+    //     //       "You cannot create more Tasks because you have reached subscription limit.",
+    //     //   });
+    //     // }
+    //   } else {
+    //     res.status(403).send({
+    //       message: "Project not found!",
+    //     });
+    //   }
+    // };
 
     const joiSchema = Joi.object({
       projectId: Joi.string().required(),
@@ -990,16 +1239,48 @@ exports.importProjectTasks = async (req, res) => {
       return;
     }
 
-    const filePath = path.resolve(__dirname, req.file.path);
+    const user = await Users.findOne({ _id: project.user }).populate({
+      path: "role",
+      select: "title",
+    });
+
+    if (!user) {
+      res.status(500).send({ message: "User does not exists" });
+      return;
+    }
+
+    const filePath = req.file.path;
+    console.log("file path: ", filePath);
     const tasks = [];
+    let checkCSVError = "";
 
     // Parse the CSV file and extract task data
     fs.createReadStream(filePath)
       .pipe(csvParser())
       .on("data", (row) => {
         // Assuming the CSV has 'name', 'description', and 'status' columns
+        console.log("row: ", row);
+        // if (
+        //   !row["Company Background"] ||
+        //   !row["Company Attributes"] ||
+        //   !row["Company Services"] ||
+        //   !row["Customer Content"] ||
+        //   !row["Customer Interest"] ||
+        //   !row["Content Purpose"] ||
+        //   !row["Content Info"]
+        // ) {
+        //   checkCSVError =
+        //     "Please make sure you have complete onBoarding details of each task (Company Background, Company Attributes, Company Services, Customer Content, Customer Interest, Content Purpose, Content Info)";
+        //   return;
+        // }
+
+        // if (!row["Keywords"]) {
+        //   checkCSVError = "Keywords required for each task in csv file";
+        //   return;
+        // }
         const task = {
-          name: row.name,
+          keywords: row["Keywords"],
+
           description: row.description,
           status: row.status,
         };
@@ -1007,7 +1288,12 @@ exports.importProjectTasks = async (req, res) => {
       })
       .on("end", async () => {
         try {
-          console.log("file tasks: ", tasks)
+          if (checkCSVError) {
+            res.status(500).send({ message: checkCSVError });
+            return;
+          }
+          console.log("tasks: ", tasks)
+
           // // Bulk add the tasks to the project
           // project.projectTasks.push(...tasks);
           // await project.save();
