@@ -1097,6 +1097,8 @@ exports.importProjectTasks = async (req, res) => {
               { new: true }
             );
 
+            console.log("updated project: ", upadteProject);
+
             let nameChar = upadteProject.projectName.slice(0, 2).toUpperCase();
             let idChar = createProjectTask._id.toString().slice(-4);
             let taskId = nameChar + "-" + idChar;
@@ -1114,7 +1116,7 @@ exports.importProjectTasks = async (req, res) => {
             if (upadteProject && createProjectTask) {
               // await session.commitTransaction();
               // session.endSession();
-              await emails.onBoadingSuccess(getuser);
+              await emails.onBoadingSuccess(user);
 
               // res.send({
               //   message: "OnBoarding successful",
@@ -1130,8 +1132,7 @@ exports.importProjectTasks = async (req, res) => {
             return;
           }
         } else if (
-          role.title == "Client" &&
-          project.projectName == projectName
+          role.title == "Client"
         ) {
           let taskCount = await ProjectTask.countDocuments({
             project: project._id,
@@ -1179,9 +1180,9 @@ exports.importProjectTasks = async (req, res) => {
           // if (taskCount <= userPlan.plan.texts - 1) {
           let projectStatus;
           let taskStatus;
-          if (speech !== "" && prespective !== "") {
+          // if (speech !== "" && prespective !== "") {
             projectStatus = "Ready";
-          }
+          // }
 
           let createCompany = await Company.create({
             ...companyInfoObj,
@@ -1232,7 +1233,7 @@ exports.importProjectTasks = async (req, res) => {
             { new: true }
           );
           await Projects.findByIdAndUpdate(
-            projectId,
+            project._id,
             { $push: { projectTasks: createProjectTask._id } },
             { new: true }
           );
@@ -1248,6 +1249,8 @@ exports.importProjectTasks = async (req, res) => {
             },
             { new: true }
           );
+            console.log("updated project: ", upadteProject);
+
 
           let nameChar = upadteProject.projectName.slice(0, 2).toUpperCase();
           let idChar = createProjectTask._id.toString().slice(-4);
@@ -1266,7 +1269,7 @@ exports.importProjectTasks = async (req, res) => {
           if (upadteProject && createProjectTask) {
             // await session.commitTransaction();
             // session.endSession();
-            await emails.onBoadingSuccess(getuser);
+            await emails.onBoadingSuccess(user);
 
             // res.send({
             //   message: "OnBoarding successful",
@@ -1336,7 +1339,7 @@ exports.importProjectTasks = async (req, res) => {
       .pipe(csvParser())
       .on("data", (row) => {
         // Assuming the CSV has 'name', 'description', and 'status' columns
-        console.log("row: ", row);
+        // console.log("row: ", row);
         if (
           !row["Company Background"] ||
           !row["Company Attributes"] ||
@@ -1395,7 +1398,9 @@ exports.importProjectTasks = async (req, res) => {
           if (allTasks.length > 0) {
             for (const importTask of tasks) {
               for (const orgTask of allTasks) {
-                if (importTask.keywords.toLowerCase().trim() === orgTask.keywords.toLowerCase().trim()) {
+                // console.log("import task: ", importTask)
+                // console.log("orgTask: ", orgTask)
+                if (importTask.keywords.toLowerCase().trim() === (orgTask?.keywords || "").toLowerCase().trim()) {
                   await editTask(user, project, importTask, orgTask, res)
                   if (res.headersSent) {
                     responseSent = true;
