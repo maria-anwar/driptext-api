@@ -975,247 +975,324 @@ exports.importProjectTasks = async (req, res) => {
       return;
     }
 
-    // const addTask = async (user, project) => {
-    //   let role = user.role
-    //   const companyInfoObj = {}
-    //   if (
-    //     (role.title == "leads" || role.title == "Leads")
-    //   ) {
-    //     let taskCount = await ProjectTask.countDocuments({
-    //       project: project._id,
-    //     });
-    //     if (taskCount == 0) {
-    //       let projectStatus;
-    //       let taskStatus;
-    //       // if (speech !== "" && prespective !== "") {
-    //       projectStatus = "Free Trial";
-    //       taskStatus = "Ready to Start";
-    //       // }
+    const editTask = async (user, project, task, orgTask) => {
+      console.log("task onBoarding: ", task)
+      const updatedTask = await projectTasks.findOneAndUpdate(
+        { _id: orgTask._id },
+        {
+          keywords: task.keywords,
+          dueDate: task.dueDate,
+          topic: task.topic,
+          type: task.type,
+        },
+        { new: true }
+      );
+      const updatedOnBoarding = await Company.findOneAndUpdate(
+        { _id: orgTask.onBoarding._id },
+        {
+          companyBackgorund: task.companyBackground,
+          companyAttributes: task.companyAttributes,
+          comapnyServices: task.companyServices,
+          customerContent: task.customerContent,
+          customerIntrest: task.customerInterest,
+          contentPurpose: task.contentPurpose,
+          contentInfo: task.ContentInfo,
+        },
+        { new: true }
+      );
+    }
 
-    //       let createCompany = await Company.create({
-    //         ...companyInfoObj,
-    //         user: project.user._id,
-    //       });
+    const importTasks = async (user, project, task) => {
+      try {
+        console.log("task inside import tasks: ", task);
+        let error = "";
+        let role = user.role;
+        let companyInfoObj = {
+          companyBackgorund: task.companyBackground,
+          companyAttributes: task.companyAttributes,
+          comapnyServices: task.companyServices,
+          customerContent: task.customerContent,
+          customerIntrest: task.customerInterest,
+          contentPurpose: task.contentPurpose,
+          contentInfo: task.ContentInfo,
+        };
+        if (role.title == "leads" || role.title == "Leads") {
+          let taskCount = await ProjectTask.countDocuments({
+            project: project._id,
+          });
+          if (taskCount == 0) {
+            let projectStatus;
+            let taskStatus;
+            // if (speech !== "" && prespective !== "") {
+            projectStatus = "Free Trial";
+            taskStatus = "Ready to Start";
+            // }
 
-    //       let proectTaskObj = {
-    //         keywords: project.keywords,
-    //         project: project._id,
-    //         desiredNumberOfWords: "1500",
-    //         status: taskStatus,
-    //         user: user._id,
-    //         onBoarding: createCompany._id,
-    //         //   tasks: taskCount,
-    //       };
+            let createCompany = await Company.create({
+              ...companyInfoObj,
+              user: project.user._id,
+            });
 
-    //       let upadteProject = await Projects.findOneAndUpdate(
-    //         { _id: project._id },
-    //         {
-    //           // speech: speech,
-    //           // prespective: prespective,
-    //           projectStatus: projectStatus,
-    //           onBoarding: true,
-    //           // boardingInfo: newOnBoarding._id,
-    //           // duration: "1",
-    //           // numberOfTasks: "1",
-    //           tasks: 1,
-    //         },
-    //         { new: true }
-    //       );
+            let proectTaskObj = {
+              keywords: task.keywords,
+              dueDate: task.dueDate,
+              topic: task.topic,
+              type: task.type,
+              published: true,
+              project: project._id,
+              desiredNumberOfWords: "1500",
+              status: taskStatus,
+              user: user._id,
+              onBoarding: createCompany._id,
+              //   tasks: taskCount,
+            };
 
-    //       let createProjectTask = await ProjectTask.create(proectTaskObj);
-    //       console.log("before creating file");
-    //       const totalFiles = await getFileCount(project.folderId);
-    //       const fileName = `${project.id}-${totalFiles + 1}-${
-    //         createProjectTask.keywords || "No Keywords"
-    //       }`;
-    //       const fileObj = await createTaskFile(project.folderId, fileName);
-    //       console.log("after creating file");
-    //       const updateProjectTask = await ProjectTask.findOneAndUpdate(
-    //         { _id: createProjectTask._id },
-    //         {
-    //           fileLink: fileObj.fileLink,
-    //           fileId: fileObj.fileId,
-    //           taskName: fileName,
-    //         },
-    //         { new: true }
-    //       );
-    //       await Projects.findByIdAndUpdate(
-    //         projectId,
-    //         { $push: { projectTasks: createProjectTask._id } },
-    //         { new: true }
-    //       );
+            let upadteProject = await Projects.findOneAndUpdate(
+              { _id: project._id },
+              {
+                // speech: speech,
+                // prespective: prespective,
+                projectStatus: projectStatus,
+                onBoarding: true,
+                // boardingInfo: newOnBoarding._id,
+                // duration: "1",
+                // numberOfTasks: "1",
+                tasks: 1,
+              },
+              { new: true }
+            );
 
-    //       const updatedUserPlan = await UserPlan.findOneAndUpdate(
-    //         { user: project.user._id, project: project._id },
-    //         {
-    //           $inc: {
-    //             textsCount: 1,
-    //             textsRemaining: -1,
-    //             tasksPerMonthCount: 1,
-    //           },
-    //         },
-    //         { new: true }
-    //       );
+            let createProjectTask = await ProjectTask.create(proectTaskObj);
+            console.log("before creating file");
+            const totalFiles = await getFileCount(project.folderId);
+            const fileName = `${project.projectId}-${totalFiles + 1}-${
+              createProjectTask.keywords || "No Keywords"
+            }`;
+            const fileObj = await createTaskFile(project.folderId, fileName);
+            console.log("after creating file");
+            // const updateProjectTask = await ProjectTask.findOneAndUpdate(
+            //   { _id: createProjectTask._id },
+            //   {
+            //     fileLink: fileObj.fileLink,
+            //     fileId: fileObj.fileId,
+            //     taskName: fileName,
+            //   },
+            //   { new: true }
+            // );
+            await Projects.findByIdAndUpdate(
+              project._id,
+              { $push: { projectTasks: createProjectTask._id } },
+              { new: true }
+            );
 
-    //       let nameChar = upadteProject.projectName.slice(0, 2).toUpperCase();
-    //       let idChar = createProjectTask._id.toString().slice(-4);
-    //       let taskId = nameChar + "-" + idChar;
+            const updatedUserPlan = await UserPlan.findOneAndUpdate(
+              { user: project.user._id, project: project._id },
+              {
+                $inc: {
+                  textsCount: 1,
+                  textsRemaining: -1,
+                  tasksPerMonthCount: 1,
+                },
+              },
+              { new: true }
+            );
 
-    //       let updateTaskId = await ProjectTask.findByIdAndUpdate(
-    //         { _id: createProjectTask._id },
-    //         { taskName: taskId },
-    //         { new: true }
-    //       );
+            let nameChar = upadteProject.projectName.slice(0, 2).toUpperCase();
+            let idChar = createProjectTask._id.toString().slice(-4);
+            let taskId = nameChar + "-" + idChar;
 
-    //       if (upadteProject && createProjectTask) {
-    //         await session.commitTransaction();
-    //         session.endSession();
-    //         await emails.onBoadingSuccess(getuser);
+            let updateTaskId = await ProjectTask.findByIdAndUpdate(
+              { _id: createProjectTask._id },
+              {
+                taskName: taskId,
+                fileLink: fileObj.fileLink,
+                fileId: fileObj.fileId,
+              },
+              { new: true }
+            );
 
-    //         res.send({
-    //           message: "OnBoarding successful",
-    //           data: createProjectTask,
-    //         });
-    //       }
-    //     } else {
-    //       res.status(403).send({ message: "As free trial gives only 1 task" });
-    //       return
-    //     }
-    //   } else if (role.title == "Client" && project.projectName == projectName) {
-    //     let taskCount = await ProjectTask.countDocuments({
-    //       project: project._id,
-    //     });
+            if (upadteProject && createProjectTask) {
+              // await session.commitTransaction();
+              // session.endSession();
+              await emails.onBoadingSuccess(getuser);
 
-    //     let userPlan = await UserPlan.findOne({
-    //       user: user._id,
-    //       project: project._id,
-    //     }).populate("plan");
+              // res.send({
+              //   message: "OnBoarding successful",
+              //   data: createProjectTask,
+              // });
+            }
+          } else {
+            // error = "As free trial gives only 1 task";
+            res
+              .status(403)
+              .send({ message: "As free trial gives only 1 task" });
 
-    //     // console.log("user plan: ", userPlan);
+            return;
+          }
+        } else if (
+          role.title == "Client" &&
+          project.projectName == projectName
+        ) {
+          let taskCount = await ProjectTask.countDocuments({
+            project: project._id,
+          });
 
-    //     if (!userPlan.subscription) {
-    //       res.status(500).send({ message: "Client don't have subscription" });
-    //       return;
-    //     }
+          let userPlan = await UserPlan.findOne({
+            user: user._id,
+            project: project._id,
+          }).populate("plan");
 
-    //     if (
-    //       dayjs(new Date()).isAfter(dayjs(userPlan.endMonthDate, "day")) ||
-    //       userPlan.tasksPerMonthCount === userPlan.tasksPerMonth
-    //     ) {
-    //       res.status(500).send({ message: "Client have reached monthly limit" });
+          // console.log("user plan: ", userPlan);
 
-    //       return;
-    //     }
-    //     if (userPlan.textsRemaining === 0) {
-    //       res.status(500).send({ message: "Client's subscription is expired" });
-    //       return;
-    //     }
-    //     if (dayjs(new Date()).isAfter(dayjs(userPlan.endDate, "day"))) {
-    //       res.status(500).send({ message: "Client's subscription is expired" });
-    //       return;
-    //     }
+          if (!userPlan.subscription) {
+            // error = "Client don't have subscription";
+            res.status(500).send({ message: "Client don't have subscription" });
+            return;
+          }
 
-    //     // if (taskCount <= userPlan.plan.texts - 1) {
-    //     let projectStatus;
-    //     let taskStatus;
-    //     if (speech !== "" && prespective !== "") {
-    //       projectStatus = "Ready";
-    //     }
+          if (
+            dayjs(new Date()).isAfter(dayjs(userPlan.endMonthDate, "day")) ||
+            userPlan.tasksPerMonthCount === userPlan.tasksPerMonth
+          ) {
+            // error = "Client have reached monthly limit";
+            res
+              .status(500)
+              .send({ message: "Client have reached monthly limit" });
 
-    //     let createCompany = await Company.create({
-    //       ...companyInfoObj,
-    //       user: project.user._id,
-    //     });
+            return;
+          }
+          if (userPlan.textsRemaining === 0) {
+            // error = "Client's subscription is expired";
+            res
+              .status(500)
+              .send({ message: "Client's subscription is expired" });
+            return;
+          }
+          if (dayjs(new Date()).isAfter(dayjs(userPlan.endDate, "day"))) {
+            // error = "Client's subscription is expired";
+            res
+              .status(500)
+              .send({ message: "Client's subscription is expired" });
+            return;
+          }
 
-    //     let proectTaskObj = {
-    //       keywords: project.keywords,
-    //       desiredNumberOfWords: userPlan.plan.desiredWords,
-    //       project: project._id,
-    //       user: user._id,
-    //       onBoarding: createCompany._id,
-    //     };
+          // if (taskCount <= userPlan.plan.texts - 1) {
+          let projectStatus;
+          let taskStatus;
+          if (speech !== "" && prespective !== "") {
+            projectStatus = "Ready";
+          }
 
-    //     let createProjectTask = await ProjectTask.create(proectTaskObj);
-    //     console.log("before creating file");
-    //     const totalFiles = await getFileCount(project.folderId);
-    //     const fileName = `${project.id}-${totalFiles + 1}-${
-    //       createProjectTask.keywords || "No Keywords"
-    //     }`;
-    //     const fileObj = await createTaskFile(project.folderId, fileName);
-    //     const updateProjectTask = await ProjectTask.findOneAndUpdate(
-    //       { _id: createProjectTask._id },
-    //       {
-    //         fileLink: fileObj.fileLink,
-    //         fileId: fileObj.fileId,
-    //         tasktName: fileName,
-    //       },
-    //       { new: true }
-    //     );
-    //     console.log("after creating file");
-    //     let upadteProject = await Projects.findOneAndUpdate(
-    //       { _id: project._id },
-    //       {
-    //         // speech: speech,
-    //         // prespective: prespective,
-    //         onBoarding: true,
-    //         // boardingInfo: newOnBoarding._id,
-    //         // duration: userPlan.subPlan.duration,
-    //         // numberOfTasks: userPlan.plan.texts,
-    //         projectStatus: projectStatus,
-    //         tasks: taskCount + 1,
-    //       },
-    //       { new: true }
-    //     );
-    //     await Projects.findByIdAndUpdate(
-    //       projectId,
-    //       { $push: { projectTasks: createProjectTask._id } },
-    //       { new: true }
-    //     );
+          let createCompany = await Company.create({
+            ...companyInfoObj,
+            user: project.user._id,
+          });
 
-    //     await UserPlan.findOneAndUpdate(
-    //       { user: project.user._id, project: project._id },
-    //       {
-    //         $inc: {
-    //           textsCount: 1,
-    //           textsRemaining: -1,
-    //           tasksPerMonthCount: 1,
-    //         },
-    //       },
-    //       { new: true }
-    //     );
+          let proectTaskObj = {
+            keywords: task.keywords,
+            dueDate: task.dueDate,
+            topic: task.topic,
+            type: task.type,
+            published: true,
+            desiredNumberOfWords: userPlan.plan.desiredWords,
+            project: project._id,
+            user: user._id,
+            onBoarding: createCompany._id,
+          };
 
-    //     let nameChar = upadteProject.projectName.slice(0, 2).toUpperCase();
-    //     let idChar = createProjectTask._id.toString().slice(-4);
-    //     let taskId = nameChar + "-" + idChar;
+          let createProjectTask = await ProjectTask.create(proectTaskObj);
+          console.log("before creating file");
+          const totalFiles = await getFileCount(project.folderId);
+          const fileName = `${project.projectId}-${totalFiles + 1}-${
+            createProjectTask.keywords || "No Keywords"
+          }`;
+          const fileObj = await createTaskFile(project.folderId, fileName);
+          // const updateProjectTask = await ProjectTask.findOneAndUpdate(
+          //   { _id: createProjectTask._id },
+          //   {
+          //     fileLink: fileObj.fileLink,
+          //     fileId: fileObj.fileId,
+          //     tasktName: fileName,
+          //   },
+          //   { new: true }
+          // );
+          console.log("after creating file");
+          let upadteProject = await Projects.findOneAndUpdate(
+            { _id: project._id },
+            {
+              // speech: speech,
+              // prespective: prespective,
+              onBoarding: true,
+              // boardingInfo: newOnBoarding._id,
+              // duration: userPlan.subPlan.duration,
+              // numberOfTasks: userPlan.plan.texts,
+              projectStatus: projectStatus,
+              tasks: taskCount + 1,
+            },
+            { new: true }
+          );
+          await Projects.findByIdAndUpdate(
+            projectId,
+            { $push: { projectTasks: createProjectTask._id } },
+            { new: true }
+          );
 
-    //     let updateTaskId = await ProjectTask.findByIdAndUpdate(
-    //       { _id: createProjectTask._id },
-    //       { taskName: taskId },
-    //       { new: true }
-    //     );
+          await UserPlan.findOneAndUpdate(
+            { user: project.user._id, project: project._id },
+            {
+              $inc: {
+                textsCount: 1,
+                textsRemaining: -1,
+                tasksPerMonthCount: 1,
+              },
+            },
+            { new: true }
+          );
 
-    //     if (upadteProject && createProjectTask) {
-    //       await session.commitTransaction();
-    //       session.endSession();
-    //       await emails.onBoadingSuccess(getuser);
+          let nameChar = upadteProject.projectName.slice(0, 2).toUpperCase();
+          let idChar = createProjectTask._id.toString().slice(-4);
+          let taskId = nameChar + "-" + idChar;
 
-    //       res.send({
-    //         message: "OnBoarding successful",
-    //         data: createProjectTask,
-    //       });
-    //     }
-    //     // } else {
-    //     //   res.status(403).send({
-    //     //     message:
-    //     //       "You cannot create more Tasks because you have reached subscription limit.",
-    //     //   });
-    //     // }
-    //   } else {
-    //     res.status(403).send({
-    //       message: "Project not found!",
-    //     });
-    //   }
-    // };
+          let updateTaskId = await ProjectTask.findByIdAndUpdate(
+            { _id: createProjectTask._id },
+            {
+              taskName: taskId,
+              fileLink: fileObj.fileLink,
+              fileId: fileObj.fileId,
+            },
+            { new: true }
+          );
+
+          if (upadteProject && createProjectTask) {
+            // await session.commitTransaction();
+            // session.endSession();
+            await emails.onBoadingSuccess(getuser);
+
+            // res.send({
+            //   message: "OnBoarding successful",
+            //   data: createProjectTask,
+            // });
+          }
+          // } else {
+          //   res.status(403).send({
+          //     message:
+          //       "You cannot create more Tasks because you have reached subscription limit.",
+          //   });
+          // }
+        } else {
+          // error = "Project not found!";
+          res.status(403).send({
+            message: "Project not found!",
+          });
+          return;
+        }
+      } catch (error) {
+        res
+          .status(500)
+          .send({ message: error.message || "Something went wrong" });
+        return;
+      }
+    };
 
     const joiSchema = Joi.object({
       projectId: Joi.string().required(),
@@ -1260,29 +1337,41 @@ exports.importProjectTasks = async (req, res) => {
       .on("data", (row) => {
         // Assuming the CSV has 'name', 'description', and 'status' columns
         console.log("row: ", row);
-        // if (
-        //   !row["Company Background"] ||
-        //   !row["Company Attributes"] ||
-        //   !row["Company Services"] ||
-        //   !row["Customer Content"] ||
-        //   !row["Customer Interest"] ||
-        //   !row["Content Purpose"] ||
-        //   !row["Content Info"]
-        // ) {
-        //   checkCSVError =
-        //     "Please make sure you have complete onBoarding details of each task (Company Background, Company Attributes, Company Services, Customer Content, Customer Interest, Content Purpose, Content Info)";
-        //   return;
-        // }
+        if (
+          !row["Company Background"] ||
+          !row["Company Attributes"] ||
+          !row["Company Services"] ||
+          !row["Customer Content"] ||
+          !row["Customer Interest"] ||
+          !row["Content Purpose"] ||
+          !row["Content Info"]
+        ) {
+          checkCSVError =
+            "Please make sure you have complete onBoarding details of each task (Company Background, Company Attributes, Company Services, Customer Content, Customer Interest, Content Purpose, Content Info)";
+          return;
+        }
 
-        // if (!row["Keywords"]) {
-        //   checkCSVError = "Keywords required for each task in csv file";
-        //   return;
-        // }
+        if (!row["Keywords"]) {
+          checkCSVError = "Keywords required for each task in csv file";
+          return;
+        }
+
+        if (!row["Due Date"] || !dayjs(row["Due Date"]).isValid()) {
+          checkCSVError = `Make sure due date is given and is valid date YYYY-MM-DD`;
+          return;
+        }
         const task = {
           keywords: row["Keywords"],
-
-          description: row.description,
-          status: row.status,
+          dueDate: dayjs(row["Due Date"]).toDate(),
+          topic: row["Topic"],
+          type: row["Type"],
+          companyBackground: row["Company Background"],
+          companyAttributes: row["Company Attributes"],
+          companyServices: row["Company Services"],
+          customerContent: row["Customer Content"],
+          customerInterest: row["Customer Interest"],
+          contentPurpose: row["Content Purpose"],
+          contentInfo: row["Content Info"],
         };
         tasks.push(task);
       })
@@ -1292,7 +1381,64 @@ exports.importProjectTasks = async (req, res) => {
             res.status(500).send({ message: checkCSVError });
             return;
           }
-          console.log("tasks: ", tasks)
+
+          const allTasks = await projectTasks
+            .find({ project: project._id, published: true })
+            .populate("onBoarding");
+
+          if (!allTasks) {
+            res.status(500).send({ message: "Could not get project tasks" });
+            return;
+          }
+          console.log("all tasks length: ", allTasks.length);
+          let responseSent = false;
+          if (allTasks.length > 0) {
+            for (const importTask of tasks) {
+              for (const orgTask of allTasks) {
+                if (importTask.keywords.toLowerCase().trim() === orgTask.keywords.toLowerCase().trim()) {
+                  await editTask(user, project, importTask, orgTask, res)
+                  if (res.headersSent) {
+                    responseSent = true;
+                    break; // Exit the loop once a response is sent
+                  }
+
+                } else {
+                  await importTasks(user, project, importTask, res);
+
+                  if (res.headersSent) {
+                    responseSent = true;
+                    break; // Exit the loop once a response is sent
+                  }
+                }
+              }
+
+              if (responseSent) {
+                break; // Exit outer loop if the response is already sent
+              }
+            }
+          }
+
+          if (allTasks.length === 0) {
+            console.log("inside 0 length if");
+            for (const importTask of tasks) {
+              await importTasks(user, project, importTask, res);
+
+              if (res.headersSent) {
+                responseSent = true;
+                break; // Exit the loop once a response is sent
+              }
+
+              if (responseSent) {
+                break; // Exit outer loop if the response is already sent
+              }
+            }
+          }
+
+          // if (allTasks.length === 0) {
+          //   tasks.forEach( async (importTask) => {
+          //     await importTasks(user, project, importTask);
+          //   });
+          // }
 
           // // Bulk add the tasks to the project
           // project.projectTasks.push(...tasks);
@@ -1301,10 +1447,12 @@ exports.importProjectTasks = async (req, res) => {
           // // Delete the uploaded CSV file after processing
           // fs.unlinkSync(filePath);
 
-          res.status(200).send({
-            message: "Tasks imported successfully",
-            // tasks,
-          });
+          if (!responseSent) {
+            res.status(200).send({
+              message: "Tasks imported successfully",
+              // tasks,
+            });
+          }
         } catch (error) {
           console.error("Error saving tasks:", error);
           res.status(500).send({ message: "Failed to save tasks" });
