@@ -716,8 +716,6 @@ exports.editTask = async (req, res) => {
 };
 
 exports.archivedProject = async (req, res) => {
-  const session = await mongoose.startSession()
-  session.startTransaction()
   try {
     if (!req.role || req.role.toLowerCase() !== "projectmanger") {
       res.status(401).send({ message: "Your are not admin" });
@@ -731,8 +729,6 @@ exports.archivedProject = async (req, res) => {
 
     if (error) {
       // emails.errorEmail(req, error);
-      await session.abortTransaction()
-      session.endSession()
 
       const message = error.details[0].message.replace(/"/g, "");
       res.status(401).send({
@@ -740,6 +736,8 @@ exports.archivedProject = async (req, res) => {
       });
       return;
     }
+    const session = await mongoose.startSession();
+    session.startTransaction();
     const project = await Projects.findOneAndUpdate(
       { _id: req.body.projectId },
       {
@@ -756,21 +754,17 @@ exports.archivedProject = async (req, res) => {
         },
         { new: true }
       );
-      
     }
-    await session.commitTransaction()
-    session.endSession()
+    await session.commitTransaction();
+    session.endSession();
     res.status(200).json({ message: "success" });
   } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
     res.status(200).json({ message: error?.message || "Something went wrong" });
   }
 };
 
 exports.editProject = async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
+ 
 
   try {
     if (!req.role || req.role.toLowerCase() !== "projectmanger") {
@@ -787,8 +781,8 @@ exports.editProject = async (req, res) => {
 
     if (error) {
       // emails.errorEmail(req, error);
-      await session.abortTransaction()
-      session.endSession()
+      await session.abortTransaction();
+      session.endSession();
 
       const message = error.details[0].message.replace(/"/g, "");
       res.status(401).send({
@@ -798,40 +792,46 @@ exports.editProject = async (req, res) => {
     }
     const project = await Projects.findOne({ _id: req.body.projectId });
     if (!project) {
-      await session.abortTransaction();
-      session.endSession();
+    
       res.status(404).send({ message: "Project Not Found" });
       return;
     }
+     const session = await mongoose.startSession();
+     session.startTransaction();
 
     let nameChar = req.body.domain.slice(0, 2).toUpperCase();
     let idChar = project._id.toString().slice(-4);
     let projId = nameChar + "-" + idChar;
 
-    const updatedProject = await Projects.findOneAndUpdate({ _id: req.body.projectId }, {
-      projectName: req.body.domain,
-      projectId: projId,
-      speech: req.body.speech,
-      prespective: req.body.prespective
-    }, { new: true })
-    
+    const updatedProject = await Projects.findOneAndUpdate(
+      { _id: req.body.projectId },
+      {
+        projectName: req.body.domain,
+        projectId: projId,
+        speech: req.body.speech,
+        prespective: req.body.prespective,
+      },
+      { new: true }
+    );
+
     for (const task of project.projectTasks) {
-       let nameChar = req.body.domain.slice(0, 2).toUpperCase();
-       let idChar = task.toString().slice(-4);
+      let nameChar = req.body.domain.slice(0, 2).toUpperCase();
+      let idChar = task.toString().slice(-4);
       let taskId = nameChar + "-" + idChar;
-      await projectTasks.findOneAndUpdate({ _id: task }, {
-        taskName: taskId
-      },{new: true})
+      await projectTasks.findOneAndUpdate(
+        { _id: task },
+        {
+          taskName: taskId,
+        },
+        { new: true }
+      );
     }
 
-    await session.commitTransaction()
-    session.endSession()
-    res.status(200).json({message: "success"})
-
-
-  } catch (error) {
-    await session.abortTransaction();
+    await session.commitTransaction();
     session.endSession();
+    res.status(200).json({ message: "success" });
+  } catch (error) {
+ 
     res.status(500).json({ message: error?.message || "Something went wrong" });
   }
 };
