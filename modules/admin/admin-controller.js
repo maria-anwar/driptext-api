@@ -781,8 +781,7 @@ exports.editProject = async (req, res) => {
 
     if (error) {
       // emails.errorEmail(req, error);
-      await session.abortTransaction();
-      session.endSession();
+    
 
       const message = error.details[0].message.replace(/"/g, "");
       res.status(401).send({
