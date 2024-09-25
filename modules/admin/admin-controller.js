@@ -658,6 +658,10 @@ exports.addTask = async (req, res) => {
 
 exports.editTask = async (req, res) => {
   try {
+    if (!req.role || req.role.toLowerCase() !== "projectmanger") {
+      res.status(401).send({ message: "Your are not admin" });
+      return;
+    }
     const joiSchema = Joi.object({
       taskId: Joi.string().required(),
       readyToWork: Joi.boolean().required(),
@@ -705,7 +709,66 @@ exports.editTask = async (req, res) => {
       { new: true }
     );
 
+    res.status(200).json({ message: "success" });
+  } catch (error) {
+    res.status(500).json({ message: error?.message || "Something went wrong" });
+  }
+};
+
+exports.archivedProject = async (req, res) => {
+  try {
+    if (!req.role || req.role.toLowerCase() !== "projectmanger") {
+      res.status(401).send({ message: "Your are not admin" });
+      return;
+    }
+    const joiSchema = Joi.object({
+      projectId: Joi.string().required(),
+      isArchived: Joi.boolean().required()
+    });
+    const { error, value } = joiSchema.validate(req.body);
+
+    if (error) {
+      // emails.errorEmail(req, error);
+
+      const message = error.details[0].message.replace(/"/g, "");
+      res.status(401).send({
+        message: message,
+      });
+      return;
+    }
+    const project = await Projects.findOneAndUpdate({ _id: req.body.projectId }, {
+      isActive: req.body.isArchived ? "Y" : "N"
+    }, { new: true })
+    
     res.status(200).json({message: "success"})
+  } catch (error) {
+    res.status(200).json({ message: error?.message || "Something went wrong" });
+  }
+};
+
+exports.editProject = async (req, res) => {
+  try {
+    if (!req.role || req.role.toLowerCase() !== "projectmanger") {
+      res.status(401).send({ message: "Your are not admin" });
+      return;
+    }
+    const joiSchema = Joi.object({
+      id: Joi.string().required(),
+      firstName: Joi.string().required(),
+      lastName: Joi.string().required(),
+      email: Joi.string().required(),
+    });
+    const { error, value } = joiSchema.validate(req.body);
+
+    if (error) {
+      // emails.errorEmail(req, error);
+
+      const message = error.details[0].message.replace(/"/g, "");
+      res.status(401).send({
+        message: message,
+      });
+      return;
+    }
   } catch (error) {
     res.status(500).json({ message: error?.message || "Something went wrong" });
   }
