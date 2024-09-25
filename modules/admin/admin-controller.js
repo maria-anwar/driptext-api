@@ -656,6 +656,61 @@ exports.addTask = async (req, res) => {
   }
 };
 
+exports.editTask = async (req, res) => {
+  try {
+    const joiSchema = Joi.object({
+      taskId: Joi.string().required(),
+      readyToWork: Joi.boolean().required(),
+      dueDate: Joi.date().required(),
+      topic: Joi.string().required(),
+      keyword: Joi.string().required(),
+      keywordType: Joi.string().required(),
+      comment: Joi.string().optional().allow("").allow(null),
+      companyBackgorund: Joi.string().optional().allow("").allow(null),
+      companyAttributes: Joi.string().optional().allow("").allow(null),
+      comapnyServices: Joi.string().optional().allow("").allow(null),
+      customerContent: Joi.string().optional().allow("").allow(null),
+      customerIntrest: Joi.string().optional().allow("").allow(null),
+      contentPurpose: Joi.string().optional().allow("").allow(null),
+      contentInfo: Joi.string().optional().allow("").allow(null),
+    });
+    const { error, value } = joiSchema.validate(req.body);
+
+    if (error) {
+      // emails.errorEmail(req, error);
+
+      const message = error.details[0].message.replace(/"/g, "");
+      res.status(401).send({
+        message: message,
+      });
+      return;
+    }
+    const task = await projectTasks.findOneAndUpdate(
+      { _id: req.body.taskId },
+      {
+        readyToWork: req.body.readyToWork,
+        dueDate: req.body.dueDate,
+        topic: req.body.topic,
+        keywords: req.body.keyword,
+        type: req.body.keywordType,
+        comments: req.body.comment,
+        companyBackgorund: req.body.companyBackgorund,
+        companyAttributes: req.body.companyAttributes,
+        comapnyServices: req.body.comapnyServices,
+        customerContent: req.body.customerContent,
+        customerIntrest: req.body.customerIntrest,
+        contentPurpose: req.body.contentPurpose,
+        contentInfo: req.body.contentInfo,
+      },
+      { new: true }
+    );
+
+    res.status(200).json({message: "success"})
+  } catch (error) {
+    res.status(500).json({ message: error?.message || "Something went wrong" });
+  }
+};
+
 exports.assignFreelancersByProject = async (req, res) => {
   console.log("inside freelancers by project api");
   const session = await mongoose.startSession();
@@ -976,7 +1031,7 @@ exports.importProjectTasks = async (req, res) => {
     }
 
     const editTask = async (user, project, task, orgTask) => {
-      console.log("task onBoarding: ", task)
+      console.log("task onBoarding: ", task);
       const updatedTask = await projectTasks.findOneAndUpdate(
         { _id: orgTask._id },
         {
@@ -1000,7 +1055,7 @@ exports.importProjectTasks = async (req, res) => {
         },
         { new: true }
       );
-    }
+    };
 
     const importTasks = async (user, project, task) => {
       try {
@@ -1131,9 +1186,7 @@ exports.importProjectTasks = async (req, res) => {
 
             return;
           }
-        } else if (
-          role.title == "Client"
-        ) {
+        } else if (role.title == "Client") {
           let taskCount = await ProjectTask.countDocuments({
             project: project._id,
           });
@@ -1181,7 +1234,7 @@ exports.importProjectTasks = async (req, res) => {
           let projectStatus;
           let taskStatus;
           // if (speech !== "" && prespective !== "") {
-            projectStatus = "Ready";
+          projectStatus = "Ready";
           // }
 
           let createCompany = await Company.create({
@@ -1249,8 +1302,7 @@ exports.importProjectTasks = async (req, res) => {
             },
             { new: true }
           );
-            console.log("updated project: ", upadteProject);
-
+          console.log("updated project: ", upadteProject);
 
           let nameChar = upadteProject.projectName.slice(0, 2).toUpperCase();
           let idChar = createProjectTask._id.toString().slice(-4);
@@ -1400,13 +1452,15 @@ exports.importProjectTasks = async (req, res) => {
               for (const orgTask of allTasks) {
                 // console.log("import task: ", importTask)
                 // console.log("orgTask: ", orgTask)
-                if (importTask.keywords.toLowerCase().trim() === (orgTask?.keywords || "").toLowerCase().trim()) {
-                  await editTask(user, project, importTask, orgTask, res)
+                if (
+                  importTask.keywords.toLowerCase().trim() ===
+                  (orgTask?.keywords || "").toLowerCase().trim()
+                ) {
+                  await editTask(user, project, importTask, orgTask, res);
                   if (res.headersSent) {
                     responseSent = true;
                     break; // Exit the loop once a response is sent
                   }
-
                 } else {
                   await importTasks(user, project, importTask, res);
 

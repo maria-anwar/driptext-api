@@ -35,6 +35,10 @@ router.post("/addTask", jwt.protect, (req, res) => {
   adminController.addTask(req, res);
 });
 
+router.post("/editTask", jwt.protect, (req, res) => {
+  adminController.editTask(req, res);
+});
+
 router.post("/assignFreelancersByProject", jwt.protect, (req, res) => {
   adminController.assignFreelancersByProject(req, res);
 });
