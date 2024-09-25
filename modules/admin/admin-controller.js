@@ -723,7 +723,7 @@ exports.archivedProject = async (req, res) => {
     }
     const joiSchema = Joi.object({
       projectId: Joi.string().required(),
-      isArchived: Joi.boolean().required()
+      isArchived: Joi.boolean().required(),
     });
     const { error, value } = joiSchema.validate(req.body);
 
@@ -736,27 +736,34 @@ exports.archivedProject = async (req, res) => {
       });
       return;
     }
-    const project = await Projects.findOneAndUpdate({ _id: req.body.projectId }, {
-      isActive: req.body.isArchived ? "Y" : "N"
-    }, { new: true })
-    
-    res.status(200).json({message: "success"})
+    const project = await Projects.findOneAndUpdate(
+      { _id: req.body.projectId },
+      {
+        isActive: req.body.isArchived ? "N" : "Y",
+      },
+      { new: true }
+    );
+
+    res.status(200).json({ message: "success" });
   } catch (error) {
     res.status(200).json({ message: error?.message || "Something went wrong" });
   }
 };
 
 exports.editProject = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
     if (!req.role || req.role.toLowerCase() !== "projectmanger") {
       res.status(401).send({ message: "Your are not admin" });
       return;
     }
     const joiSchema = Joi.object({
-      id: Joi.string().required(),
-      firstName: Joi.string().required(),
-      lastName: Joi.string().required(),
-      email: Joi.string().required(),
+      projectId: Joi.string().required(),
+      domain: Joi.string().required(),
+      speech: Joi.string().required(),
+      prespective: Joi.string().required(),
     });
     const { error, value } = joiSchema.validate(req.body);
 
@@ -769,7 +776,42 @@ exports.editProject = async (req, res) => {
       });
       return;
     }
+    const project = await Projects.findOne({ _id: req.body.projectId });
+    if (!project) {
+      await session.abortTransaction();
+      session.endSession();
+      res.status(404).send({ message: "Project Not Found" });
+      return;
+    }
+
+    let nameChar = req.body.domain.slice(0, 2).toUpperCase();
+    let idChar = project._id.toString().slice(-4);
+    let projId = nameChar + "-" + idChar;
+
+    const updatedProject = await Projects.findOneAndUpdate({ _id: req.body.projectId }, {
+      projectName: req.body.domain,
+      projectId: projId,
+      speech: req.body.speech,
+      prespective: req.body.prespective
+    }, { new: true })
+    
+    for (const task of project.projectTasks) {
+       let nameChar = req.body.domain.slice(0, 2).toUpperCase();
+       let idChar = task.toString().slice(-4);
+      let taskId = nameChar + "-" + idChar;
+      await projectTasks.findOneAndUpdate({ _id: task }, {
+        taskName: taskId
+      },{new: true})
+    }
+
+    await session.commitTransaction()
+    session.endSession()
+    res.status(200).json({message: "success"})
+
+
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
     res.status(500).json({ message: error?.message || "Something went wrong" });
   }
 };
