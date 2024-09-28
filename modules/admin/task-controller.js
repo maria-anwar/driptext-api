@@ -568,19 +568,8 @@ exports.importProjectTasks = async (req, res) => {
           dueDate: task.dueDate,
           topic: task.topic,
           type: task.type,
-        },
-        { new: true }
-      );
-      const updatedOnBoarding = await Company.findOneAndUpdate(
-        { _id: orgTask.onBoarding._id },
-        {
-          companyBackgorund: task.companyBackground,
-          companyAttributes: task.companyAttributes,
-          comapnyServices: task.companyServices,
-          customerContent: task.customerContent,
-          customerIntrest: task.customerInterest,
-          contentPurpose: task.contentPurpose,
-          contentInfo: task.ContentInfo,
+          desiredNumberOfWords: task.wordCount,
+          status: "Ready To Work",
         },
         { new: true }
       );
@@ -591,15 +580,15 @@ exports.importProjectTasks = async (req, res) => {
         console.log("task inside import tasks: ", task);
         let error = "";
         let role = user.role;
-        let companyInfoObj = {
-          companyBackgorund: task.companyBackground,
-          companyAttributes: task.companyAttributes,
-          comapnyServices: task.companyServices,
-          customerContent: task.customerContent,
-          customerIntrest: task.customerInterest,
-          contentPurpose: task.contentPurpose,
-          contentInfo: task.ContentInfo,
-        };
+        // let companyInfoObj = {
+        //   companyBackgorund: task.companyBackground,
+        //   companyAttributes: task.companyAttributes,
+        //   comapnyServices: task.companyServices,
+        //   customerContent: task.customerContent,
+        //   customerIntrest: task.customerInterest,
+        //   contentPurpose: task.contentPurpose,
+        //   contentInfo: task.ContentInfo,
+        // };
         if (role.title == "leads" || role.title == "Leads") {
           let taskCount = await ProjectTask.countDocuments({
             project: project._id,
@@ -608,14 +597,14 @@ exports.importProjectTasks = async (req, res) => {
             let projectStatus;
             let taskStatus;
             // if (speech !== "" && prespective !== "") {
-            projectStatus = "Free Trial";
-            taskStatus = "Ready to Start";
+            // projectStatus = "Free Trial";
+            // taskStatus = "Ready to Start";
             // }
 
-            let createCompany = await Company.create({
-              ...companyInfoObj,
-              user: project.user._id,
-            });
+            // let createCompany = await Company.create({
+            //   ...companyInfoObj,
+            //   user: project.user._id,
+            // });
 
             let proectTaskObj = {
               keywords: task.keywords,
@@ -624,10 +613,10 @@ exports.importProjectTasks = async (req, res) => {
               type: task.type,
               published: true,
               project: project._id,
-              desiredNumberOfWords: "1500",
-              status: taskStatus,
+              desiredNumberOfWords: task.wordCount,
+              status: "Ready To Work",
               user: user._id,
-              onBoarding: createCompany._id,
+              //   onBoarding: createCompany._id,
               //   tasks: taskCount,
             };
 
@@ -636,8 +625,8 @@ exports.importProjectTasks = async (req, res) => {
               {
                 // speech: speech,
                 // prespective: prespective,
-                projectStatus: projectStatus,
-                onBoarding: true,
+                // projectStatus: projectStatus,
+                // onBoarding: true,
                 // boardingInfo: newOnBoarding._id,
                 // duration: "1",
                 // numberOfTasks: "1",
@@ -763,21 +752,22 @@ exports.importProjectTasks = async (req, res) => {
           let projectStatus;
           let taskStatus;
           // if (speech !== "" && prespective !== "") {
-          projectStatus = "Ready";
+          //   projectStatus = "Ready";
           // }
 
-          let createCompany = await Company.create({
-            ...companyInfoObj,
-            user: project.user._id,
-          });
+          //   let createCompany = await Company.create({
+          //     ...companyInfoObj,
+          //     user: project.user._id,
+          //   });
 
           let proectTaskObj = {
             keywords: task.keywords,
             dueDate: task.dueDate,
             topic: task.topic,
             type: task.type,
+            status: "Ready To Work",
             published: true,
-            desiredNumberOfWords: userPlan.plan.desiredWords,
+            desiredNumberOfWords: task.wordCount,
             project: project._id,
             user: user._id,
             onBoarding: createCompany._id,
@@ -805,11 +795,11 @@ exports.importProjectTasks = async (req, res) => {
             {
               // speech: speech,
               // prespective: prespective,
-              onBoarding: true,
+              //   onBoarding: true,
               // boardingInfo: newOnBoarding._id,
               // duration: userPlan.subPlan.duration,
               // numberOfTasks: userPlan.plan.texts,
-              projectStatus: projectStatus,
+              //   projectStatus: projectStatus,
               tasks: taskCount + 1,
             },
             { new: true }
@@ -921,22 +911,15 @@ exports.importProjectTasks = async (req, res) => {
       .on("data", (row) => {
         // Assuming the CSV has 'name', 'description', and 'status' columns
         // console.log("row: ", row);
+
         if (
-          !row["Company Background"] ||
-          !row["Company Attributes"] ||
-          !row["Company Services"] ||
-          !row["Customer Content"] ||
-          !row["Customer Interest"] ||
-          !row["Content Purpose"] ||
-          !row["Content Info"]
+          !row["Keywords"] ||
+          !row["Type"] ||
+          !row["Topic"] ||
+          !row["Word Count Expectation"]
         ) {
           checkCSVError =
-            "Please make sure you have complete onBoarding details of each task (Company Background, Company Attributes, Company Services, Customer Content, Customer Interest, Content Purpose, Content Info)";
-          return;
-        }
-
-        if (!row["Keywords"]) {
-          checkCSVError = "Keywords required for each task in csv file";
+            "Keywords, Type, Topic, and Word Count fields are required for each task in csv file";
           return;
         }
 
@@ -949,13 +932,7 @@ exports.importProjectTasks = async (req, res) => {
           dueDate: dayjs(row["Due Date"]).toDate(),
           topic: row["Topic"],
           type: row["Type"],
-          companyBackground: row["Company Background"],
-          companyAttributes: row["Company Attributes"],
-          companyServices: row["Company Services"],
-          customerContent: row["Customer Content"],
-          customerInterest: row["Customer Interest"],
-          contentPurpose: row["Content Purpose"],
-          contentInfo: row["Content Info"],
+          wordCount: row["Word Count Expectation"],
         };
         tasks.push(task);
       })

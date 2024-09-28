@@ -75,35 +75,36 @@ exports.findOrCreateFolderInParent = async (parentFolderId, folderName) => {
     // List the files in the parent folder to check if the folder already exists
     const response = await drive.files.list({
       q: `'${parentFolderId}' in parents and name = '${folderName}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
-      fields: 'files(id, name)',
-      spaces: 'drive',
+      fields: "files(id, name)",
+      spaces: "drive",
     });
 
     // If the folder already exists, return its ID
     if (response.data.files.length > 0) {
-      console.log(`Folder "${folderName}" already exists with ID: ${response.data.files[0].id}`);
+      console.log(
+        `Folder "${folderName}" already exists with ID: ${response.data.files[0].id}`
+      );
       return response.data.files[0].id;
     }
 
     // If the folder doesn't exist, create it
     const fileMetadata = {
       name: folderName,
-      mimeType: 'application/vnd.google-apps.folder',
+      mimeType: "application/vnd.google-apps.folder",
       parents: [parentFolderId],
     };
 
     const newFolder = await drive.files.create({
       resource: fileMetadata,
-      fields: 'id',
+      fields: "id",
     });
 
     console.log(`Folder "${folderName}" created with ID: ${newFolder.data.id}`);
     return newFolder.data.id;
-
   } catch (error) {
-    console.error('Error finding or creating folder:', error);
+    console.error("Error finding or creating folder:", error);
   }
-}
+};
 
 exports.exportTasksToSheetInFolder = async (tasks, folderId) => {
   console.log("inside export tasks function");
@@ -152,18 +153,12 @@ exports.exportTasksToSheetInFolder = async (tasks, folderId) => {
 
   // Step 2: Write tasks to the sheet
   const taskData = tasks.map((task, index) => [
-    index + 1, // Task number
-    task.keywords || "",
     task.dueDate ? dayjs(task.dueDate).format("YYYY-MM-DD") : "",
+    task.status,
     task.topic || "",
+    task.keywords || "",
     task.type || "",
-    task.onBoarding.companyBackgorund || "",
-    task.onBoarding.companyAttributes || "",
-    task.onBoarding.comapnyServices || "",
-    task.onBoarding.customerContent || "",
-    task.onBoarding.customerIntrest || "",
-    task.onBoarding.contentPurpose || "",
-    task.onBoarding.contentInfo || "",
+    task.desiredNumberOfWords || "",
   ]);
 
   const updateRequest = {
@@ -173,18 +168,12 @@ exports.exportTasksToSheetInFolder = async (tasks, folderId) => {
     resource: {
       values: [
         [
-          "Task No.",
-          "Keywords",
           "Due Date",
+          "Status",
           "Topic",
+          "Keyword",
           "Type",
-          "Company Background",
-          "Company Attributes",
-          "Company Services",
-          "Customer Content",
-          "Customer Interest",
-          "Content Purpose",
-          "Content Info",
+          "Word Count Expectation",
         ], // Headers
         ...taskData,
       ],
