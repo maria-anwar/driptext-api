@@ -33,7 +33,7 @@ exports.getProjects = async (req, res) => {
       return;
     }
     const projects = await projectTasks
-      .find({ published: true })
+      .find({})
       .select("project status")
       .populate({ path: "project", populate: "plan" })
       .populate({ path: "user", match: { isActive: "Y" } });
@@ -224,4 +224,3 @@ exports.archivedProject = async (req, res) => {
     res.status(200).json({ message: error?.message || "Something went wrong" });
   }
 };
-

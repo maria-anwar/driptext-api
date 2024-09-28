@@ -11,9 +11,21 @@ module.exports = (mongoose) => {
       tasks: { type: Number, unique: false, required: false, default: 0 },
       speech: { type: String, required: false, unique: false, default: null },
       keywords: { type: String, required: false, unique: false, default: null },
-      folderLink: { type: String, required: false, unique: false, default: null },
+      folderLink: {
+        type: String,
+        required: false,
+        unique: false,
+        default: null,
+      },
       folderId: { type: String, required: false, unique: false, default: null },
-      onBoardingInfo: { type: Schema.Types.ObjectId, ref: "User", required: false, default: null },
+      onBoardingInfo: {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+        required: false,
+        default: null,
+      },
+      openTasks: { type: Number, required: false, default: 0 },
+      finalTasks: { type: Number, required: false, default: 0 },
       //   duration: { type: String, required: false, unique: false },
       prespective: {
         type: String,

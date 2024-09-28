@@ -1009,10 +1009,11 @@ exports.onboarding = async (req, res) => {
         contentInfo: req.body.contentInfo,
       };
 
-      const newOnBoarding = await Company.create(companyInfoObj);
+      const newOnBoarding = await Company.create({...companyInfoObj, user: req.body.userId});
       const updatedProject = await findOneAndUpdate(
         { _id: req.body.projectId },
         {
+          
           speech: req.body.speech,
           prespective: req.body.prespective,
           onBoarding: true,
