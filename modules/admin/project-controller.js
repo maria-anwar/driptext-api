@@ -28,12 +28,12 @@ const {
 exports.getProjects = async (req, res) => {
   try {
     console.log("req.role: ", req.role);
-      if (!req.role || req.role.toLowerCase() !== "projectmanger") {
-          res.status(401).send({ message: "Your are not admin" });
-          return;
-      }
+    if (!req.role || req.role.toLowerCase() !== "projectmanger") {
+      res.status(401).send({ message: "Your are not admin" });
+      return;
+    }
 
-      const projects = Projects.find({}).populate("plan")
+    const projects = await Projects.find({}).populate("plan");
 
     res.status(200).send({ message: "success", projects: projects });
   } catch (error) {
