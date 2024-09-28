@@ -70,9 +70,8 @@ exports.projectDetail = async (req, res) => {
       { path: "plan" },
       {
         path: "projectTasks",
-        match: { published: true },
-        populate: { path: "onBoarding" },
       },
+      { path: "onBoardingInfo" },
     ]);
     if (!project) {
       res.status(500).send({ message: "Project not found" });
