@@ -13,7 +13,7 @@ module.exports = (mongoose) => {
       keywords: { type: String, required: false, unique: false, default: null },
       folderLink: { type: String, required: false, unique: false, default: null },
       folderId: { type: String, required: false, unique: false, default: null },
-
+      onBoardingInfo: { type: Schema.Types.ObjectId, ref: "User", required: false, default: null },
       //   duration: { type: String, required: false, unique: false },
       prespective: {
         type: String,

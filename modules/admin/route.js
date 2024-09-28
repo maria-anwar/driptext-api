@@ -5,6 +5,9 @@ const router = express.Router();
 const fileUpload = require("../../utils/fileUpload");
 const { upload } = fileUpload("users");
 const adminController = require("./admin-controller");
+const projectController = require("./project-controller")
+const freelancerController = require("./freelancer-controller")
+const taskController = require("./task-controller")
 const jwt = require("../../utils/jwt");
 const multer = require("multer");
 const csvUpload = multer({ dest: "csvuploads/" });
@@ -14,14 +17,14 @@ router.post("/create", (req, res) => {
 });
 
 router.get("/getProjects", jwt.protect, (req, res) => {
-  adminController.getProjects(req, res)
+  projectController.getProjects(req, res);
 })
 
 router.post("/getProjectDetail", jwt.protect, (req, res) => {
-  adminController.projectDetail(req, res);
+  projectController.projectDetail(req, res);
 });
 router.get("/getFreelancers", jwt.protect, (req, res) => {
-  adminController.getFreelancers(req, res);
+  freelancerController.getFreelancers(req, res);
 });
 router.get("/getAllUsers", jwt.protect, (req, res) => {
   adminController.getAllUsers(req, res);
@@ -32,39 +35,39 @@ router.post("/updateUserStatus", jwt.protect, (req, res) => {
 });
 
 router.post("/addTask", jwt.protect, (req, res) => {
-  adminController.addTask(req, res);
+  taskController.addTask(req, res);
 });
 
 
 router.post("/archiveProject", jwt.protect, (req, res) => {
-  adminController.archivedProject(req, res);
+  projectController.archivedProject(req, res);
 });
 
 router.post("/editTask", jwt.protect, (req, res) => {
-  adminController.editTask(req, res);
+  taskController.editTask(req, res);
 });
 
 router.post("/editProject", jwt.protect, (req, res) => {
-  adminController.editProject(req, res);
+  projectController.editProject(req, res);
 });
 
 router.post("/assignFreelancersByProject", jwt.protect, (req, res) => {
-  adminController.assignFreelancersByProject(req, res);
+  freelancerController.assignFreelancersByProject(req, res);
 });
 
 router.post("/assignFreelancersByTask", jwt.protect, (req, res) => {
-  adminController.assignFreelancerByTask(req, res);
+  freelancerController.assignFreelancerByTask(req, res);
 });
 router.post("/updateAdminProfile", jwt.protect, (req, res) => {
   adminController.updateAdminProfile(req, res);
 });
 
 router.post("/exportTasks", jwt.protect, (req, res) => {
-  adminController.projectTasksExport(req, res);
+  taskController.projectTasksExport(req, res);
 });
 
 router.post("/importTasks", jwt.protect, csvUpload.single("file"), (req, res) => {
-  adminController.importProjectTasks(req, res);
+  taskController.importProjectTasks(req, res);
 });
 
 module.exports = router;

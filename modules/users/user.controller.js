@@ -9,7 +9,11 @@ const fs = require("fs");
 const handlebars = require("handlebars");
 const { alternatives } = require("joi");
 const dayjs = require("dayjs");
-const { createFolder, createTaskFile, getFileCount } = require("../../utils/googleService/actions");
+const {
+  createFolder,
+  createTaskFile,
+  getFileCount,
+} = require("../../utils/googleService/actions");
 
 const Users = db.User;
 const Roles = db.Role;
@@ -543,7 +547,11 @@ exports.create = async (req, res) => {
 
               await Projects.findByIdAndUpdate(
                 { _id: final_project._id },
-                { projectId: projectId, folderLink: folderObj.folderLink, folderId: folderObj.folderId },
+                {
+                  projectId: projectId,
+                  folderLink: folderObj.folderLink,
+                  folderId: folderObj.folderId,
+                },
                 { new: true }
               );
 
@@ -831,7 +839,11 @@ exports.create = async (req, res) => {
 
             let updateProjectId = await Projects.findByIdAndUpdate(
               { _id: final_project._id },
-              { projectId: projectId, folderLink: folderObj.folderLink, folderId: folderObj.folderId },
+              {
+                projectId: projectId,
+                folderLink: folderObj.folderLink,
+                folderId: folderObj.folderId,
+              },
               { new: true }
             );
 
@@ -997,333 +1009,25 @@ exports.onboarding = async (req, res) => {
         contentInfo: req.body.contentInfo,
       };
 
-      var whereClause;
-      if (userId) {
-        whereClause = {
-          _id: userId,
-          isActive: "Y",
-        };
-      }
-      let getuser = await Users.findOne(whereClause).populate({
-        path: "role",
-        select: "title",
-      });
+      const newOnBoarding = await Company.create(companyInfoObj);
+      const updatedProject = await findOneAndUpdate(
+        { _id: req.body.projectId },
+        {
+          speech: req.body.speech,
+          prespective: req.body.prespective,
+          onBoarding: true,
+          onBoardingInfo: newOnBoarding._id
+        },
+        { new: true }
+      );
 
-      if (getuser) {
-        var role = getuser.role;
-        var project = await Projects.findOne({
-          _id: projectId,
-          user: userId,
-        });
-        if (project) {
-          var project = await Projects.findOne({
-            _id: projectId,
-            user: userId,
-          })
-            .populate({
-              path: "user",
-              select: "email role",
-              populate: { path: "role", select: "title" },
-            })
-            .select("id projectName keywords folderId projectId");
-
-          if (getuser && project) {
-            if (
-              (role.title == "leads" || role.title == "Leads") &&
-              project.projectName == projectName
-            ) {
-              let taskCount = await ProjectTask.countDocuments({
-                project: projectId,
-              });
-              if (taskCount == 0) {
-                let projectStatus;
-                let taskStatus;
-                // if (speech !== "" && prespective !== "") {
-                projectStatus = "Free Trial";
-                taskStatus = "Ready to Start";
-                // }
-
-                let createCompany = await Company.create({
-                  ...companyInfoObj,
-                  user: project.user._id,
-                });
-
-                let proectTaskObj = {
-                  keywords: project.keywords,
-                  project: project._id,
-                  desiredNumberOfWords: "1500",
-                  status: taskStatus,
-                  user: userId,
-                  onBoarding: createCompany._id,
-                  //   tasks: taskCount,
-                };
-
-                let upadteProject = await Projects.findOneAndUpdate(
-                  { _id: project._id },
-                  {
-                    speech: speech,
-                    prespective: prespective,
-                    projectStatus: projectStatus,
-                    onBoarding: true,
-                    // boardingInfo: newOnBoarding._id,
-                    // duration: "1",
-                    // numberOfTasks: "1",
-                    tasks: 1,
-                  },
-                  { new: true }
-                );
-
-                let createProjectTask = await ProjectTask.create(proectTaskObj);
-                console.log("before creating file")
-                const totalFiles = await getFileCount(project.folderId)
-                const fileName = `${project.projectId}-${
-                  totalFiles + 1
-                  }-${createProjectTask.keywords || "No Keywords"}`;
-                const fileObj = await createTaskFile(project.folderId, fileName)
-                console.log("after creating file")
-                // const updateProjectTask = await ProjectTask.findOneAndUpdate({ _id: createProjectTask._id }, {
-                //   fileLink: fileObj.fileLink,
-                //   fileId: fileObj.fileId,
-                //   // taskName: fileName,
-                // },{new: true})
-                await Projects.findByIdAndUpdate(
-                  projectId,
-                  { $push: { projectTasks: createProjectTask._id } },
-                  { new: true }
-                );
-
-                const updatedUserPlan = await UserPlan.findOneAndUpdate(
-                  { user: project.user._id, project: project._id },
-                  {
-                    $inc: {
-                      textsCount: 1,
-                      textsRemaining: -1,
-                      tasksPerMonthCount: 1,
-                    },
-                  },
-                  { new: true }
-                );
-
-                let nameChar = upadteProject.projectName
-                  .slice(0, 2)
-                  .toUpperCase();
-                let idChar = createProjectTask._id.toString().slice(-4);
-                let taskId = nameChar + "-" + idChar;
-
-                let updateTaskId = await ProjectTask.findByIdAndUpdate(
-                  { _id: createProjectTask._id },
-                  {
-                    taskName: taskId,
-                    fileLink: fileObj.fileLink,
-                    fileId: fileObj.fileId,
-                  },
-                  { new: true }
-                );
-
-                if (upadteProject && createProjectTask) {
-                  await session.commitTransaction();
-                  session.endSession();
-                  await emails.onBoadingSuccess(getuser);
-
-                  res.send({
-                    message: "OnBoarding successful",
-                    data: createProjectTask,
-                  });
-                }
-              } else {
-                res
-                  .status(403)
-                  .send({ message: "As free trial gives only 1 task" });
-              }
-            } else if (
-              (role.title == "leads" || role.title == "Leads") &&
-              project.projectName !== projectName
-            ) {
-              res.status(403).send({
-                message:
-                  "You are Leads Role so you can not onboard another project/task",
-              });
-            } else if (
-              role.title == "Client" &&
-              project.projectName == projectName
-            ) {
-              let taskCount = await ProjectTask.countDocuments({
-                project: project._id,
-              });
-
-              let userPlan = await UserPlan.findOne({
-                user: userId,
-                project: projectId,
-              }).populate("plan");
-
-              console.log("user plan: ", userPlan);
-
-              if (!userPlan.subscription) {
-                res
-                  .status(500)
-                  .send({ message: "You don't have subscription" });
-                return;
-              }
-
-              if (
-                dayjs(new Date()).isAfter(
-                  dayjs(userPlan.endMonthDate, "day")
-                ) ||
-                userPlan.tasksPerMonthCount === userPlan.tasksPerMonth
-              ) {
-                res
-                  .status(500)
-                  .send({ message: "You have reached monthly limit" });
-
-                return;
-              }
-              if (userPlan.textsRemaining === 0) {
-                res
-                  .status(500)
-                  .send({ message: "Your subscription is expired" });
-                return;
-              }
-              if (dayjs(new Date()).isAfter(dayjs(userPlan.endDate, "day"))) {
-                res
-                  .status(500)
-                  .send({ message: "Your subscription is expired" });
-                return;
-              }
-
-              // if (taskCount <= userPlan.plan.texts - 1) {
-              let projectStatus;
-              let taskStatus;
-              if (speech !== "" && prespective !== "") {
-                projectStatus = "Ready";
-              }
-
-              let createCompany = await Company.create({
-                ...companyInfoObj,
-                user: project.user._id,
-              });
-
-              let proectTaskObj = {
-                keywords: project.keywords,
-                desiredNumberOfWords: userPlan.plan.desiredWords,
-                project: project._id,
-                user: userId,
-                onBoarding: createCompany._id,
-              };
-
-              let createProjectTask = await ProjectTask.create(proectTaskObj);
-              console.log("before creating file")
-               const totalFiles = await getFileCount(project.folderId);
-               const fileName = `${project.projectId}-${totalFiles + 1}-${
-                 createProjectTask.keywords || "No Keywords"
-               }`;
-               const fileObj = await createTaskFile(project.folderId, fileName);
-              //  const updateProjectTask = await ProjectTask.findOneAndUpdate(
-              //    { _id: createProjectTask._id },
-              //    {
-              //      fileLink: fileObj.fileLink,
-              //      fileId: fileObj.fileId,
-              //      tasktName: `${project.projectId}-${totalFiles + 1}`,
-              //    },
-              //    { new: true }
-              //  );
-              console.log("after creating file")
-              let upadteProject = await Projects.findOneAndUpdate(
-                { _id: project._id },
-                {
-                  speech: speech,
-                  prespective: prespective,
-                  onBoarding: true,
-                  // boardingInfo: newOnBoarding._id,
-                  // duration: userPlan.subPlan.duration,
-                  // numberOfTasks: userPlan.plan.texts,
-                  projectStatus: projectStatus,
-                  tasks: taskCount + 1,
-                },
-                { new: true }
-              );
-              await Projects.findByIdAndUpdate(
-                projectId,
-                { $push: { projectTasks: createProjectTask._id } },
-                { new: true }
-              );
-
-              await UserPlan.findOneAndUpdate(
-                { user: project.user._id, project: project._id },
-                {
-                  $inc: {
-                    textsCount: 1,
-                    textsRemaining: -1,
-                    tasksPerMonthCount: 1,
-                  },
-                },
-                { new: true }
-              );
-
-              let nameChar = upadteProject.projectName
-                .slice(0, 2)
-                .toUpperCase();
-              let idChar = createProjectTask._id.toString().slice(-4);
-              let taskId = nameChar + "-" + idChar;
-
-              let updateTaskId = await ProjectTask.findByIdAndUpdate(
-                { _id: createProjectTask._id },
-                {
-                  taskName: taskId,
-                  fileLink: fileObj.fileLink,
-                  fileId: fileObj.fileId,
-                },
-                { new: true }
-              );
-
-              if (upadteProject && createProjectTask) {
-                await session.commitTransaction();
-                session.endSession();
-                await emails.onBoadingSuccess(getuser);
-
-                res.send({
-                  message: "OnBoarding successful",
-                  data: createProjectTask,
-                });
-              }
-              // } else {
-              //   res.status(403).send({
-              //     message:
-              //       "You cannot create more Tasks because you have reached subscription limit.",
-              //   });
-              // }
-            } else {
-              res.status(403).send({
-                message: "Project not found!",
-              });
-            }
-          } else if (role && role.title == "leads") {
-            await session.commitTransaction();
-            session.endSession();
-            res
-              .status(403)
-              .send({ message: "As free trial gives only 1 task" });
-            return;
-          } else {
-            await session.commitTransaction();
-            session.endSession();
-            res.status(401).send({ message: "You are not a valid user" });
-            return;
-          }
-        } else {
-          res.status(404).send({ message: "Project not found!" });
-          return;
-        }
-      } else {
-        await session.commitTransaction();
-        session.endSession();
-        res.status(401).send({ message: "You are not a valid user" });
-        return;
-      }
+      await session.commitTransaction()
+      session.endSession()
+      res.status(200).send({message: "success"})
     }
   } catch (err) {
-    // emails.errorEmail(req, err);
-    await session.abortTransaction();
-    session.endSession();
+    await session.abortTransaction()
+    session.endSession()
     res.status(500).send({
       message: err.message || "Some error occurred.",
     });
