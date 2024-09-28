@@ -97,7 +97,6 @@ exports.create = async (req, res) => {
           .then(async (user) => {
             console.log("user created....");
             var userPlanObj = {};
-
             var projectObj = {
               projectName: req.body.projectName,
               keywords: req.body.keywords ? req.body.keywords : null,
@@ -388,6 +387,7 @@ exports.create = async (req, res) => {
               let subscription = "";
               let startAt = "";
               let endAt = "";
+              let projectStatus = "Free Trial";
 
               if (req.body.response) {
                 subscriptionItems = {
@@ -452,6 +452,7 @@ exports.create = async (req, res) => {
                   subscriptionItem: subscriptionItems,
                   paymentMethod: paymentMethod,
                 });
+                projectStatus = "Ready";
               }
 
               let final_project = "";
@@ -488,6 +489,16 @@ exports.create = async (req, res) => {
                   },
                   { new: true }
                 );
+                if (project.onBoarding) {
+                  const updateProject = await Projects.findOneAndUpdate(
+                    { _id: project._id },
+                    {
+                      projectStatus: projectStatus,
+                    },
+                    { new: true }
+                  );
+                }
+
                 final_project = project;
               } else {
                 console.log("creating new project");
@@ -686,6 +697,7 @@ exports.create = async (req, res) => {
             let subscription = "";
             let startAt = "";
             let endAt = "";
+            let projectStatus = "Free Trial"
             if (billResponse !== "" && billResponse !== null) {
               subscriptionItems = {
                 item_price_id:
@@ -744,6 +756,8 @@ exports.create = async (req, res) => {
                 subscriptionItem: subscriptionItems,
                 paymentMethod: paymentMethod,
               });
+              projectStatus = "Ready"
+
             }
 
             let final_project = "";
@@ -786,7 +800,16 @@ exports.create = async (req, res) => {
                 },
                 { new: true }
               );
-              console.log("updated plan: ", updatePlan);
+              // console.log("updated plan: ", updatePlan);
+              if (project.onBoarding) {
+                const updateProject = await Projects.findOneAndUpdate(
+                  { _id: project._id },
+                  {
+                    projectStatus: projectStatus,
+                  },
+                  { new: true }
+                );
+              }
               final_project = project;
             } else {
               console.log("creating new project");
@@ -915,6 +938,7 @@ exports.create = async (req, res) => {
     });
   }
 };
+
 exports.update = async (req, res) => {
   try {
     const joiSchema = Joi.object({
@@ -1009,26 +1033,40 @@ exports.onboarding = async (req, res) => {
         contentInfo: req.body.contentInfo,
       };
 
-      const newOnBoarding = await Company.create({...companyInfoObj, user: req.body.userId});
+      const user = await Users.findOne({ _id: req.body.userId }).populate(
+        "role"
+      );
+      let projectStatus = "";
+      if (user.role.title.toLowerCase() === "leads") {
+        projectStatus = "Free Trial";
+      }
+      if (user.role.title.toLowerCase() === "client") {
+        projectStatus = "Ready";
+      }
+
+      const newOnBoarding = await Company.create({
+        ...companyInfoObj,
+        user: req.body.userId,
+      });
       const updatedProject = await Projects.findOneAndUpdate(
         { _id: req.body.projectId },
         {
-          
+          projectStatus: projectStatus,
           speech: req.body.speech,
           prespective: req.body.prespective,
           onBoarding: true,
-          onBoardingInfo: newOnBoarding._id
+          onBoardingInfo: newOnBoarding._id,
         },
         { new: true }
       );
 
-      await session.commitTransaction()
-      session.endSession()
-      res.status(200).send({message: "success"})
+      await session.commitTransaction();
+      session.endSession();
+      res.status(200).send({ message: "success" });
     }
   } catch (err) {
-    await session.abortTransaction()
-    session.endSession()
+    await session.abortTransaction();
+    session.endSession();
     res.status(500).send({
       message: err.message || "Some error occurred.",
     });
