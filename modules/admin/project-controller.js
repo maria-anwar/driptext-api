@@ -28,39 +28,14 @@ const {
 exports.getProjects = async (req, res) => {
   try {
     console.log("req.role: ", req.role);
-    if (!req.role || req.role.toLowerCase() !== "projectmanger") {
-      res.status(401).send({ message: "Your are not admin" });
-      return;
-    }
-    const projects = await projectTasks
-      .find({})
-      .select("project status")
-      .populate({ path: "project", populate: "plan" })
-      .populate({ path: "user", match: { isActive: "Y" } });
-
-    let openTasks = 0;
-    let finalTasks = 0;
-    projects.forEach((item) => {
-      if (item.status.toLowerCase() === "final") {
-        finalTasks = finalTasks + 1;
+      if (!req.role || req.role.toLowerCase() !== "projectmanger") {
+          res.status(401).send({ message: "Your are not admin" });
+          return;
       }
-      if (item.status.toLowerCase() === "open") {
-        openTasks = openTasks + 1;
-      }
-    });
 
-    const projectsData = projects.map((item) => {
-      // const temp = {...item.project.toObject(), openTasks, finalTasks}
-      return { ...item.project.toObject(), openTasks, finalTasks };
-    });
-    // Create a Map to filter out duplicates based on project._id
-    const uniqueProjectsData = [
-      ...new Map(
-        projectsData.map((item) => [item._id.toString(), item])
-      ).values(),
-    ];
+      const projects = Projects.find({}).populate("plan")
 
-    res.status(200).send({ message: "success", projects: uniqueProjectsData });
+    res.status(200).send({ message: "success", projects: projects });
   } catch (error) {
     res.status(500).send({ message: error.message || "Something went wrong" });
   }
