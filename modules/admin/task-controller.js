@@ -517,14 +517,7 @@ exports.projectTasksExport = async (req, res) => {
 
     const project = await Projects.findOne({
       _id: req.body.projectId,
-    }).populate({
-      path: "projectTasks",
-      match: { published: true },
-      populate: {
-        path: "onBoarding",
-        model: "Company",
-      },
-    });
+    }).populate(["projectTasks","onBoardingInfo"]);
     if (!project) {
       res.status(500).send({ message: "project not found" });
       return;
