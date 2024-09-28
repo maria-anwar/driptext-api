@@ -39,7 +39,7 @@ exports.addTask = async (req, res) => {
       topic: Joi.string().required(),
       keyword: Joi.string().required(),
       keywordType: Joi.string().required(),
-      // wordCount: Joi.number().required(),
+      wordCount: Joi.number().required(),
       comment: Joi.string().optional().allow("").allow(null),
       projectName: Joi.string().required(),
       projectId: Joi.string().required(),
@@ -62,15 +62,15 @@ exports.addTask = async (req, res) => {
       // const speech = req.body.speech.trim();
       // const prespective = req.body.prespective.trim();
 
-    //   let companyInfoObj = {
-    //     companyBackgorund: req.body.companyBackgorund,
-    //     companyAttributes: req.body.companyAttributes,
-    //     comapnyServices: req.body.comapnyServices,
-    //     customerContent: req.body.customerContent,
-    //     customerIntrest: req.body.customerIntrest,
-    //     contentPurpose: req.body.contentPurpose,
-    //     contentInfo: req.body.contentInfo,
-    //   };
+      //   let companyInfoObj = {
+      //     companyBackgorund: req.body.companyBackgorund,
+      //     companyAttributes: req.body.companyAttributes,
+      //     comapnyServices: req.body.comapnyServices,
+      //     customerContent: req.body.customerContent,
+      //     customerIntrest: req.body.customerIntrest,
+      //     contentPurpose: req.body.contentPurpose,
+      //     contentInfo: req.body.contentInfo,
+      //   };
 
       var whereClause;
       if (userId) {
@@ -111,10 +111,10 @@ exports.addTask = async (req, res) => {
               });
               if (taskCount == 0) {
                 let projectStatus;
-                let taskStatus;
+                let taskStatus = "Uninitialized";
                 // if (speech !== "" && prespective !== "") {
-                projectStatus = "Free Trial";
-                taskStatus = "Ready to Start";
+                // projectStatus = "Free Trial";
+                // taskStatus = "Ready to Start";
                 // }
 
                 // let createCompany = await Company.create({
@@ -129,10 +129,10 @@ exports.addTask = async (req, res) => {
                   topic: req.body.topic,
                   comments: req.body.comment,
                   project: project._id,
-                  desiredNumberOfWords: "1500",
-                  status: taskStatus,
+                  desiredNumberOfWords: req.body.wordCount,
+                  //   status: taskStatus,
                   user: userId,
-                //   onBoarding: createCompany._id,
+                  //   onBoarding: createCompany._id,
                   published: true,
                   //   tasks: taskCount,
                 };
@@ -162,9 +162,18 @@ exports.addTask = async (req, res) => {
                   fileName
                 );
                 console.log("after creating file");
+                if (
+                  createProjectTask.keywords &&
+                  createProjectTask.type &&
+                  createProjectTask.topic &&
+                  createProjectTask.dueDate
+                ) {
+                  taskStatus = "Ready To Work";
+                }
                 const updateProjectTask = await ProjectTask.findOneAndUpdate(
                   { _id: createProjectTask._id },
                   {
+                    status: taskStatus,
                     fileLink: fileObj.fileLink,
                     fileId: fileObj.fileId,
                     taskName: fileName,
@@ -276,15 +285,15 @@ exports.addTask = async (req, res) => {
 
               // if (taskCount <= userPlan.plan.texts - 1) {
               let projectStatus;
-              let taskStatus;
+              let taskStatus = "Uninitialized";
               // if (speech !== "" && prespective !== "") {
               //   projectStatus = "Ready";
               // }
 
-            //   let createCompany = await Company.create({
-            //     ...companyInfoObj,
-            //     user: project.user._id,
-            //   });
+              //   let createCompany = await Company.create({
+              //     ...companyInfoObj,
+              //     user: project.user._id,
+              //   });
 
               let proectTaskObj = {
                 keywords: req.body.keyword,
@@ -292,7 +301,7 @@ exports.addTask = async (req, res) => {
                 dueDate: req.body.dueDate,
                 topic: req.body.topic,
                 comments: req.body.comment,
-                desiredNumberOfWords: userPlan.plan.desiredWords,
+                desiredNumberOfWords: req.body.wordCount,
                 project: project._id,
                 user: userId,
                 // onBoarding: createCompany._id,
@@ -306,9 +315,18 @@ exports.addTask = async (req, res) => {
               }`;
               const fileObj = await createTaskFile(project.folderId, fileName);
               console.log("after creating file");
+              if (
+                createProjectTask.keywords &&
+                createProjectTask.type &&
+                createProjectTask.topic &&
+                createProjectTask.dueDate
+              ) {
+                taskStatus = "Ready To Work";
+              }
               const updateProjectTask = await ProjectTask.findOneAndUpdate(
                 { _id: createProjectTask._id },
                 {
+                  status: taskStatus,
                   fileLink: fileObj.fileLink,
                   fileId: fileObj.fileId,
                   taskName: fileName,
@@ -320,7 +338,7 @@ exports.addTask = async (req, res) => {
                 {
                   // speech: speech,
                   // prespective: prespective,
-                //   onBoarding: true,
+                  //   onBoarding: true,
                   // boardingInfo: newOnBoarding._id,
                   // duration: userPlan.subPlan.duration,
                   // numberOfTasks: userPlan.plan.texts,

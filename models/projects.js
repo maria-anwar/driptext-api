@@ -20,7 +20,7 @@ module.exports = (mongoose) => {
       folderId: { type: String, required: false, unique: false, default: null },
       onBoardingInfo: {
         type: Schema.Types.ObjectId,
-        ref: "User",
+        ref: "Company",
         required: false,
         default: null,
       },
