@@ -1010,7 +1010,7 @@ exports.onboarding = async (req, res) => {
       };
 
       const newOnBoarding = await Company.create({...companyInfoObj, user: req.body.userId});
-      const updatedProject = await findOneAndUpdate(
+      const updatedProject = await Projects.findOneAndUpdate(
         { _id: req.body.projectId },
         {
           
