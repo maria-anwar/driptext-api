@@ -22,8 +22,8 @@ const {
   createTaskFile,
   getFileCount,
   findOrCreateFolderInParent,
-    exportTasksToSheetInFolder,
-  getWordCount
+  exportTasksToSheetInFolder,
+  getWordCount,
 } = require("../../utils/googleService/actions");
 
 exports.addTask = async (req, res) => {
@@ -463,7 +463,6 @@ exports.editTask = async (req, res) => {
     const task = await projectTasks.findOneAndUpdate(
       { _id: req.body.taskId },
       {
-       
         dueDate: req.body.dueDate,
         topic: req.body.topic,
         keywords: req.body.keyword,
@@ -500,21 +499,20 @@ exports.wordCountTask = async (req, res) => {
       });
       return;
     }
-      const task = await projectTasks.findOne({ _id: req.body.taskId })
-      if (!task) {
-          res.status(404).send({message: "Task not found"})
-      }
-      const wordCount = await getWordCount(task.fileId)
-      await projectTasks.findOneAndUpdate(
-        { _id: task._id },
-        {
-          actualNumberOfWords: wordCount
-        },
-        { new: true }
-      );
+    const task = await projectTasks.findOne({ _id: req.body.taskId });
+    if (!task) {
+      res.status(404).send({ message: "Task not found" });
+    }
+    const wordCount = await getWordCount(task.fileId);
+    await projectTasks.findOneAndUpdate(
+      { _id: task._id },
+      {
+        actualNumberOfWords: wordCount,
+      },
+      { new: true }
+    );
 
-      res.status(200).send({message: "success"})
-
+    res.status(200).send({ message: "success" });
   } catch (error) {
     res.status(500).send({ message: error.message || "Something went wrong" });
   }
@@ -581,7 +579,7 @@ exports.importProjectTasks = async (req, res) => {
     }
 
     const editTask = async (user, project, task, orgTask) => {
-      console.log("task onBoarding: ", task);
+      //   console.log("task onBoarding: ", task);
       const updatedTask = await projectTasks.findOneAndUpdate(
         { _id: orgTask._id },
         {
@@ -598,7 +596,7 @@ exports.importProjectTasks = async (req, res) => {
 
     const importTasks = async (user, project, task) => {
       try {
-        console.log("task inside import tasks: ", task);
+        console.log("task inside import tasks: ");
         let error = "";
         let role = user.role;
         // let companyInfoObj = {
@@ -791,7 +789,7 @@ exports.importProjectTasks = async (req, res) => {
             desiredNumberOfWords: task.wordCount,
             project: project._id,
             user: user._id,
-            onBoarding: createCompany._id,
+            // onBoarding: createCompany._id,
           };
 
           let createProjectTask = await ProjectTask.create(proectTaskObj);
@@ -922,7 +920,7 @@ exports.importProjectTasks = async (req, res) => {
     }
 
     const filePath = req.file.path;
-    console.log("file path: ", filePath);
+    // console.log("file path: ", filePath);
     const tasks = [];
     let checkCSVError = "";
 
@@ -964,42 +962,47 @@ exports.importProjectTasks = async (req, res) => {
             return;
           }
 
-          const allTasks = await projectTasks
-            .find({ project: project._id, published: true })
-            .populate("onBoarding");
-
+          const allTasks = await projectTasks.find({ project: project._id });
+          const savedTasksKeywords = allTasks.map((item) =>
+            item.keywords.toLowerCase().trim()
+          );
           if (!allTasks) {
             res.status(500).send({ message: "Could not get project tasks" });
             return;
           }
-          console.log("all tasks length: ", allTasks.length);
+          //   console.log("all tasks length: ", allTasks.length);
           let responseSent = false;
           if (allTasks.length > 0) {
             for (const importTask of tasks) {
-              for (const orgTask of allTasks) {
-                // console.log("import task: ", importTask)
-                // console.log("orgTask: ", orgTask)
-                if (
-                  importTask.keywords.toLowerCase().trim() ===
-                  (orgTask?.keywords || "").toLowerCase().trim()
-                ) {
-                  await editTask(user, project, importTask, orgTask, res);
-                  if (res.headersSent) {
-                    responseSent = true;
-                    break; // Exit the loop once a response is sent
-                  }
-                } else {
-                  await importTasks(user, project, importTask, res);
-
-                  if (res.headersSent) {
-                    responseSent = true;
-                    break; // Exit the loop once a response is sent
-                  }
+              if (
+                savedTasksKeywords.includes(
+                  importTask.keywords.toLowerCase().trim()
+                )
+              ) {
+                let orgTask = allTasks.find(
+                  (item) =>
+                    item.keywords.toLowerCase().trim() ===
+                    importTask.keywords.toLowerCase().trim()
+                );
+                console.log("old task");
+                await editTask(user, project, importTask, orgTask, res);
+                if (res.headersSent) {
+                  responseSent = true;
+                  break;
                 }
-              }
-
-              if (responseSent) {
-                break; // Exit outer loop if the response is already sent
+                if (responseSent) {
+                  break;
+                }
+              } else {
+                console.log("new task...");
+                await importTasks(user, project, importTask, res);
+                if (res.headersSent) {
+                  responseSent = true;
+                  break;
+                }
+                if (responseSent) {
+                  break;
+                }
               }
             }
           }
@@ -1020,11 +1023,11 @@ exports.importProjectTasks = async (req, res) => {
             }
           }
 
-          // if (allTasks.length === 0) {
-          //   tasks.forEach( async (importTask) => {
-          //     await importTasks(user, project, importTask);
-          //   });
-          // }
+          //   if (allTasks.length === 0) {
+          //     tasks.forEach( async (importTask) => {
+          //       await importTasks(user, project, importTask);
+          //     });
+          //   }
 
           // // Bulk add the tasks to the project
           // project.projectTasks.push(...tasks);
