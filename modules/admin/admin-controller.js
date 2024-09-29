@@ -28,7 +28,6 @@ const {
 exports.createProjectManager = async (req, res) => {
   try {
     const joiSchema = Joi.object({
-      // userId: Joi.string().required(),
       email: Joi.string().required(),
       firstName: Joi.string().required(),
       lastName: Joi.string().required(),
