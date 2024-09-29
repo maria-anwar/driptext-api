@@ -22,7 +22,8 @@ const {
   createTaskFile,
   getFileCount,
   findOrCreateFolderInParent,
-  exportTasksToSheetInFolder,
+    exportTasksToSheetInFolder,
+  getWordCount
 } = require("../../utils/googleService/actions");
 
 exports.addTask = async (req, res) => {
@@ -477,6 +478,46 @@ exports.editTask = async (req, res) => {
     res.status(200).json({ message: "success" });
   } catch (error) {
     res.status(500).json({ message: error?.message || "Something went wrong" });
+  }
+};
+
+exports.wordCountTask = async (req, res) => {
+  try {
+    if (!req.role || req.role.toLowerCase() !== "projectmanger") {
+      res.status(401).send({ message: "Your are not admin" });
+      return;
+    }
+    const joiSchema = Joi.object({
+      taskId: Joi.string().required(),
+    });
+    const { error, value } = joiSchema.validate(req.body);
+
+    if (error) {
+      // emails.errorEmail(req, error);
+
+      const message = error.details[0].message.replace(/"/g, "");
+      res.status(401).send({
+        message: message,
+      });
+      return;
+    }
+      const task = await projectTasks.findOne({ _id: req.body.taskId })
+      if (!task) {
+          res.status(404).send({message: "Task not found"})
+      }
+      const wordCount = await getWordCount(task.fileId)
+      await projectTasks.findOneAndUpdate(
+        { _id: task._id },
+        {
+          actualNumberOfWords: wordCount
+        },
+        { new: true }
+      );
+
+      res.status(200).send({message: "success"})
+
+  } catch (error) {
+    res.status(500).send({ message: error.message || "Something went wrong" });
   }
 };
 

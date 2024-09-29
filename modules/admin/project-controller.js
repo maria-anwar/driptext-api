@@ -23,6 +23,7 @@ const {
   getFileCount,
   findOrCreateFolderInParent,
   exportTasksToSheetInFolder,
+  getWordCount,
 } = require("../../utils/googleService/actions");
 
 exports.getProjects = async (req, res) => {
@@ -120,20 +121,20 @@ exports.editProject = async (req, res) => {
       return;
     }
     const session = await mongoose.startSession();
-      session.startTransaction();
-      const updatedonBoardingInfo = await Company.findOneAndUpdate(
-        { _id: project.onBoardingInfo },
-        {
-          companyBackgorund: req.body.companyBackgorund,
-          companyAttributes: req.body.companyAttributes,
-          comapnyServices: req.body.comapnyServices,
-          customerContent: req.body.customerContent,
-          customerIntrest: req.body.customerIntrest,
-          contentPurpose: req.body.contentPurpose,
-          contentInfo: req.body.contentInfo,
-        },
-        { new: true }
-      );
+    session.startTransaction();
+    const updatedonBoardingInfo = await Company.findOneAndUpdate(
+      { _id: project.onBoardingInfo },
+      {
+        companyBackgorund: req.body.companyBackgorund,
+        companyAttributes: req.body.companyAttributes,
+        comapnyServices: req.body.comapnyServices,
+        customerContent: req.body.customerContent,
+        customerIntrest: req.body.customerIntrest,
+        contentPurpose: req.body.contentPurpose,
+        contentInfo: req.body.contentInfo,
+      },
+      { new: true }
+    );
 
     let nameChar = req.body.domain.slice(0, 2).toUpperCase();
     let idChar = project._id.toString().slice(-4);
@@ -171,9 +172,59 @@ exports.editProject = async (req, res) => {
   }
 };
 
-exports.wordCountAllTasks = async (req, res) => {
-    
-}
+exports.wordCountAllTasksInProject = async (req, res) => {
+  if (!req.role || req.role.toLowerCase() !== "projectmanger") {
+    res.status(401).send({ message: "Your are not admin" });
+    return;
+  }
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const joiSchema = Joi.object({
+      projectId: Joi.string().required(),
+    });
+    const { error, value } = joiSchema.validate(req.body);
+
+    if (error) {
+      // emails.errorEmail(req, error);
+      await session.abortTransaction();
+      session.endSession();
+
+      const message = error.details[0].message.replace(/"/g, "");
+      res.status(401).send({
+        message: message,
+      });
+      return;
+    }
+    const project = await Projects.findOne({
+      _id: req.body.projectId,
+    }).populate({ path: "projectTasks", select: "fileId" });
+    if (!project) {
+      await session.abortTransaction();
+      session.endSession();
+      res.status(404).send({ message: "Project not found" });
+    }
+
+    for (const task of project.projectTasks) {
+      let wordCount = await getWordCount(task.fileId);
+      await projectTasks.findOneAndUpdate(
+        { _id: task._id },
+        {
+          actualNumberOfWords: wordCount,
+        },
+        { new: true }
+      );
+    }
+
+    await session.commitTransaction();
+    session.endSession();
+    res.status(200).send({ message: "success" });
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    res.status(500).send({ message: error.message || "Something went wrong" });
+  }
+};
 
 exports.archivedProject = async (req, res) => {
   try {
