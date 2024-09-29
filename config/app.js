@@ -15,7 +15,7 @@ class AppConfig {
         // You can log the decrypted value if needed
         // console.log(customCrypto.decrypt('UWRuejBBVlRwcm9xaEpoaFhoK2hEUT09'))
 
-        this.app.use(cors());
+        this.app.use(cors({origin:"*"}));
         this.app.use(bodyParser.json({ limit: "5mb" }));
         this.app.use("/uploads", express.static("uploads"));
 
