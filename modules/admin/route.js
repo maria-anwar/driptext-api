@@ -12,7 +12,7 @@ const jwt = require("../../utils/jwt");
 const multer = require("multer");
 const csvUpload = multer({ dest: "csvuploads/" });
 
-router.post("/create", (req, res) => {
+router.post("/createProjectManager", (req, res) => {
   adminController.create(req, res);
 });
 

@@ -95,6 +95,13 @@ exports.editProject = async (req, res) => {
       domain: Joi.string().required(),
       speech: Joi.string().required(),
       prespective: Joi.string().required(),
+      companyBackgorund: Joi.string().optional().allow("").allow(null),
+      companyAttributes: Joi.string().optional().allow("").allow(null),
+      comapnyServices: Joi.string().optional().allow("").allow(null),
+      customerContent: Joi.string().optional().allow("").allow(null),
+      customerIntrest: Joi.string().optional().allow("").allow(null),
+      contentPurpose: Joi.string().optional().allow("").allow(null),
+      contentInfo: Joi.string().optional().allow("").allow(null),
     });
     const { error, value } = joiSchema.validate(req.body);
 
@@ -113,7 +120,20 @@ exports.editProject = async (req, res) => {
       return;
     }
     const session = await mongoose.startSession();
-    session.startTransaction();
+      session.startTransaction();
+      const updatedonBoardingInfo = await Company.findOneAndUpdate(
+        { _id: project.onBoardingInfo },
+        {
+          companyBackgorund: req.body.companyBackgorund,
+          companyAttributes: req.body.companyAttributes,
+          comapnyServices: req.body.comapnyServices,
+          customerContent: req.body.customerContent,
+          customerIntrest: req.body.customerIntrest,
+          contentPurpose: req.body.contentPurpose,
+          contentInfo: req.body.contentInfo,
+        },
+        { new: true }
+      );
 
     let nameChar = req.body.domain.slice(0, 2).toUpperCase();
     let idChar = project._id.toString().slice(-4);

@@ -445,15 +445,9 @@ exports.editTask = async (req, res) => {
       dueDate: Joi.date().required(),
       topic: Joi.string().required(),
       keyword: Joi.string().required(),
+      wordCount: Joi.number().required(),
       keywordType: Joi.string().required(),
       comment: Joi.string().optional().allow("").allow(null),
-      companyBackgorund: Joi.string().optional().allow("").allow(null),
-      companyAttributes: Joi.string().optional().allow("").allow(null),
-      comapnyServices: Joi.string().optional().allow("").allow(null),
-      customerContent: Joi.string().optional().allow("").allow(null),
-      customerIntrest: Joi.string().optional().allow("").allow(null),
-      contentPurpose: Joi.string().optional().allow("").allow(null),
-      contentInfo: Joi.string().optional().allow("").allow(null),
     });
     const { error, value } = joiSchema.validate(req.body);
 
@@ -473,15 +467,9 @@ exports.editTask = async (req, res) => {
         dueDate: req.body.dueDate,
         topic: req.body.topic,
         keywords: req.body.keyword,
+        desiredNumberOfWords: req.body.wordCount,
         type: req.body.keywordType,
         comments: req.body.comment,
-        companyBackgorund: req.body.companyBackgorund,
-        companyAttributes: req.body.companyAttributes,
-        comapnyServices: req.body.comapnyServices,
-        customerContent: req.body.customerContent,
-        customerIntrest: req.body.customerIntrest,
-        contentPurpose: req.body.contentPurpose,
-        contentInfo: req.body.contentInfo,
       },
       { new: true }
     );
@@ -517,7 +505,7 @@ exports.projectTasksExport = async (req, res) => {
 
     const project = await Projects.findOne({
       _id: req.body.projectId,
-    }).populate(["projectTasks","onBoardingInfo"]);
+    }).populate(["projectTasks", "onBoardingInfo"]);
     if (!project) {
       res.status(500).send({ message: "project not found" });
       return;
@@ -1003,7 +991,7 @@ exports.importProjectTasks = async (req, res) => {
           // await project.save();
 
           // // Delete the uploaded CSV file after processing
-          // fs.unlinkSync(filePath);
+          fs.unlinkSync(filePath);
 
           if (!responseSent) {
             res.status(200).send({

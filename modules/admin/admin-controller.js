@@ -25,13 +25,14 @@ const {
   exportTasksToSheetInFolder,
 } = require("../../utils/googleService/actions");
 
-exports.create = async (req, res) => {
+exports.createProjectManager = async (req, res) => {
   try {
     const joiSchema = Joi.object({
       // userId: Joi.string().required(),
       email: Joi.string().required(),
       firstName: Joi.string().required(),
       lastName: Joi.string().required(),
+      password: Joi.string().required(),
     });
     const { error, value } = joiSchema.validate(req.body);
 
@@ -68,7 +69,7 @@ exports.create = async (req, res) => {
       lastName: req.body.lastName,
       email: req.body.email,
       role: role._id,
-      password: "123456@123456",
+      password: req.body.password,
     };
 
     const admin = await Users.create(body);
@@ -80,6 +81,63 @@ exports.create = async (req, res) => {
     res.status(500).send({ message: error.message || "Something went wrong" });
   }
 };
+
+exports.editProjectManager = async (req, res) => {
+  try {
+    if (!req.role || req.role.toLowerCase() !== "projectmanger") {
+      res.status(401).send({ message: "Your are not admin" });
+      return;
+    }
+    const joiSchema = Joi.object({
+      id: Joi.string().required(),
+      firstName: Joi.string().required(),
+      lastName: Joi.string().required(),
+      email: Joi.string().required(),
+    });
+    const { error, value } = joiSchema.validate(req.body);
+
+    if (error) {
+      // emails.errorEmail(req, error);
+
+      const message = error.details[0].message.replace(/"/g, "");
+      res.status(401).send({
+        message: message,
+      });
+      return;
+    }
+
+    const isFreelancer = await Freelancers.findOne({ email: req.body.email });
+    if (isFreelancer) {
+      res
+        .status(500)
+        .send({ message: "This email already exists as freelancer" });
+      return;
+    }
+
+    const alreadyExists = await Users.findOne({
+      email: req.body.email.trim(),
+      _id: { $ne: req.body.id },
+    });
+    if (alreadyExists) {
+      res.status(500).send({ message: "Email already exists" });
+      return;
+    }
+
+    const updatedAdmin = await Users.findOneAndUpdate(
+      { _id: req.body.id },
+      {
+        firstName: req.body.firstName.trim(),
+        lastName: req.body.lastName.trim(),
+        email: req.body.email.trim(),
+      },
+      { new: true }
+    );
+
+    res.status(200).send({ message: "success"});
+  } catch (error) {
+    res.status(500).send({ message: error.message || "something went wrong" });
+  }
+}
 
 
 
