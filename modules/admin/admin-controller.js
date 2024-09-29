@@ -36,7 +36,7 @@ exports.createProjectManager = async (req, res) => {
     const { error, value } = joiSchema.validate(req.body);
 
     if (error) {
-      emails.errorEmail(req, error);
+      // emails.errorEmail(req, error);
 
       const message = error.details[0].message.replace(/"/g, "");
       res.status(401).send({

@@ -13,7 +13,7 @@ const multer = require("multer");
 const csvUpload = multer({ dest: "csvuploads/" });
 
 router.post("/createProjectManager", (req, res) => {
-  adminController.create(req, res);
+  adminController.createProjectManager(req, res);
 });
 router.post("/editProjectManager", (req, res) => {
   adminController.editProjectManager(req, res);
