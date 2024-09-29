@@ -115,7 +115,14 @@ exports.editProject = async (req, res) => {
       });
       return;
     }
-    const project = await Projects.findOne({ _id: req.body.projectId });
+      const project = await Projects.findOne({ _id: req.body.projectId });
+      if (project) {
+          const alreadyExist = await Projects.findOne({ _id: { $ne: project._id }, projectName: req.body.domain })
+          if (alreadyExist) {
+              res.status(500).send({ message: "This project Name already exists" })
+              return
+          }
+      }
     if (!project) {
       res.status(404).send({ message: "Project Not Found" });
       return;
