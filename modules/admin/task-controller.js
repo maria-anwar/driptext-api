@@ -442,7 +442,6 @@ exports.editTask = async (req, res) => {
     }
     const joiSchema = Joi.object({
       taskId: Joi.string().required(),
-      readyToWork: Joi.boolean().required(),
       dueDate: Joi.date().required(),
       topic: Joi.string().required(),
       keyword: Joi.string().required(),
@@ -464,7 +463,7 @@ exports.editTask = async (req, res) => {
     const task = await projectTasks.findOneAndUpdate(
       { _id: req.body.taskId },
       {
-        readyToWork: req.body.readyToWork,
+       
         dueDate: req.body.dueDate,
         topic: req.body.topic,
         keywords: req.body.keyword,
