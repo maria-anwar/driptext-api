@@ -227,6 +227,60 @@ Email.forgotPassword = async (user) => {
   }
 };
 
+Email.forgotPasswordAdmin = async (user) => {
+  try {
+    const forgetPasswordToken = jwt.signToken({
+      userId: user.id,
+      roleId: user.roleId,
+      email: user.email,
+    });
+
+    var link =
+      "https://driptext-admin-panel.vercel.app/" +
+      "auth/forgetkey/" +
+      forgetPasswordToken;
+
+    const data = fs.readFileSync(
+      "./templates/emailForgotPassword.html",
+      "utf8"
+    );
+    var text = data;
+    text = text.replace("[USER_NAME]", user.firstName + " " + user.lastName);
+    text = text.replace("[BUTTON_LINK_1]", link);
+    text = text.replace("[TEXT_LINK]", link);
+    const params = {
+      Source: `DripText <noreply@driptext.de>`,
+      Destination: {
+        ToAddresses: [user.email],
+      },
+      Message: {
+        Subject: {
+          Data: "Reset Password",
+        },
+        Body: {
+          Html: {
+            Data: text,
+          },
+        },
+      },
+    };
+    const result = await ses.sendEmail(params).promise();
+    console.log("Email sent successfully", result);
+
+    // var mailOptions = {
+    //   from: `DripText <noreply@driptext.de>`,
+    //   to: user.email,
+    //   subject: "Reset Password",
+    //   html: text,
+    // };
+
+    // nodeMailer(mailOptions);
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
 Email.AwsEmailPassword = async (user) => {
   try {
     // const data = fs.readFileSync("./templates/awsPasswordUpdateEmail.html", "utf8");

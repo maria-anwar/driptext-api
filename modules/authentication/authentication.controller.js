@@ -213,11 +213,31 @@ exports.create = async (req, res) => {
 exports.forgotPassword = async (req, res) => {
   try {
     var email = req.body.email.trim();
-    const user = await Users.findOne({ email: email });
+    const user = await Users.findOne({ email: email }).populate("role");
+    if (!user) {
+      const freelancer = await Freelancers.findOne({ email: req.body.email.trim() })
+      if (freelancer) {
+        emails.forgotPassword(freelancer);
+        res.status(200).send({ message: "Email send to user." });
+      } else {
+        res.status(401).send({
+          title: "Incorrect Email.",
+          message:
+            "Email does not exist in our system, Please verify you have entered correct email.",
+        });
+      }
+      
+    }
     console.log("user: ", user);
     if (user) {
-      emails.forgotPassword(user);
-      res.status(200).send({ message: "Email send to user." });
+      if (user.role.title.toLowerCase() === "projectmanger") {
+        emails.forgotPasswordAdmin(user);
+        res.status(200).send({ message: "Email send to user." });
+      } else {
+         emails.forgotPassword(user);
+         res.status(200).send({ message: "Email send to user." });
+      }
+     
     } else {
       res.status(401).send({
         title: "Incorrect Email.",
