@@ -171,7 +171,7 @@ exports.exportTasksToSheetInFolder = async (tasks, folderId) => {
           "Due Date",
           "Status",
           "Topic",
-          "Keyword",
+          "Keywords",
           "Type",
           "Word Count Expectation",
         ], // Headers
