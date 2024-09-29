@@ -15,7 +15,7 @@ const csvUpload = multer({ dest: "csvuploads/" });
 router.post("/createProjectManager", (req, res) => {
   adminController.createProjectManager(req, res);
 });
-router.post("/editProjectManager", (req, res) => {
+router.post("/editProjectManager", jwt.protect, (req, res) => {
   adminController.editProjectManager(req, res);
 });
 

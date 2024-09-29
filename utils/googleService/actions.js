@@ -187,3 +187,36 @@ exports.exportTasksToSheetInFolder = async (tasks, folderId) => {
 
   return { spreadsheetId, exportUrl };
 };
+
+exports.getWordCount = async (docId) => {
+  try {
+    // Fetch the document metadata from Google Docs API
+    const doc = await docs.documents.get({
+      documentId: docId,
+    });
+
+    // Extract the content of the document
+    const content = doc.data.body.content;
+
+    // Function to count words
+    let wordCount = 0;
+
+    content.forEach((element) => {
+      if (element.paragraph) {
+        element.paragraph.elements.forEach((elem) => {
+          if (elem.textRun && elem.textRun.content) {
+            // Split the content to count words
+            const words = elem.textRun.content.trim().split(/\s+/);
+            wordCount += words.length;
+          }
+        });
+      }
+    });
+
+    console.log(`Word Count: ${wordCount}`);
+    return wordCount;
+  } catch (error) {
+    // console.error("Error fetching document:", error);
+    throw error;
+  }
+}

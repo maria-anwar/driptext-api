@@ -171,6 +171,10 @@ exports.editProject = async (req, res) => {
   }
 };
 
+exports.wordCountAllTasks = async (req, res) => {
+    
+}
+
 exports.archivedProject = async (req, res) => {
   try {
     if (!req.role || req.role.toLowerCase() !== "projectmanger") {

@@ -3,7 +3,8 @@ const Joi = require("@hapi/joi");
 const db = require("../../models");
 const mongoose = require("mongoose");
 const jwt = require("../../utils/jwt");
-const {drive, docs} = require("../../utils/googleService/googleService")
+const { drive, docs } = require("../../utils/googleService/googleService")
+const {getWordCount} = require("../../utils/googleService/actions")
 
 
 
@@ -13,16 +14,10 @@ const Roles = db.Role;
 const Billings = db.Billing.Billings;
 exports.test = async (req, res) => {
     try {
-       const resFiles = await drive.files.list({
-         q: `'1PeXpVoYnRHlTziBM9EPbMAALDdEb8-Kd' in parents and trashed=false`,
-         fields: "files(id)", // We only need the file IDs, not the full file details
-       });
-
-      console.log("res files: ", resFiles)
-       const files = resFiles.data.files;
-      //  return files.length;
-
-        res.status(200).json({ message: "success", data: files.length });
+      const wordCount = await getWordCount(
+        "1_dG8YOIq1jKHe1al-ySNDjvnkfrPHSEHDXbsV0UiOOY"
+      );
+      res.status(200).send({message: "Success", wordCount})
         
     } catch (error) {
         res.status(500).json({error: error.message ||"Something went wrong"})
