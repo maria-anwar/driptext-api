@@ -608,7 +608,7 @@ exports.importProjectTasks = async (req, res) => {
         //   contentPurpose: task.contentPurpose,
         //   contentInfo: task.ContentInfo,
         // };
-        if (role.title == "leads" || role.title == "Leads") {
+        if (role.title == "leads" || role.title == "Leads" || project.status.toLowerCase() === "free trial") {
           let taskCount = await ProjectTask.countDocuments({
             project: project._id,
           });
