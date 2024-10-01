@@ -119,7 +119,7 @@ exports.getTasks = async (req, res) => {
         { seo: req.body.freelancerId },
         { metaLector: req.body.freelancerId },
       ],
-    });
+    }).populate({path:"project", populate: ["plan","onBoardingInfo"]});
 
     // Get the current month and year
     const today = dayjs(); // Current date
