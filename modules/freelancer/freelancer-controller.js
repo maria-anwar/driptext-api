@@ -3,12 +3,12 @@ const Joi = require("@hapi/joi");
 const db = require("../../models");
 const mongoose = require("mongoose");
 const jwt = require("../../utils/jwt");
-
-
+const dayjs = require("dayjs")
 
 const Freelancers = db.Freelancer;
 const Users = db.User;
 const Roles = db.Role;
+const ProjectTask = db.ProjectTask;
 exports.create = async (req, res) => {
   try {
     const joiSchema = Joi.object({
@@ -26,45 +26,45 @@ exports.create = async (req, res) => {
     });
     const { error, value } = joiSchema.validate(req.body);
     if (error) {
-    //   emails.errorEmail(req, error);
+      //   emails.errorEmail(req, error);
 
       const message = error.details[0].message.replace(/"/g, "");
       return res.status(401).send({
         message: message,
       });
     }
-      const session = await mongoose.startSession();
-      session.startTransaction();
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
     const role = await Roles.findOne({ title: "Freelancer" });
 
-      if (!role) {
-        await session.commitTransaction();
-        session.endSession();
+    if (!role) {
+      await session.commitTransaction();
+      session.endSession();
       return res
         .status(500)
         .json({ message: "Freelancer role does not exists" });
-      }
-      
-      const alreadyExistsInFreelancers = await Freelancers.findOne({ email: req.body.email })
-      
-      if (alreadyExistsInFreelancers) {
-        await session.commitTransaction();
-        session.endSession();
-        return res.status(500).json({ message: "Email Already exists" });
-      }
-    
-       const alreadyExistsInUsers = await Users.findOne({
-         email: req.body.email,
-       });
+    }
 
-       if (alreadyExistsInUsers) {
-         await session.commitTransaction();
-         session.endSession();
-         return res.status(500).json({ message: "Email Already exists" });
-       }
-    
-    
+    const alreadyExistsInFreelancers = await Freelancers.findOne({
+      email: req.body.email,
+    });
+
+    if (alreadyExistsInFreelancers) {
+      await session.commitTransaction();
+      session.endSession();
+      return res.status(500).json({ message: "Email Already exists" });
+    }
+
+    const alreadyExistsInUsers = await Users.findOne({
+      email: req.body.email,
+    });
+
+    if (alreadyExistsInUsers) {
+      await session.commitTransaction();
+      session.endSession();
+      return res.status(500).json({ message: "Email Already exists" });
+    }
 
     const tempUser = {
       firstName: req.body.firstName,
@@ -81,13 +81,83 @@ exports.create = async (req, res) => {
       },
       password: req.body.password ? req.body.password : "123456@123456",
     };
-      const user = await Freelancers.create(tempUser);
-      await session.commitTransaction();
-      session.endSession();
+    const user = await Freelancers.create(tempUser);
+    await session.commitTransaction();
+    session.endSession();
 
     res.status(200).json({ message: "freelancer created", freelancer: user });
   } catch (error) {
     res.status(500).json({ message: error?.message || "Something went wrong" });
+  }
+};
+
+exports.getTasks = async (req, res) => {
+  try {
+    if (!req.role || req.role.toLowerCase() !== "freelancer") {
+      res.status(401).send({ message: "Your are not freelancer" });
+      return;
+    }
+    const joiSchema = Joi.object({
+      freelancerId: Joi.string().required(),
+    });
+
+    const { error, value } = joiSchema.validate(req.body);
+    if (error) {
+      //   emails.errorEmail(req, error);
+
+      const message = error.details[0].message.replace(/"/g, "");
+      return res.status(401).send({
+        message: message,
+      });
+    }
+
+    const tasks = await ProjectTask.find({
+      isActive: "Y",
+      $or: [
+        { texter: req.body.freelancerId },
+        { lector: req.body.freelancerId },
+        { seo: req.body.freelancerId },
+        { metaLector: req.body.freelancerId },
+      ],
+    });
+
+    // Get the current month and year
+    const today = dayjs(); // Current date
+    const currentMonth = today.month(); // Current month (0-based, so 0 is January)
+    const currentYear = today.year(); // Current year
+
+    // Separate tasks into current and upcoming based on deadline
+    const currentTasks = [];
+    const upcomingTasks = [];
+
+    tasks.forEach((task) => {
+      const deadline = dayjs(task.dueDate); // Convert deadline to dayjs object
+      const taskMonth = deadline.month(); // Task deadline month (0-based)
+      const taskYear = deadline.year(); // Task deadline year
+
+      if (taskYear === currentYear && taskMonth === currentMonth) {
+        // Task is due in the current month and year
+        currentTasks.push(task);
+      } else if (
+        taskYear > currentYear ||
+        (taskYear === currentYear && taskMonth > currentMonth)
+      ) {
+        // Task is due in the future (either later this year or in a future year)
+        upcomingTasks.push(task);
+      } else {
+        // If the task's deadline is in the past, you can choose to handle it as well (optional)
+        currentTasks.push(task);
+      }
+    });
+
+    const finalData = {
+      currentTasks,
+      upcomingTasks,
+    };
+
+    res.status(200).send({ message: "success", tasks: finalData });
+  } catch (error) {
+    res.status(500).send({ message: error.message || "Something went wrong" });
   }
 };
 
@@ -116,13 +186,7 @@ exports.emailCheck = async (req, res) => {
     }
 
     res.status(200).json({ message: "success" });
-    
   } catch (error) {
-    res.status(500).send({message: error.message || "Something went wrong"})
-    
+    res.status(500).send({ message: error.message || "Something went wrong" });
   }
-  
-
-}
-
-
+};
