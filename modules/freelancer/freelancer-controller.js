@@ -131,22 +131,32 @@ exports.getTasks = async (req, res) => {
     const upcomingTasks = [];
 
     tasks.forEach((task) => {
+      const taskObj = task.toObject(); // Convert Mongoose document to plain object
       const deadline = dayjs(task.dueDate); // Convert deadline to dayjs object
       const taskMonth = deadline.month(); // Task deadline month (0-based)
       const taskYear = deadline.year(); // Task deadline year
 
+      // Determine the active role(s)
+      let activeRole = "";
+      if (task.texter) activeRole += "Texter";
+      if (task.lector) activeRole += (activeRole ? "," : "") + "Lector";
+      if (task.seo) activeRole += (activeRole ? "," : "") + "Seo-Optimizer";
+      if (task.metaLector)
+        activeRole += (activeRole ? "," : "") + "Meta-Lector";
+
+      // Add activeRole to task object
+      taskObj.activeRole = activeRole;
+
       if (taskYear === currentYear && taskMonth === currentMonth) {
         // Task is due in the current month and year
-        currentTasks.push(task);
+        currentTasks.push(taskObj);
       } else if (
         taskYear > currentYear ||
         (taskYear === currentYear && taskMonth > currentMonth)
       ) {
-        // Task is due in the future (either later this year or in a future year)
-        upcomingTasks.push(task);
+        upcomingTasks.push(taskObj);
       } else {
-        // If the task's deadline is in the past, you can choose to handle it as well (optional)
-        currentTasks.push(task);
+        currentTasks.push(taskObj);
       }
     });
 
