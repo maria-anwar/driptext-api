@@ -138,12 +138,13 @@ exports.getTasks = async (req, res) => {
 
       // Determine the active role(s)
       let activeRole = "";
-      if (task.texter === req.body.freelancerId) activeRole += "Texter";
-      if (task.lector === req.body.freelancerId)
+      if ((task.texter || "").toString() === req.body.freelancerId)
+        activeRole += "Texter";
+      if ((task.lector || "").toString() === req.body.freelancerId)
         activeRole += (activeRole ? "," : "") + "Lector";
-      if (task.seo === req.body.freelancerId)
+      if ((task.seo || "").toString() === req.body.freelancerId)
         activeRole += (activeRole ? "," : "") + "Seo-Optimizer";
-      if (task.metaLector === req.body.freelancerId)
+      if ((task.metaLector || "").toString() === req.body.freelancerId)
         activeRole += (activeRole ? "," : "") + "Meta-Lector";
 
       // Add activeRole to task object
