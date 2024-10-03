@@ -3,7 +3,8 @@ const Joi = require("@hapi/joi");
 const db = require("../../models");
 const mongoose = require("mongoose");
 const jwt = require("../../utils/jwt");
-const dayjs = require("dayjs")
+const dayjs = require("dayjs");
+const { getWordCount } = require("../../utils/googleService/actions");
 
 const Freelancers = db.Freelancer;
 const Users = db.User;
@@ -119,7 +120,7 @@ exports.getTasks = async (req, res) => {
         { seo: req.body.freelancerId },
         { metaLector: req.body.freelancerId },
       ],
-    }).populate({path:"project", populate: ["plan","onBoardingInfo"]});
+    }).populate({ path: "project", populate: ["plan", "onBoardingInfo"] });
 
     // Get the current month and year
     const today = dayjs(); // Current date
@@ -169,6 +170,90 @@ exports.getTasks = async (req, res) => {
     };
 
     res.status(200).send({ message: "success", tasks: finalData });
+  } catch (error) {
+    res.status(500).send({ message: error.message || "Something went wrong" });
+  }
+};
+
+exports.updateWordCountAllTasks = async () => {
+  try {
+    if (!req.role || req.role.toLowerCase() !== "freelancer") {
+      res.status(401).send({ message: "Your are not freelancer" });
+      return;
+    }
+    const joiSchema = Joi.object({
+      freelancerId: Joi.string().required(),
+    });
+
+    const { error, value } = joiSchema.validate(req.body);
+    if (error) {
+      //   emails.errorEmail(req, error);
+
+      const message = error.details[0].message.replace(/"/g, "");
+      return res.status(401).send({
+        message: message,
+      });
+    }
+
+    const tasks = await ProjectTask.find({
+      isActive: "Y",
+      $or: [
+        { texter: req.body.freelancerId },
+        { lector: req.body.freelancerId },
+        { seo: req.body.freelancerId },
+        { metaLector: req.body.freelancerId },
+      ],
+    });
+    for (const task of tasks) {
+      let wordCount = await getWordCount(task.fileId);
+      await ProjectTask.findOneAndUpdate(
+        { _id: task._id },
+        {
+          actualNumberOfWords: wordCount,
+        },
+        { new: true }
+      );
+    }
+    res.status(200).send({message: "success"})
+  } catch (error) {
+    res.status(500).send({ message: error.message || "Something went wrong" });
+  }
+};
+
+exports.updateWordCountTask = async (req, res) => {
+  try {
+    if (!req.role || req.role.toLowerCase() !== "freelancer") {
+      res.status(401).send({ message: "Your are not freelancer" });
+      return;
+    }
+    const joiSchema = Joi.object({
+      taskId: Joi.string().required(),
+    });
+    const { error, value } = joiSchema.validate(req.body);
+
+    if (error) {
+      // emails.errorEmail(req, error);
+
+      const message = error.details[0].message.replace(/"/g, "");
+      res.status(401).send({
+        message: message,
+      });
+      return;
+    }
+    const task = await projectTasks.findOne({ _id: req.body.taskId });
+    if (!task) {
+      res.status(404).send({ message: "Task not found" });
+    }
+    const wordCount = await getWordCount(task.fileId);
+    await projectTasks.findOneAndUpdate(
+      { _id: task._id },
+      {
+        actualNumberOfWords: wordCount,
+      },
+      { new: true }
+    );
+
+    res.status(200).send({ message: "success" });
   } catch (error) {
     res.status(500).send({ message: error.message || "Something went wrong" });
   }

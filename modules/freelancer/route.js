@@ -11,6 +11,14 @@ router.post("/getTasks", jwt.protect, (req, res) => {
   freelancerController.getTasks(req, res);
 });
 
+router.post("/updateWordCountAllTasks", jwt.protect, (req, res) => {
+  freelancerController.updateWordCountAllTasks(req, res);
+});
+
+router.post("/updateWordCount", jwt.protect, (req, res) => {
+  freelancerController.updateWordCountTask(req, res);
+});
+
 router.post("/emailCheck", (req, res) => {
   freelancerController.emailCheck(req, res);
 });
