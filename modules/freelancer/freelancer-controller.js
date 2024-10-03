@@ -92,6 +92,169 @@ exports.create = async (req, res) => {
   }
 };
 
+exports.taskDecline = async (req, res) => {
+  try {
+    if (!req.role || req.role.toLowerCase() !== "freelancer") {
+      res.status(401).send({ message: "Your are not freelancer" });
+      return;
+    }
+    const joiSchema = Joi.object({
+      taskId: Joi.string().required(),
+    });
+    const { error, value } = joiSchema.validate(req.body);
+
+    if (error) {
+      // emails.errorEmail(req, error);
+
+      const message = error.details[0].message.replace(/"/g, "");
+      res.status(401).send({
+        message: message,
+      });
+      return;
+    }
+    const task = await ProjectTask.findOne({ _id: req.body.taskId });
+    if (!task) {
+      res.status(404).send({ message: "Task not found" });
+    }
+    if (
+      task.status.toLowerCase() === "ready to work" ||
+      task.status.toLowerCase() === "in progress"
+    ) {
+      await ProjectTask.findOneAndUpdate(
+        { _id: req.body.taskId },
+        {
+          status: "Ready To Work",
+          texter: null,
+        },
+        { new: true }
+      );
+    }
+    if (
+      task.status.toLowerCase() === "ready for proofreading" ||
+      task.status.toLowerCase() === "proofreading in progress"
+    ) {
+      await ProjectTask.findOneAndUpdate(
+        { _id: req.body.taskId },
+        {
+          status: "Ready For Proofreading",
+          lector: null,
+        },
+        { new: true }
+      );
+    }
+    if (
+      task.status.toLowerCase() === "ready for seo optimization" ||
+      task.status.toLowerCase() === "seo optimization in progress"
+    ) {
+      await ProjectTask.findOneAndUpdate(
+        { _id: req.body.taskId },
+        {
+          status: "Ready For SEO Optimization",
+          seo: null,
+        },
+        { new: true }
+      );
+    }
+    if (
+      task.status.toLowerCase() === "ready for 2nd proofreading" ||
+      task.status.toLowerCase() === "proofreading in progress"
+    ) {
+      await ProjectTask.findOneAndUpdate(
+        { _id: req.body.taskId },
+        {
+          status: "Ready For 2nd Proofreading",
+          metaLector: null,
+        },
+        { new: true }
+      );
+    }
+
+    res.status(200).send({ message: "success" });
+
+    
+  } catch (error) {
+    res.status(500).send({ message: error.message || "Something went wrong" });
+  }
+};
+
+exports.taskStart = async (req, res) => {
+  try {
+    if (!req.role || req.role.toLowerCase() !== "freelancer") {
+      res.status(401).send({ message: "Your are not freelancer" });
+      return;
+    }
+    const joiSchema = Joi.object({
+      taskId: Joi.string().required(),
+    });
+    const { error, value } = joiSchema.validate(req.body);
+
+    if (error) {
+      // emails.errorEmail(req, error);
+
+      const message = error.details[0].message.replace(/"/g, "");
+      res.status(401).send({
+        message: message,
+      });
+      return;
+    }
+    const task = await ProjectTask.findOne({ _id: req.body.taskId });
+     if (!task) {
+       res.status(404).send({ message: "Task not found" });
+     }
+    if (
+      task.status.toLowerCase() === "ready to work"
+    ) {
+      await ProjectTask.findOneAndUpdate(
+        { _id: req.body.taskId },
+        {
+          status: "In Progress",
+        },
+        { new: true }
+      );
+    }
+    if (
+      task.status.toLowerCase() === "ready for proofreading"
+    ) {
+      await ProjectTask.findOneAndUpdate(
+        { _id: req.body.taskId },
+        {
+          status: "Proofreading In Progress",
+        },
+        { new: true }
+      );
+    }
+    if (
+      task.status.toLowerCase() === "ready for seo optimization"
+    ) {
+      await ProjectTask.findOneAndUpdate(
+        { _id: req.body.taskId },
+        {
+          status: "SEO Optimization In Progress",
+       
+        },
+        { new: true }
+      );
+    }
+    if (
+      task.status.toLowerCase() === "ready for 2nd proofreading"
+    ) {
+      await ProjectTask.findOneAndUpdate(
+        { _id: req.body.taskId },
+        {
+          status: "2nd Proofreading In Progress",
+        },
+        { new: true }
+      );
+    }
+
+    res.status(200).send({ message: "success" });
+
+   
+  } catch (error) {
+    res.status(500).send({ message: error.message || "Something went wrong" });
+  }
+};
+
 exports.getTasks = async (req, res) => {
   try {
     if (!req.role || req.role.toLowerCase() !== "freelancer") {
@@ -214,7 +377,7 @@ exports.updateWordCountAllTasks = async () => {
         { new: true }
       );
     }
-    res.status(200).send({message: "success"})
+    res.status(200).send({ message: "success" });
   } catch (error) {
     res.status(500).send({ message: error.message || "Something went wrong" });
   }
