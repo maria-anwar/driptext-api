@@ -148,6 +148,7 @@ exports.addTask = async (req, res) => {
                     // boardingInfo: newOnBoarding._id,
                     // duration: "1",
                     // numberOfTasks: "1",
+                    openTasks: 1,
                     tasks: 1,
                   },
                   { new: true }
@@ -344,6 +345,7 @@ exports.addTask = async (req, res) => {
                   // duration: userPlan.subPlan.duration,
                   // numberOfTasks: userPlan.plan.texts,
                   // projectStatus: projectStatus,
+                  openTasks: taskCount + 1,
                   tasks: taskCount + 1,
                 },
                 { new: true }
@@ -649,6 +651,7 @@ exports.importProjectTasks = async (req, res) => {
                 // boardingInfo: newOnBoarding._id,
                 // duration: "1",
                 // numberOfTasks: "1",
+                openTasks: 1,
                 tasks: 1,
               },
               { new: true }
@@ -819,6 +822,7 @@ exports.importProjectTasks = async (req, res) => {
               // duration: userPlan.subPlan.duration,
               // numberOfTasks: userPlan.plan.texts,
               //   projectStatus: projectStatus,
+              openTasks: taskCount + 1,
               tasks: taskCount + 1,
             },
             { new: true }

@@ -225,9 +225,6 @@ exports.changeUserStatus = async (req, res) => {
 
 
 
-
-
-
 exports.updateAdminProfile = async (req, res) => {
   try {
     if (!req.role || req.role.toLowerCase() !== "projectmanger") {
