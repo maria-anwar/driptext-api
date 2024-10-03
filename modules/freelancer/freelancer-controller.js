@@ -240,12 +240,12 @@ exports.updateWordCountTask = async (req, res) => {
       });
       return;
     }
-    const task = await projectTasks.findOne({ _id: req.body.taskId });
+    const task = await ProjectTask.findOne({ _id: req.body.taskId });
     if (!task) {
       res.status(404).send({ message: "Task not found" });
     }
     const wordCount = await getWordCount(task.fileId);
-    await projectTasks.findOneAndUpdate(
+    await ProjectTask.findOneAndUpdate(
       { _id: task._id },
       {
         actualNumberOfWords: wordCount,
