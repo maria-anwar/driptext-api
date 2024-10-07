@@ -331,8 +331,7 @@ exports.finishTask = async (req, res) => {
         const updatedProject = await Projects.findOneAndUpdate(
           { _id: task.project },
           {
-            $inc: { openTasks: -1 },
-            $inc: { finalTasks: 1 },
+            $inc: { openTasks: -1, finalTasks: 1 },
           },
           { new: true }
         );
@@ -349,8 +348,8 @@ exports.finishTask = async (req, res) => {
       const updatedProject = await Projects.findOneAndUpdate(
         { _id: task.project },
         {
-          $inc: { openTasks: -1 },
-          $inc: { finalTasks: 1 },
+          $inc: { openTasks: -1, finalTasks: 1 },
+        
         },
         { new: true }
       );
