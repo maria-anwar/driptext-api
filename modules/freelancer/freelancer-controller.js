@@ -252,7 +252,8 @@ exports.finishTask = async (req, res) => {
     }
     const joiSchema = Joi.object({
       taskId: Joi.string().required(),
-      pass: Joi.string().optional().default(""),
+      // pass: Joi.string().optional().default(""),
+      feedback: Joi.string().optional().default(""),
     });
     const { error, value } = joiSchema.validate(req.body);
 
@@ -282,30 +283,30 @@ exports.finishTask = async (req, res) => {
       );
     }
     if (task.status.toLowerCase() === "proofreading in progress") {
-      if (!req.body.pass) {
-        res.status(500).send({ message: "pass value is not given" });
-        return;
-      }
+      // if (!req.body.pass) {
+      //   res.status(500).send({ message: "pass value is not given" });
+      //   return;
+      // }
 
-      if (req.body.pass === "pass") {
+      if (!req.body.feedback) {
         await ProjectTask.findOneAndUpdate(
           { _id: req.body.taskId },
           {
             status: "Proofreading In Progress",
+            feedback: null,
           },
           { new: true }
         );
-      } else if (req.body.pass === "fail") {
+      }
+      if (req.body.feedback) {
         await ProjectTask.findOneAndUpdate(
           { _id: req.body.taskId },
           {
             status: "In Rivision",
+            feedback: req.body.feedback,
           },
           { new: true }
         );
-      } else {
-        res.status(500).send({ message: "Invalid pass value" });
-        return;
       }
     }
     if (task.status.toLowerCase() === "seo optimization in progress") {

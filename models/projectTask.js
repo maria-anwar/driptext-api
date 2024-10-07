@@ -16,6 +16,7 @@ module.exports = (mongoose) => {
       type: { type: String, required: false, unique: false, default: null },
       fileLink: { type: String, required: false, unique: false, default: null },
       fileId: { type: String, required: false, unique: false, default: null },
+      feedback: { type: String, required: false, unique: false, default: null },
       desiredNumberOfWords: {
         type: String,
         required: false,
