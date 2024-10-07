@@ -292,7 +292,7 @@ exports.finishTask = async (req, res) => {
         await ProjectTask.findOneAndUpdate(
           { _id: req.body.taskId },
           {
-            status: "Proofreading In Progress",
+            status: "Ready For SEO Optimization",
             feedback: null,
           },
           { new: true }
