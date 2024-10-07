@@ -10,6 +10,8 @@ const Freelancers = db.Freelancer;
 const Users = db.User;
 const Roles = db.Role;
 const ProjectTask = db.ProjectTask;
+const Projects = db.Project;
+
 exports.create = async (req, res) => {
   try {
     const joiSchema = Joi.object({
@@ -170,8 +172,6 @@ exports.taskDecline = async (req, res) => {
     }
 
     res.status(200).send({ message: "success" });
-
-    
   } catch (error) {
     res.status(500).send({ message: error.message || "Something went wrong" });
   }
@@ -198,12 +198,10 @@ exports.taskStart = async (req, res) => {
       return;
     }
     const task = await ProjectTask.findOne({ _id: req.body.taskId });
-     if (!task) {
-       res.status(404).send({ message: "Task not found" });
-     }
-    if (
-      task.status.toLowerCase() === "ready to work"
-    ) {
+    if (!task) {
+      res.status(404).send({ message: "Task not found" });
+    }
+    if (task.status.toLowerCase() === "ready to work") {
       await ProjectTask.findOneAndUpdate(
         { _id: req.body.taskId },
         {
@@ -212,9 +210,7 @@ exports.taskStart = async (req, res) => {
         { new: true }
       );
     }
-    if (
-      task.status.toLowerCase() === "ready for proofreading"
-    ) {
+    if (task.status.toLowerCase() === "ready for proofreading") {
       await ProjectTask.findOneAndUpdate(
         { _id: req.body.taskId },
         {
@@ -223,21 +219,16 @@ exports.taskStart = async (req, res) => {
         { new: true }
       );
     }
-    if (
-      task.status.toLowerCase() === "ready for seo optimization"
-    ) {
+    if (task.status.toLowerCase() === "ready for seo optimization") {
       await ProjectTask.findOneAndUpdate(
         { _id: req.body.taskId },
         {
           status: "SEO Optimization In Progress",
-       
         },
         { new: true }
       );
     }
-    if (
-      task.status.toLowerCase() === "ready for 2nd proofreading"
-    ) {
+    if (task.status.toLowerCase() === "ready for 2nd proofreading") {
       await ProjectTask.findOneAndUpdate(
         { _id: req.body.taskId },
         {
@@ -248,8 +239,123 @@ exports.taskStart = async (req, res) => {
     }
 
     res.status(200).send({ message: "success" });
+  } catch (error) {
+    res.status(500).send({ message: error.message || "Something went wrong" });
+  }
+};
 
-   
+exports.finishTask = async (req, res) => {
+  try {
+    if (!req.role || req.role.toLowerCase() !== "freelancer") {
+      res.status(401).send({ message: "Your are not freelancer" });
+      return;
+    }
+    const joiSchema = Joi.object({
+      taskId: Joi.string().required(),
+      pass: Joi.string().optional().default(""),
+    });
+    const { error, value } = joiSchema.validate(req.body);
+
+    if (error) {
+      // emails.errorEmail(req, error);
+
+      const message = error.details[0].message.replace(/"/g, "");
+      res.status(401).send({
+        message: message,
+      });
+      return;
+    }
+    const task = await ProjectTask.findOne({ _id: req.body.taskId });
+    if (!task) {
+      res.status(404).send({ message: "Task not found" });
+    }
+    if (
+      task.status.toLowerCase() === "in progress" ||
+      task.status.toLowerCase() === "in rivision"
+    ) {
+      await ProjectTask.findOneAndUpdate(
+        { _id: req.body.taskId },
+        {
+          status: "Ready For Proofreading",
+        },
+        { new: true }
+      );
+    }
+    if (task.status.toLowerCase() === "proofreading in progress") {
+      if (!req.body.pass) {
+        res.status(500).send({ message: "pass value is not given" });
+        return;
+      }
+
+      if (req.body.pass === "pass") {
+        await ProjectTask.findOneAndUpdate(
+          { _id: req.body.taskId },
+          {
+            status: "Proofreading In Progress",
+          },
+          { new: true }
+        );
+      } else if (req.body.pass === "fail") {
+        await ProjectTask.findOneAndUpdate(
+          { _id: req.body.taskId },
+          {
+            status: "In Rivision",
+          },
+          { new: true }
+        );
+      } else {
+        res.status(500).send({ message: "Invalid pass value" });
+        return;
+      }
+    }
+    if (task.status.toLowerCase() === "seo optimization in progress") {
+      if (task.metaLector) {
+        await ProjectTask.findOneAndUpdate(
+          { _id: req.body.taskId },
+          {
+            status: "Ready For 2nd Proofreading",
+          },
+          { new: true }
+        );
+      }
+      if (!task.metaLector) {
+        await ProjectTask.findOneAndUpdate(
+          { _id: req.body.taskId },
+          {
+            status: "Final",
+          },
+          { new: true }
+        );
+
+        const updatedProject = await Projects.findOneAndUpdate(
+          { _id: task.project },
+          {
+            $inc: { openTasks: -1 },
+            $inc: { finalTasks: 1 },
+          },
+          { new: true }
+        );
+      }
+    }
+    if (task.status.toLowerCase() === "2nd proofreading in progress") {
+      await ProjectTask.findOneAndUpdate(
+        { _id: req.body.taskId },
+        {
+          status: "Final",
+        },
+        { new: true }
+      );
+      const updatedProject = await Projects.findOneAndUpdate(
+        { _id: task.project },
+        {
+          $inc: { openTasks: -1 },
+          $inc: { finalTasks: 1 },
+        },
+        { new: true }
+      );
+    }
+
+    res.status(200).send({ message: "success" });
   } catch (error) {
     res.status(500).send({ message: error.message || "Something went wrong" });
   }
