@@ -232,3 +232,71 @@ exports.assignFreelancerByTask = async (req, res) => {
     res.status(500).send({ message: error.message || "Something went wrong" });
   }
 };
+
+exports.setPrices = async (req, res) => {
+  try {
+    if (!req.role || req.role.toLowerCase() !== "projectmanger") {
+      res.status(401).send({ message: "Your are not admin" });
+      return;
+    }
+    const joiSchema = Joi.object({
+      texter: Joi.number().required(),
+      lector: Joi.number().required(),
+      seo: Joi.number().required(),
+    });
+    const { error, value } = joiSchema.validate(req.body);
+
+    if (error) {
+      // emails.errorEmail(req, error);
+
+      const message = error.details[0].message.replace(/"/g, "");
+      res.status(401).send({
+        message: message,
+      });
+      return;
+    }
+
+    const freelancerPrice = await freelancerPrices.findOne({});
+
+    if (!freelancerPrice) {
+      const newFreelancerPrice = await freelancerPrices.create({
+        texter: req.body.texter,
+        lector: req.body.lector,
+        seo: req.body.seo,
+        metaLector: req.body.lector,
+      });
+    }
+
+    if (freelancerPrice) {
+      const updatedFreelancerPrice = await freelancerPrices.findOneAndUpdate(
+        { _id: freelancerPrice._id },
+        {
+          texter: req.body.texter,
+          lector: req.body.lector,
+          seo: req.body.seo,
+          metaLector: req.body.lector,
+        },
+        { new: true }
+      );
+    }
+
+    res.status(200).send({ message: "success" });
+  } catch (error) {
+    res.status(500).send({ message: error.message || "Something went wrong" });
+  }
+};
+
+exports.getPrices = async (req, res) => {
+  try {
+    if (!req.role || req.role.toLowerCase() !== "projectmanger") {
+      res.status(401).send({ message: "Your are not admin" });
+      return;
+    }
+    const freelancerPrice = await freelancerPrices.findOne({});
+
+    res.status(200).send({ message: "success", data: freelancerPrice });
+  } catch (error) {
+    res.status(500).send({ message: error.message || "Something went wrong" });
+  }
+};
+

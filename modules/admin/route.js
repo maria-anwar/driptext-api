@@ -76,6 +76,14 @@ router.post("/exportTasks", jwt.protect, (req, res) => {
   taskController.projectTasksExport(req, res);
 });
 
+router.post("/setPrices", (req, res) => {
+  freelancerController.setPrices(req, res);
+});
+
+router.get("/getPrices", (req, res) => {
+  freelancerController.getPrices(req, res);
+});
+
 router.post(
   "/importTasks",
   jwt.protect,
