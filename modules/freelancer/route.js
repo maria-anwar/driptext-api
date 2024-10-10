@@ -11,7 +11,7 @@ router.post("/setPrices", (req, res) => {
   freelancerController.setPrices(req, res);
 });
 
-router.post("/getPrices", (req, res) => {
+router.get("/getPrices", (req, res) => {
   freelancerController.getPrices(req, res);
 });
 
