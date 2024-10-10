@@ -275,7 +275,7 @@ exports.setPrices = async (req, res) => {
         {
           texter: req.body.texter,
           lector: req.body.lector,
-          seo: req.body.seo,
+          seoOptimizer: req.body.seo,
           metaLector: req.body.lector,
         },
         { new: true }
