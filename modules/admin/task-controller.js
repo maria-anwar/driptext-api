@@ -345,7 +345,7 @@ exports.addTask = async (req, res) => {
                   // duration: userPlan.subPlan.duration,
                   // numberOfTasks: userPlan.plan.texts,
                   // projectStatus: projectStatus,
-                  openTasks: taskCount + 1,
+                  $inc: { openTasks: 1 },
                   tasks: taskCount + 1,
                 },
                 { new: true }
@@ -610,7 +610,11 @@ exports.importProjectTasks = async (req, res) => {
         //   contentPurpose: task.contentPurpose,
         //   contentInfo: task.ContentInfo,
         // };
-        if (role.title == "leads" || role.title == "Leads" || project.projectStatus.toLowerCase() === "free trial") {
+        if (
+          role.title == "leads" ||
+          role.title == "Leads" ||
+          project.projectStatus.toLowerCase() === "free trial"
+        ) {
           let taskCount = await ProjectTask.countDocuments({
             project: project._id,
           });
@@ -822,7 +826,7 @@ exports.importProjectTasks = async (req, res) => {
               // duration: userPlan.subPlan.duration,
               // numberOfTasks: userPlan.plan.texts,
               //   projectStatus: projectStatus,
-              openTasks: taskCount + 1,
+              $inc: { openTasks: 1 },
               tasks: taskCount + 1,
             },
             { new: true }

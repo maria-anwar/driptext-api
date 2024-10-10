@@ -11,6 +11,7 @@ const Users = db.User;
 const Roles = db.Role;
 const ProjectTask = db.ProjectTask;
 const Projects = db.Project;
+const freelancerPrices = db.FreelancerPrice;
 
 exports.create = async (req, res) => {
   try {
@@ -320,7 +321,7 @@ exports.finishTask = async (req, res) => {
         );
       }
       if (!task.metaLector) {
-        await ProjectTask.findOneAndUpdate(
+        const updateTask = await ProjectTask.findOneAndUpdate(
           { _id: req.body.taskId },
           {
             status: "Final",
@@ -349,7 +350,6 @@ exports.finishTask = async (req, res) => {
         { _id: task.project },
         {
           $inc: { openTasks: -1, finalTasks: 1 },
-        
         },
         { new: true }
       );
@@ -553,6 +553,73 @@ exports.emailCheck = async (req, res) => {
     }
 
     res.status(200).json({ message: "success" });
+  } catch (error) {
+    res.status(500).send({ message: error.message || "Something went wrong" });
+  }
+};
+
+exports.setPrices = async (req, res) => {
+  try {
+    if (!req.role || req.role.toLowerCase() !== "freelancer") {
+      res.status(401).send({ message: "Your are not freelancer" });
+      return;
+    }
+    const joiSchema = Joi.object({
+      texter: Joi.number().required(),
+      lector: Joi.number().required(),
+      seo: Joi.number().required(),
+    });
+    const { error, value } = joiSchema.validate(req.body);
+
+    if (error) {
+      // emails.errorEmail(req, error);
+
+      const message = error.details[0].message.replace(/"/g, "");
+      res.status(401).send({
+        message: message,
+      });
+      return;
+    }
+
+    const freelancerPrice = await freelancerPrices.findOne({});
+
+    if (!freelancerPrice) {
+      const newFreelancerPrice = await freelancerPrices.create({
+        texter: req.body.texter,
+        lector: req.body.lector,
+        seo: req.body.seo,
+        metaLector: req.body.lector,
+      });
+    }
+
+    if (freelancerPrice) {
+      const updatedFreelancerPrice = await freelancerPrices.findOneAndUpdate(
+        { _id: freelancerPrice._id },
+        {
+          texter: req.body.texter,
+          lector: req.body.lector,
+          seo: req.body.seo,
+          metaLector: req.body.lector,
+        },
+        { new: true }
+      );
+    }
+
+    res.status(200).send({ message: "success" });
+  } catch (error) {
+    res.status(500).send({ message: error.message || "Something went wrong" });
+  }
+};
+
+exports.getPrices = async (req, res) => {
+  try {
+    if (!req.role || req.role.toLowerCase() !== "freelancer") {
+      res.status(401).send({ message: "Your are not freelancer" });
+      return;
+    }
+    const freelancerPrice = await freelancerPrices.findOne({});
+
+    res.status(200).send({message: "success", data: freelancerPrice})
   } catch (error) {
     res.status(500).send({ message: error.message || "Something went wrong" });
   }

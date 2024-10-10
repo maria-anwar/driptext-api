@@ -7,6 +7,14 @@ router.post("/create", (req, res) => {
   freelancerController.create(req, res);
 });
 
+router.post("/setPrices", (req, res) => {
+  freelancerController.setPrices(req, res);
+});
+
+router.post("/getPrices", (req, res) => {
+  freelancerController.getPrices(req, res);
+});
+
 router.post("/getTasks", jwt.protect, (req, res) => {
   freelancerController.getTasks(req, res);
 });
