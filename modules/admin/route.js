@@ -76,11 +76,11 @@ router.post("/exportTasks", jwt.protect, (req, res) => {
   taskController.projectTasksExport(req, res);
 });
 
-router.post("/setPrices", (req, res) => {
+router.post("/setPrices", jwt.protect, (req, res) => {
   freelancerController.setPrices(req, res);
 });
 
-router.get("/getPrices", (req, res) => {
+router.get("/getPrices", jwt.protect, (req, res) => {
   freelancerController.getPrices(req, res);
 });
 
