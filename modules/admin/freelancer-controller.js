@@ -17,6 +17,8 @@ const Projects = db.Project;
 const UserPlan = db.UserPlan;
 const ProjectTask = db.ProjectTask;
 const Company = db.Company;
+const freelancerPrices = db.FreelancerPrice;
+
 const {
   createFolder,
   createTaskFile,
