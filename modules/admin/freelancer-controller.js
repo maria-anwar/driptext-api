@@ -264,7 +264,7 @@ exports.setPrices = async (req, res) => {
       const newFreelancerPrice = await freelancerPrices.create({
         texter: req.body.texter,
         lector: req.body.lector,
-        seo: req.body.seo,
+        seoOptimizer: req.body.seo,
         metaLector: req.body.lector,
       });
     }
