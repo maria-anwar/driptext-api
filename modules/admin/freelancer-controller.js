@@ -155,6 +155,27 @@ exports.assignFreelancersByProject = async (req, res) => {
       }
     }
 
+    // Meta-Lector
+    if (req.body.role.toLowerCase() === "meta-lector") {
+      const updatedProject = await Projects.findOneAndUpdate(
+        { _id: req.body.projectId },
+        { metaLector: req.body.freelancerId },
+        { new: true }
+      );
+      // const projectTasks =
+      //   project?.projectTasks && project.projectTasks.length > 0
+      //     ? project.projectTasks
+      //     : null;
+      // if (projectTasks) {
+      //   for (const task of projectTasks) {
+      //     await ProjectTask.findOneAndUpdate(
+      //       { _id: task._id },
+      //       { seo: req.body.freelancerId },
+      //       { new: true }
+      //     );
+      //   }
+      // }
+    }
     await session.commitTransaction();
     session.endSession();
     res.status(200).send({ message: "success" });
