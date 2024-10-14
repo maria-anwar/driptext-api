@@ -1063,3 +1063,19 @@ exports.importProjectTasks = async (req, res) => {
     res.status(500).send({ message: error.message || "Something went wrong" });
   }
 };
+
+exports.getAllTasks = async (req, res) => {
+  try {
+      if (!req.role || req.role.toLowerCase() !== "projectmanger") {
+        res.status(401).send({ message: "Your are not admin" });
+        return;
+      }
+    
+    const allTasks = await projectTasks.find({ isActive: "Y" })
+
+    res.status(200).send({message: "success", data: allTasks})
+    
+  } catch (error) {
+    res.status(500).send({message: error.message ||"Something went wrong"})
+  }
+}

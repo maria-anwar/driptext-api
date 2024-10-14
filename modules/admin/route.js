@@ -53,6 +53,10 @@ router.post("/archiveProject", jwt.protect, (req, res) => {
 router.post("/editTask", jwt.protect, (req, res) => {
   taskController.editTask(req, res);
 });
+
+router.get("/getAllTasks", jwt.protect, (req, res) => {
+  taskController.getAllTasks(req, res);
+});
 router.post("/wordCountTask", jwt.protect, (req, res) => {
   taskController.wordCountTask(req, res);
 });
