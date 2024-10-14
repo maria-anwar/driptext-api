@@ -1088,6 +1088,8 @@ exports.getTaskDetail = async (req, res) => {
     const joiSchema = Joi.object({
       taskId: Joi.string().required()
     })
+    const { error, value } = joiSchema.validate(req.body);
+
     if (error) {
       // emails.errorEmail(req, error);
 
