@@ -54,6 +54,10 @@ router.post("/editTask", jwt.protect, (req, res) => {
   taskController.editTask(req, res);
 });
 
+router.post("/getTaskDetail", jwt.protect, (req, res) => {
+  taskController.getTaskDetail(req, res);
+});
+
 router.get("/getAllTasks", jwt.protect, (req, res) => {
   taskController.getAllTasks(req, res);
 });
