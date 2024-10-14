@@ -166,8 +166,15 @@ exports.assignFreelancersByProject = async (req, res) => {
         project?.projectTasks && project.projectTasks.length > 0
           ? project.projectTasks
           : null;
-      if (projectTasks) {
-        let count = 0
+      if (projectTasks && projectTasks.length === 1 && !updatedProject.plan) {
+        await ProjectTask.findOneAndUpdate(
+          { _id: ProjectTask[0]._id },
+          { metaLector: req.body.freelancerId },
+          { new: true }
+        );
+      }
+      if (projectTasks && projectTasks.length > 1) {
+        let count = 0;
         for (const task of projectTasks) {
           count++;
           if (count % 10 === 0) {
@@ -177,7 +184,6 @@ exports.assignFreelancersByProject = async (req, res) => {
               { new: true }
             );
           }
-          
         }
       }
     }
@@ -327,4 +333,3 @@ exports.getPrices = async (req, res) => {
     res.status(500).send({ message: error.message || "Something went wrong" });
   }
 };
-
