@@ -1100,7 +1100,7 @@ exports.getTaskDetail = async (req, res) => {
       return;
     }
 
-    const task = await projectTasks.findOne({ _id: req.body.taskId }).populate(["project", "texter", "lector", "seo", "metaLector"])
+    const task = await projectTasks.findOne({ _id: req.body.taskId }).populate(["user","project", "texter", "lector", "seo", "metaLector"])
     
     res.status(200).send({message: "Success", data: task})
 
