@@ -135,6 +135,7 @@ exports.addTask = async (req, res) => {
                   user: userId,
                   //   onBoarding: createCompany._id,
                   published: true,
+                  metaLector: project.metaLector
                   //   tasks: taskCount,
                 };
 
@@ -308,6 +309,9 @@ exports.addTask = async (req, res) => {
                 user: userId,
                 // onBoarding: createCompany._id,
                 published: true,
+                ...(taskCount % 9 === 0 && {
+                  metaLector: project.metaLector
+                })
               };
 
               let createProjectTask = await ProjectTask.create(proectTaskObj);
@@ -643,6 +647,7 @@ exports.importProjectTasks = async (req, res) => {
               user: user._id,
               //   onBoarding: createCompany._id,
               //   tasks: taskCount,
+              metaLector: project.metaLector
             };
 
             let upadteProject = await Projects.findOneAndUpdate(
@@ -796,6 +801,7 @@ exports.importProjectTasks = async (req, res) => {
             desiredNumberOfWords: task.wordCount,
             project: project._id,
             user: user._id,
+            ...(taskCount % 9 === 0 && {metaLector: project.metaLector})
             // onBoarding: createCompany._id,
           };
 

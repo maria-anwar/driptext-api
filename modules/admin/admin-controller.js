@@ -138,10 +138,6 @@ exports.editProjectManager = async (req, res) => {
   }
 }
 
-
-
-
-
 exports.getAllUsers = async (req, res) => {
   try {
     if (!req.role || req.role.toLowerCase() !== "projectmanger") {
@@ -221,9 +217,6 @@ exports.changeUserStatus = async (req, res) => {
     res.status(200).send({ message: error.message || "Something went wrong" });
   }
 };
-
-
-
 
 exports.updateAdminProfile = async (req, res) => {
   try {

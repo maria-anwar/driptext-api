@@ -162,19 +162,24 @@ exports.assignFreelancersByProject = async (req, res) => {
         { metaLector: req.body.freelancerId },
         { new: true }
       );
-      // const projectTasks =
-      //   project?.projectTasks && project.projectTasks.length > 0
-      //     ? project.projectTasks
-      //     : null;
-      // if (projectTasks) {
-      //   for (const task of projectTasks) {
-      //     await ProjectTask.findOneAndUpdate(
-      //       { _id: task._id },
-      //       { seo: req.body.freelancerId },
-      //       { new: true }
-      //     );
-      //   }
-      // }
+      const projectTasks =
+        project?.projectTasks && project.projectTasks.length > 0
+          ? project.projectTasks
+          : null;
+      if (projectTasks) {
+        let count = 0
+        for (const task of projectTasks) {
+          count++;
+          if (count % 10 === 0) {
+            await ProjectTask.findOneAndUpdate(
+              { _id: task._id },
+              { metaLector: req.body.freelancerId },
+              { new: true }
+            );
+          }
+          
+        }
+      }
     }
     await session.commitTransaction();
     session.endSession();
