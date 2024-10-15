@@ -168,7 +168,7 @@ exports.assignFreelancersByProject = async (req, res) => {
           : null;
       if (projectTasks && projectTasks.length === 1 && !updatedProject.plan) {
         await ProjectTask.findOneAndUpdate(
-          { _id: ProjectTask[0]._id },
+          { _id: projectTasks[0]._id },
           { metaLector: req.body.freelancerId },
           { new: true }
         );
