@@ -104,7 +104,7 @@ exports.addTask = async (req, res) => {
 
           if (getuser && project) {
             if (
-              (role.title == "leads" || role.title == "Leads") &&
+              (role.title == "leads" || role.title == "Leads" || project.projectStatus.toLowerCase() === "free trial") &&
               project.projectName == projectName
             ) {
               let taskCount = await ProjectTask.countDocuments({
