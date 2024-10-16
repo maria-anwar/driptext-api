@@ -801,6 +801,18 @@ exports.importProjectTasks = async (req, res) => {
             createProjectTask.keywords || "No Keywords"
           }`;
           const fileObj = await createTaskFile(project.folderId, fileName);
+
+          await UserPlan.findOneAndUpdate(
+            { user: project.user._id, project: project._id },
+            {
+              $inc: {
+                textsCount: 1,
+                textsRemaining: -1,
+                tasksPerMonthCount: 1,
+              },
+            },
+            { new: true }
+          );
           // const updateProjectTask = await ProjectTask.findOneAndUpdate(
           //   { _id: createProjectTask._id },
           //   {
@@ -832,17 +844,6 @@ exports.importProjectTasks = async (req, res) => {
             { new: true }
           );
 
-          await UserPlan.findOneAndUpdate(
-            { user: project.user._id, project: project._id },
-            {
-              $inc: {
-                textsCount: 1,
-                textsRemaining: -1,
-                tasksPerMonthCount: 1,
-              },
-            },
-            { new: true }
-          );
           console.log("updated project: ", upadteProject);
 
           let nameChar = upadteProject.projectName.slice(0, 2).toUpperCase();
