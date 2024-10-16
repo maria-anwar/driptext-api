@@ -590,7 +590,10 @@ exports.importProjectTasks = async (req, res) => {
     };
 
     const importTasks = async (user, project, task) => {
+      const session = await mongoose.startSession()
+      session.startTransaction()
       try {
+        
         console.log("task inside import tasks: ");
         let error = "";
         let role = user.role;
@@ -707,9 +710,9 @@ exports.importProjectTasks = async (req, res) => {
             );
 
             if (upadteProject && createProjectTask) {
-              // await session.commitTransaction();
-              // session.endSession();
-              await emails.onBoadingSuccess(user);
+              await session.commitTransaction();
+              session.endSession();
+              emails.onBoadingSuccess(user);
 
               // res.send({
               //   message: "OnBoarding successful",
@@ -718,6 +721,8 @@ exports.importProjectTasks = async (req, res) => {
             }
           } else {
             // error = "As free trial gives only 1 task";
+            await session.abortTransaction()
+            session.endSession()
             res
               .status(403)
               .send({ message: "As free trial gives only 1 task" });
@@ -738,6 +743,8 @@ exports.importProjectTasks = async (req, res) => {
 
           if (!userPlan.subscription) {
             // error = "Client don't have subscription";
+             await session.abortTransaction();
+             session.endSession();
             res.status(500).send({ message: "Client don't have subscription" });
             return;
           }
@@ -747,6 +754,8 @@ exports.importProjectTasks = async (req, res) => {
             userPlan.tasksPerMonthCount >= userPlan.tasksPerMonth
           ) {
             // error = "Client have reached monthly limit";
+             await session.abortTransaction();
+             session.endSession();
             res
               .status(500)
               .send({ message: "Client have reached monthly limit" });
@@ -755,6 +764,8 @@ exports.importProjectTasks = async (req, res) => {
           }
           if (userPlan.textsRemaining === 0) {
             // error = "Client's subscription is expired";
+             await session.abortTransaction();
+             session.endSession();
             res
               .status(500)
               .send({ message: "Client's subscription is expired" });
@@ -762,6 +773,8 @@ exports.importProjectTasks = async (req, res) => {
           }
           if (dayjs(new Date()).isAfter(dayjs(userPlan.endDate, "day"))) {
             // error = "Client's subscription is expired";
+             await session.abortTransaction();
+             session.endSession();
             res
               .status(500)
               .send({ message: "Client's subscription is expired" });
@@ -861,9 +874,9 @@ exports.importProjectTasks = async (req, res) => {
           );
 
           if (upadteProject && createProjectTask) {
-            // await session.commitTransaction();
-            // session.endSession();
-            await emails.onBoadingSuccess(user);
+            await session.commitTransaction();
+            session.endSession();
+             emails.onBoadingSuccess(user);
 
             // res.send({
             //   message: "OnBoarding successful",
@@ -878,12 +891,16 @@ exports.importProjectTasks = async (req, res) => {
           // }
         } else {
           // error = "Project not found!";
+           await session.abortTransaction();
+           session.endSession();
           res.status(403).send({
             message: "Project not found!",
           });
           return;
         }
       } catch (error) {
+         await session.abortTransaction();
+         session.endSession();
         res
           .status(500)
           .send({ message: error.message || "Something went wrong" });
