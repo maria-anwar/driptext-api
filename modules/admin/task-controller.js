@@ -573,7 +573,7 @@ exports.importProjectTasks = async (req, res) => {
       return;
     }
 
-    const editTask = async (user, project, task, orgTask) => {
+    const editTask = async (user, project, task, orgTask, res) => {
       //   console.log("task onBoarding: ", task);
       const updatedTask = await projectTasks.findOneAndUpdate(
         { _id: orgTask._id },
@@ -589,11 +589,10 @@ exports.importProjectTasks = async (req, res) => {
       );
     };
 
-    const importTasks = async (user, project, task) => {
-      const session = await mongoose.startSession()
-      session.startTransaction()
+    const importTasks = async (user, project, task, responseSent, res) => {
+      const session = await mongoose.startSession();
+      session.startTransaction();
       try {
-        
         console.log("task inside import tasks: ");
         let error = "";
         let role = user.role;
@@ -721,12 +720,12 @@ exports.importProjectTasks = async (req, res) => {
             }
           } else {
             // error = "As free trial gives only 1 task";
-            await session.abortTransaction()
-            session.endSession()
+            await session.abortTransaction();
+            session.endSession();
             res
               .status(403)
               .send({ message: "As free trial gives only 1 task" });
-
+            responseSent = true;
             return;
           }
         } else if (role.title == "Client") {
@@ -743,9 +742,10 @@ exports.importProjectTasks = async (req, res) => {
 
           if (!userPlan.subscription) {
             // error = "Client don't have subscription";
-             await session.abortTransaction();
-             session.endSession();
+            await session.abortTransaction();
+            session.endSession();
             res.status(500).send({ message: "Client don't have subscription" });
+            responseSent = true;
             return;
           }
 
@@ -760,25 +760,27 @@ exports.importProjectTasks = async (req, res) => {
             res
               .status(500)
               .send({ message: "Client have reached monthly limit" });
-
+            responseSent = true;
             return;
           }
           if (userPlan.textsRemaining === 0) {
             // error = "Client's subscription is expired";
-             await session.abortTransaction();
-             session.endSession();
+            await session.abortTransaction();
+            session.endSession();
             res
               .status(500)
               .send({ message: "Client's subscription is expired" });
+            responseSent = true;
             return;
           }
           if (dayjs(new Date()).isAfter(dayjs(userPlan.endDate, "day"))) {
             // error = "Client's subscription is expired";
-             await session.abortTransaction();
-             session.endSession();
+            await session.abortTransaction();
+            session.endSession();
             res
               .status(500)
               .send({ message: "Client's subscription is expired" });
+            responseSent = true;
             return;
           }
 
@@ -877,7 +879,7 @@ exports.importProjectTasks = async (req, res) => {
           if (upadteProject && createProjectTask) {
             await session.commitTransaction();
             session.endSession();
-             emails.onBoadingSuccess(user);
+            emails.onBoadingSuccess(user);
 
             // res.send({
             //   message: "OnBoarding successful",
@@ -892,19 +894,21 @@ exports.importProjectTasks = async (req, res) => {
           // }
         } else {
           // error = "Project not found!";
-           await session.abortTransaction();
-           session.endSession();
+          await session.abortTransaction();
+          session.endSession();
           res.status(403).send({
             message: "Project not found!",
           });
+          responseSent = true;
           return;
         }
       } catch (error) {
-         await session.abortTransaction();
-         session.endSession();
+        await session.abortTransaction();
+        session.endSession();
         res
           .status(500)
           .send({ message: error.message || "Something went wrong" });
+        responseSent = true;
         return;
       }
     };
@@ -1032,31 +1036,18 @@ exports.importProjectTasks = async (req, res) => {
           if (allTasks.length === 0) {
             console.log("inside 0 length if");
             for (const importTask of tasks) {
-              await importTasks(user, project, importTask, res);
+              await importTasks(user, project, importTask, responseSent, res);
 
-              if (res.headersSent) {
-                responseSent = true;
-                break; // Exit the loop once a response is sent
-              }
+              // if (res.headersSent) {
+              //   responseSent = true;
+              //   break; // Exit the loop once a response is sent
+              // }
 
               if (responseSent) {
                 break; // Exit outer loop if the response is already sent
               }
             }
           }
-
-          //   if (allTasks.length === 0) {
-          //     tasks.forEach( async (importTask) => {
-          //       await importTasks(user, project, importTask);
-          //     });
-          //   }
-
-          // // Bulk add the tasks to the project
-          // project.projectTasks.push(...tasks);
-          // await project.save();
-
-          // // Delete the uploaded CSV file after processing
-          // fs.unlinkSync(filePath);
 
           if (!responseSent) {
             res.status(200).send({
