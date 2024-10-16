@@ -54,13 +54,13 @@ exports.createPaymentIntent = async (req, res) => {
           last_name: lastName,
           email: email,
           // cf_subscription: uniqueId,
-          // tax_withheld: [
-          //   {
-          //     tax_name: "VAT",
-          //     tax_rate: 15, // Replace with the applicable tax rate
-          //     amount: 1000, // Replace with the tax amount in your base currency
-          //   },
-          // ],
+          tax_withheld: [
+            {
+              tax_name: "VAT",
+              tax_rate: 15, // Replace with the applicable tax rate
+              amount: 1000, // Replace with the tax amount in your base currency
+            },
+          ],
         },
       })
       .request();
