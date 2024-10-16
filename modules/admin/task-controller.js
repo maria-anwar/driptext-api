@@ -744,7 +744,7 @@ exports.importProjectTasks = async (req, res) => {
 
           if (
             dayjs(new Date()).isAfter(dayjs(userPlan.endMonthDate, "day")) ||
-            userPlan.tasksPerMonthCount === userPlan.tasksPerMonth
+            userPlan.tasksPerMonthCount >= userPlan.tasksPerMonth
           ) {
             // error = "Client have reached monthly limit";
             res
