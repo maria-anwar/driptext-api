@@ -104,13 +104,14 @@ exports.addTask = async (req, res) => {
 
           if (getuser && project) {
             if (
-              (role.title == "leads" || role.title == "Leads" || project.projectStatus.toLowerCase() === "free trial") &&
-              project.projectName == projectName
+              role.title == "leads" ||
+              role.title == "Leads" ||
+              project.projectStatus.toLowerCase() === "free trial"
             ) {
               let taskCount = await ProjectTask.countDocuments({
                 project: projectId,
               });
-              if (taskCount == 0) {
+              if (taskCount === 0) {
                 let projectStatus;
                 let taskStatus = "Uninitialized";
                 // if (speech !== "" && prespective !== "") {
@@ -135,7 +136,7 @@ exports.addTask = async (req, res) => {
                   user: userId,
                   //   onBoarding: createCompany._id,
                   published: true,
-                  metaLector: project.metaLector
+                  metaLector: project.metaLector,
                   //   tasks: taskCount,
                 };
 
@@ -230,19 +231,7 @@ exports.addTask = async (req, res) => {
 
                 return;
               }
-            } else if (
-              (role.title == "leads" || role.title == "Leads") &&
-              project.projectName !== projectName
-            ) {
-              res.status(403).send({
-                message:
-                  "This user is in Leads Role so you can not onboard another project/task",
-              });
-              return;
-            } else if (
-              role.title == "Client" &&
-              project.projectName == projectName
-            ) {
+            } else if (role.title == "Client") {
               let taskCount = await ProjectTask.countDocuments({
                 project: project._id,
               });
@@ -265,7 +254,7 @@ exports.addTask = async (req, res) => {
                 dayjs(new Date()).isAfter(
                   dayjs(userPlan.endMonthDate, "day")
                 ) ||
-                userPlan.tasksPerMonthCount === userPlan.tasksPerMonth
+                userPlan.tasksPerMonthCount >= userPlan.tasksPerMonth
               ) {
                 res
                   .status(500)
@@ -310,8 +299,8 @@ exports.addTask = async (req, res) => {
                 // onBoarding: createCompany._id,
                 published: true,
                 ...(taskCount % 9 === 0 && {
-                  metaLector: project.metaLector
-                })
+                  metaLector: project.metaLector,
+                }),
               };
 
               let createProjectTask = await ProjectTask.create(proectTaskObj);
@@ -647,7 +636,7 @@ exports.importProjectTasks = async (req, res) => {
               user: user._id,
               //   onBoarding: createCompany._id,
               //   tasks: taskCount,
-              metaLector: project.metaLector
+              metaLector: project.metaLector,
             };
 
             let upadteProject = await Projects.findOneAndUpdate(
@@ -801,7 +790,7 @@ exports.importProjectTasks = async (req, res) => {
             desiredNumberOfWords: task.wordCount,
             project: project._id,
             user: user._id,
-            ...(taskCount % 9 === 0 && {metaLector: project.metaLector})
+            ...(taskCount % 9 === 0 && { metaLector: project.metaLector }),
             // onBoarding: createCompany._id,
           };
 
@@ -1092,8 +1081,8 @@ exports.getTaskDetail = async (req, res) => {
       return;
     }
     const joiSchema = Joi.object({
-      taskId: Joi.string().required()
-    })
+      taskId: Joi.string().required(),
+    });
     const { error, value } = joiSchema.validate(req.body);
 
     if (error) {
@@ -1106,10 +1095,11 @@ exports.getTaskDetail = async (req, res) => {
       return;
     }
 
-    const task = await projectTasks.findOne({ _id: req.body.taskId }).populate(["user","project", "texter", "lector", "seo", "metaLector"])
-    
-    res.status(200).send({message: "Success", data: task})
+    const task = await projectTasks
+      .findOne({ _id: req.body.taskId })
+      .populate(["user", "project", "texter", "lector", "seo", "metaLector"]);
 
+    res.status(200).send({ message: "Success", data: task });
   } catch (error) {
     res.status(500).send({ message: error.message || "Something went wrong" });
   }
