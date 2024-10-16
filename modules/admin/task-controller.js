@@ -100,7 +100,7 @@ exports.addTask = async (req, res) => {
               select: "email role",
               populate: { path: "role", select: "title" },
             })
-            .select("id projectName keywords folderId");
+            .select("id projectName keywords folderId projectStatus");
 
           if (getuser && project) {
             if (
