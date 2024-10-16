@@ -23,7 +23,7 @@ const bccEmail = process.env.BCC_EMAIL;
 const awsSource = process.env.AWS_SOURCE;
 const awsNoreplySource = process.env.AWS_NOREPLY_SOURCE;
 
-console.log(awsSource);
+//console.log(awsSource);
 /**
  * Email component
  * @constructor
@@ -63,7 +63,7 @@ Email.errorEmail = async (req, error) => {
     };
     return nodeMailer(mailOptions);
   } catch (error) {
-    console.log(error);
+    //console.log(error);
     throw error;
   }
 };
@@ -76,7 +76,7 @@ Email.emailPassword = async (user) => {
       "templates",
       "awsPasswordUpdateEmail.html"
     );
-    console.log(filePath);
+    //console.log(filePath);
     const data = fs.readFileSync(filePath, "utf8");
     // const data = fs.readFileSync("./templates/passwordEmail.html", "utf8");
 
@@ -100,7 +100,7 @@ Email.emailPassword = async (user) => {
 
     return nodeMailer(mailOptions);
   } catch (error) {
-    console.log(error);
+    //console.log(error);
     throw error;
   }
 };
@@ -145,7 +145,7 @@ Email.cornJob = async (dateOne, dateTwo) => {
       return nodeMailer(mailOptions);
     });
   } catch (error) {
-    console.log(error);
+    //console.log(error);
     throw error;
   }
 };
@@ -168,7 +168,7 @@ Email.addUser = async (user) => {
 
     return nodeMailer(mailOptions);
   } catch (error) {
-    console.log(error);
+    //console.log(error);
     throw error;
   }
 };
@@ -211,7 +211,7 @@ Email.forgotPassword = async (user) => {
       },
     };
    const result = await ses.sendEmail(params).promise();
-   console.log("Email sent successfully", result);
+   //console.log("Email sent successfully", result);
 
     // var mailOptions = {
     //   from: `DripText <noreply@driptext.de>`,
@@ -222,7 +222,7 @@ Email.forgotPassword = async (user) => {
 
     // nodeMailer(mailOptions);
   } catch (error) {
-    console.log(error);
+    //console.log(error);
     throw error;
   }
 };
@@ -265,7 +265,7 @@ Email.forgotPasswordAdmin = async (user) => {
       },
     };
     const result = await ses.sendEmail(params).promise();
-    console.log("Email sent successfully", result);
+    //console.log("Email sent successfully", result);
 
     // var mailOptions = {
     //   from: `DripText <noreply@driptext.de>`,
@@ -276,7 +276,7 @@ Email.forgotPasswordAdmin = async (user) => {
 
     // nodeMailer(mailOptions);
   } catch (error) {
-    console.log(error);
+    //console.log(error);
     throw error;
   }
 };
@@ -291,10 +291,10 @@ Email.AwsEmailPassword = async (user) => {
       "templates",
       "awsPasswordUpdateEmail.html"
     );
-    // console.log(filePath);
+    // //console.log(filePath);
     const data = fs.readFileSync(filePath, "utf8");
     let text = data;
-    // console.log(text);
+    // //console.log(text);
     const forgetPasswordToken = jwt.signToken({
       userId: user.id,
       roleId: user.role,
@@ -321,7 +321,7 @@ Email.AwsEmailPassword = async (user) => {
         },
       },
     };
-    // console.log(params);
+    // //console.log(params);
     await ses.sendEmail(params).promise();
   } catch (error) {
     throw error;
@@ -330,7 +330,7 @@ Email.AwsEmailPassword = async (user) => {
 
 Email.sendBillingInfo = async (to, subject, clientData) => {
   try {
-    console.log("inside billing info");
+    //console.log("inside billing info");
     const filePath = path.join(
       __dirname,
       "..",
@@ -377,7 +377,7 @@ Email.sendBillingInfo = async (to, subject, clientData) => {
     // };
 
     const result = await ses.sendEmail(params).promise();
-    console.log("Email sent successfully", result);
+    //console.log("Email sent successfully", result);
   } catch (error) {
     console.error("Error sending email", error);
   }
@@ -393,10 +393,10 @@ Email.onBoadingSuccess = async (user) => {
       "templates",
       "onBoardingSuccessEmail.html"
     );
-    console.log(filePath);
+    //console.log(filePath);
     const data = fs.readFileSync(filePath, "utf8");
     let text = data;
-    console.log(text);
+    //console.log(text);
     const forgetPasswordToken = jwt.signToken({
       userId: user.id,
       roleId: user.role,
@@ -424,7 +424,7 @@ Email.onBoadingSuccess = async (user) => {
       },
     };
     await ses.sendEmail(params).promise();
-    console.log("on boarding success");
+    //console.log("on boarding success");
   } catch (error) {
     throw error;
   }
@@ -440,10 +440,10 @@ Email.onBoardingRequest = async (user, project) => {
       "templates",
       "requestOnBoarding.html"
     );
-    console.log(filePath);
+    //console.log(filePath);
     const data = fs.readFileSync(filePath, "utf8");
     let text = data;
-    // console.log(text);
+    // //console.log(text);
     // const forgetPasswordToken = jwt.signToken({
     //   userId: user.id,
     //   roleId: user.role,
@@ -453,7 +453,7 @@ Email.onBoardingRequest = async (user, project) => {
     // const link = `https://driptext-app.vercel.app/auth/forgetkey/${forgetPasswordToken}`;
     // text = text.replace("[USER_NAME]", `${user.firstName} ${user.lastName}`);
     // text = text.replace("[BUTTON_LINK_1]", link);
-    console.log("projectName: ", `${project.projectName}`);
+    //console.log("projectName: ", `${project.projectName}`);
     text = text.replace(/{{project\.domain}}/g, `${project.projectName}`);
 
     const params = {
@@ -473,7 +473,7 @@ Email.onBoardingRequest = async (user, project) => {
       },
     };
     await ses.sendEmail(params).promise();
-    console.log("on boarding request sent");
+    //console.log("on boarding request sent");
   } catch (error) {
     throw error;
   }

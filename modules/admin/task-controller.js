@@ -27,7 +27,7 @@ const {
 } = require("../../utils/googleService/actions");
 
 exports.addTask = async (req, res) => {
-  console.log("on boarding api called ... !!");
+  //console.log("on boarding api called ... !!");
   if (!req.role || req.role.toLowerCase() !== "projectmanger") {
     res.status(401).send({ message: "Your are not admin" });
     return;
@@ -165,7 +165,7 @@ exports.addTask = async (req, res) => {
                   project.folderId,
                   fileName
                 );
-                console.log("after creating file");
+                //console.log("after creating file");
                 if (
                   createProjectTask.keywords &&
                   createProjectTask.type &&
@@ -241,7 +241,7 @@ exports.addTask = async (req, res) => {
                 project: projectId,
               }).populate("plan");
 
-              console.log("user plan: ", userPlan);
+              //console.log("user plan: ", userPlan);
 
               if (!userPlan.subscription) {
                 res
@@ -309,7 +309,7 @@ exports.addTask = async (req, res) => {
                 createProjectTask.keywords || "No Keywords"
               }`;
               const fileObj = await createTaskFile(project.folderId, fileName);
-              console.log("after creating file");
+              //console.log("after creating file");
               if (
                 createProjectTask.keywords &&
                 createProjectTask.type &&
@@ -568,17 +568,18 @@ exports.projectTasksExport = async (req, res) => {
 
 exports.importProjectTasks = async (req, res) => {
   try {
+    console.log("inside project import tasks api ....")
     if (!req.role || req.role.toLowerCase() !== "projectmanger") {
       res.status(401).send({ message: "You are not authorized" });
       return;
     }
 
     const editTask = async (user, project, task, orgTask, res) => {
-      //   console.log("task onBoarding: ", task);
+      //   //console.log("task onBoarding: ", task);
       const updatedTask = await projectTasks.findOneAndUpdate(
         { _id: orgTask._id },
         {
-          keywords: task.keywords,
+          // keywords: task.keywords,
           dueDate: task.dueDate,
           topic: task.topic,
           type: task.type,
@@ -658,13 +659,13 @@ exports.importProjectTasks = async (req, res) => {
             );
 
             let createProjectTask = await ProjectTask.create(proectTaskObj);
-            console.log("before creating file");
+            //console.log("before creating file");
             const totalFiles = await getFileCount(project.folderId);
             const fileName = `${project.projectId}-${totalFiles + 1}-${
               createProjectTask.keywords || "No Keywords"
             }`;
             const fileObj = await createTaskFile(project.folderId, fileName);
-            console.log("after creating file");
+            //console.log("after creating file");
             // const updateProjectTask = await ProjectTask.findOneAndUpdate(
             //   { _id: createProjectTask._id },
             //   {
@@ -692,7 +693,7 @@ exports.importProjectTasks = async (req, res) => {
               { new: true }
             );
 
-            console.log("updated project: ", upadteProject);
+            //console.log("updated project: ", upadteProject);
 
             let nameChar = upadteProject.projectName.slice(0, 2).toUpperCase();
             let idChar = createProjectTask._id.toString().slice(-4);
@@ -738,7 +739,7 @@ exports.importProjectTasks = async (req, res) => {
             project: project._id,
           }).populate("plan");
 
-          // console.log("user plan: ", userPlan);
+          // //console.log("user plan: ", userPlan);
 
           if (!userPlan.subscription) {
             // error = "Client don't have subscription";
@@ -811,7 +812,7 @@ exports.importProjectTasks = async (req, res) => {
           };
 
           let createProjectTask = await ProjectTask.create(proectTaskObj);
-          console.log("before creating file");
+          //console.log("before creating file");
           const totalFiles = await getFileCount(project.folderId);
           const fileName = `${project.projectId}-${totalFiles + 1}-${
             createProjectTask.keywords || "No Keywords"
@@ -838,7 +839,7 @@ exports.importProjectTasks = async (req, res) => {
           //   },
           //   { new: true }
           // );
-          console.log("after creating file");
+          //console.log("after creating file");
           let upadteProject = await Projects.findOneAndUpdate(
             { _id: project._id },
             {
@@ -860,7 +861,7 @@ exports.importProjectTasks = async (req, res) => {
             { new: true }
           );
 
-          console.log("updated project: ", upadteProject);
+          //console.log("updated project: ", upadteProject);
 
           let nameChar = upadteProject.projectName.slice(0, 2).toUpperCase();
           let idChar = createProjectTask._id.toString().slice(-4);
@@ -946,7 +947,7 @@ exports.importProjectTasks = async (req, res) => {
     }
 
     const filePath = req.file.path;
-    // console.log("file path: ", filePath);
+    // //console.log("file path: ", filePath);
     const tasks = [];
     let checkCSVError = "";
 
@@ -955,7 +956,7 @@ exports.importProjectTasks = async (req, res) => {
       .pipe(csvParser())
       .on("data", (row) => {
         // Assuming the CSV has 'name', 'description', and 'status' columns
-        // console.log("row: ", row);
+        // //console.log("row: ", row);
 
         if (
           !row["Keywords"] ||
@@ -996,7 +997,7 @@ exports.importProjectTasks = async (req, res) => {
             res.status(500).send({ message: "Could not get project tasks" });
             return;
           }
-          //   console.log("all tasks length: ", allTasks.length);
+          //   //console.log("all tasks length: ", allTasks.length);
           let responseSent = false;
           if (allTasks.length > 0) {
             for (const importTask of tasks) {
@@ -1010,7 +1011,7 @@ exports.importProjectTasks = async (req, res) => {
                     item.keywords.toLowerCase().trim() ===
                     importTask.keywords.toLowerCase().trim()
                 );
-                console.log("old task");
+                //console.log("old task");
                 await editTask(user, project, importTask, orgTask, res);
                 if (res.headersSent) {
                   responseSent = true;
@@ -1020,7 +1021,7 @@ exports.importProjectTasks = async (req, res) => {
                   break;
                 }
               } else {
-                console.log("new task...");
+                //console.log("new task...");
                 await importTasks(user, project, importTask, res);
                 if (res.headersSent) {
                   responseSent = true;
@@ -1036,6 +1037,7 @@ exports.importProjectTasks = async (req, res) => {
           if (allTasks.length === 0) {
             console.log("inside 0 length if");
             for (const importTask of tasks) {
+              console.log("loop step ....");
               await importTasks(user, project, importTask, res);
 
               if (res.headersSent) {
@@ -1048,6 +1050,8 @@ exports.importProjectTasks = async (req, res) => {
               }
             }
           }
+
+          console.log("out side loop: ", responseSent);
 
           if (!responseSent) {
             res.status(200).send({
