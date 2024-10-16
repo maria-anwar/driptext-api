@@ -751,11 +751,12 @@ exports.importProjectTasks = async (req, res) => {
 
           if (
             dayjs(new Date()).isAfter(dayjs(userPlan.endMonthDate, "day")) ||
-            userPlan.tasksPerMonthCount >= userPlan.tasksPerMonth
+            userPlan.tasksPerMonthCount === userPlan.tasksPerMonth ||
+            userPlan.tasksPerMonthCount > userPlan.tasksPerMonth
           ) {
             // error = "Client have reached monthly limit";
-             await session.abortTransaction();
-             session.endSession();
+            await session.abortTransaction();
+            session.endSession();
             res
               .status(500)
               .send({ message: "Client have reached monthly limit" });
