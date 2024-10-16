@@ -589,7 +589,7 @@ exports.importProjectTasks = async (req, res) => {
       );
     };
 
-    const importTasks = async (user, project, task, responseSent, res) => {
+    const importTasks = async (user, project, task, res) => {
       const session = await mongoose.startSession();
       session.startTransaction();
       try {
@@ -1036,12 +1036,12 @@ exports.importProjectTasks = async (req, res) => {
           if (allTasks.length === 0) {
             console.log("inside 0 length if");
             for (const importTask of tasks) {
-              await importTasks(user, project, importTask, responseSent, res);
+              await importTasks(user, project, importTask, res);
 
-              // if (res.headersSent) {
-              //   responseSent = true;
-              //   break; // Exit the loop once a response is sent
-              // }
+              if (res.headersSent) {
+                responseSent = true;
+                break; // Exit the loop once a response is sent
+              }
 
               if (responseSent) {
                 break; // Exit outer loop if the response is already sent
