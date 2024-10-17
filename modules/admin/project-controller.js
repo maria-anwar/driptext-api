@@ -160,7 +160,8 @@ exports.editProject = async (req, res) => {
       await Projects.findOneAndUpdate(
         { _id: req.body.projectId },
         {
-          onBoardingInfo: newOnBoarding._id
+          onBoardingInfo: newOnBoarding._id,
+          onBoarding: true
         },
         { new: true }
       );
