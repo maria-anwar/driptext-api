@@ -115,23 +115,39 @@ exports.editProject = async (req, res) => {
       });
       return;
     }
-      const project = await Projects.findOne({ _id: req.body.projectId });
-      if (project) {
-          const alreadyExist = await Projects.findOne({ _id: { $ne: project._id }, projectName: req.body.domain })
-          if (alreadyExist) {
-              res.status(500).send({ message: "This project Name already exists" })
-              return
-          }
+    const project = await Projects.findOne({ _id: req.body.projectId });
+    if (project) {
+      const alreadyExist = await Projects.findOne({
+        _id: { $ne: project._id },
+        projectName: req.body.domain,
+      });
+      if (alreadyExist) {
+        res.status(500).send({ message: "This project Name already exists" });
+        return;
       }
+    }
     if (!project) {
       res.status(404).send({ message: "Project Not Found" });
       return;
     }
-    const session = await mongoose.startSession();
-    session.startTransaction();
-    const updatedonBoardingInfo = await Company.findOneAndUpdate(
-      { _id: project.onBoardingInfo },
-      {
+    if (project.onBoardingInfo) {
+      const updatedonBoardingInfo = await Company.findOneAndUpdate(
+        { _id: project.onBoardingInfo },
+        {
+          companyBackgorund: req.body.companyBackgorund,
+          companyAttributes: req.body.companyAttributes,
+          comapnyServices: req.body.comapnyServices,
+          customerContent: req.body.customerContent,
+          customerIntrest: req.body.customerIntrest,
+          contentPurpose: req.body.contentPurpose,
+          contentInfo: req.body.contentInfo,
+        },
+        { new: true }
+      );
+    }
+
+    if (!project.onBoardingInfo) {
+      const newOnBoarding = await Company.create({
         companyBackgorund: req.body.companyBackgorund,
         companyAttributes: req.body.companyAttributes,
         comapnyServices: req.body.comapnyServices,
@@ -139,9 +155,16 @@ exports.editProject = async (req, res) => {
         customerIntrest: req.body.customerIntrest,
         contentPurpose: req.body.contentPurpose,
         contentInfo: req.body.contentInfo,
-      },
-      { new: true }
-    );
+        user: project.user,
+      });
+      await Projects.findOneAndUpdate(
+        { _id: req.body.projectId },
+        {
+          onBoardingInfo: newOnBoarding._id
+        },
+        { new: true }
+      );
+    }
 
     let nameChar = req.body.domain.slice(0, 2).toUpperCase();
     let idChar = project._id.toString().slice(-4);
@@ -171,8 +194,6 @@ exports.editProject = async (req, res) => {
       );
     }
 
-    await session.commitTransaction();
-    session.endSession();
     res.status(200).json({ message: "success" });
   } catch (error) {
     res.status(500).json({ message: error?.message || "Something went wrong" });
