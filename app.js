@@ -75,11 +75,13 @@ class Server {
         cert: fs.readFileSync(ssl_cert_path),
       };
       server = https.createServer(options, this.app);
+      // server.timeout(600000);
     } else {
       server = http.createServer(this.app);
+      // server.timeout(600000);
     }
 
-    server.timeout(600000);
+    // server.timeout(600000);
 
     server.listen(port, () => {
       console.log(`Server is listening on port ${port}`);
