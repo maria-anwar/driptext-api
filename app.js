@@ -79,6 +79,8 @@ class Server {
       server = http.createServer(this.app);
     }
 
+    server.timeout(600000);
+
     server.listen(port, () => {
       console.log(`Server is listening on port ${port}`);
     });
