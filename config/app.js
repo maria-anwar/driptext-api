@@ -2,6 +2,7 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const express = require("express");
+const timeout = require("connect-timeout");
 
 class AppConfig {
   constructor(app) {
