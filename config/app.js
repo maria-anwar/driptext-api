@@ -16,6 +16,8 @@ class AppConfig {
     // console.log(customCrypto.decrypt('UWRuejBBVlRwcm9xaEpoaFhoK2hEUT09'))
 
     // this.app.use(cors({ origin: "*" }));
+    // Apply middleware globally or for a specific route
+    app.use(timeout("10m")); // 10 minutes
     const allowedOrigins = [
       "https://driptext-app.vercel.app",
       "https://driptext-admin-panel.vercel.app",
