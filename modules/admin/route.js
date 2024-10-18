@@ -11,7 +11,7 @@ const taskController = require("./task-controller");
 const jwt = require("../../utils/jwt");
 const multer = require("multer");
 const csvUpload = multer({ dest: "csvuploads/" });
-const timeout = require("connect-timeout");
+// const timeout = require("connect-timeout");
 
 router.post("/createProjectManager", (req, res) => {
   adminController.createProjectManager(req, res);
@@ -97,7 +97,6 @@ router.post(
   "/importTasks",
   jwt.protect,
   csvUpload.single("file"),
-  timeout("10m"),
   (req, res) => {
     taskController.importProjectTasks(req, res);
   }
