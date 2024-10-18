@@ -2,7 +2,7 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const express = require("express");
-const timeout = require("connect-timeout");
+// const timeout = require("connect-timeout");
 
 class AppConfig {
   constructor(app) {
@@ -18,7 +18,7 @@ class AppConfig {
 
     // this.app.use(cors({ origin: "*" }));
     // Apply middleware globally or for a specific route
-    app.use(timeout("10m")); // 10 minutes
+    // app.use(timeout("10m"));
     const allowedOrigins = [
       "https://driptext-app.vercel.app",
       "https://driptext-admin-panel.vercel.app",
