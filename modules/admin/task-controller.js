@@ -567,124 +567,123 @@ exports.projectTasksExport = async (req, res) => {
 };
 
 exports.importProjectTasks = async (req, res) => {
-  res.setTimeout(600000, async () => {
-    try {
-      console.log("inside project import tasks api ....");
+  // res.setTimeout(600000, async () => {
+  try {
+    console.log("inside project import tasks api ....");
 
-      // Check if user is project manager
-      if (!req.role || req.role.toLowerCase() !== "projectmanager") {
-        return res.status(401).send({ message: "You are not authorized" });
-      }
-
-      // Validate request body
-      const joiSchema = Joi.object({
-        projectId: Joi.string().required(),
-      });
-      const { error, value } = joiSchema.validate(req.body);
-      if (error) {
-        const message = error.details[0].message.replace(/"/g, "");
-        return res.status(400).send({ message });
-      }
-
-      // Check if a file was uploaded
-      if (!req.file) {
-        return res.status(400).send({ message: "No file uploaded" });
-      }
-
-      // Find project
-      const project = await Projects.findOne({ _id: req.body.projectId });
-      if (!project) {
-        return res.status(404).send({ message: "Project not found" });
-      }
-
-      // Find user associated with project
-      const user = await Users.findOne({ _id: project.user }).populate({
-        path: "role",
-        select: "title",
-      });
-      if (!user) {
-        return res.status(500).send({ message: "User does not exist" });
-      }
-
-      const filePath = req.file.path;
-
-      // Helper function to handle task creation
-      const createOrUpdateTask = async (task, project, user, isFreeTrial) => {
-        const session = await mongoose.startSession();
-        session.startTransaction();
-        try {
-          const taskCount = await ProjectTask.countDocuments({
-            project: project._id,
-          });
-
-          // Free Trial Restriction
-          if (isFreeTrial && taskCount > 0) {
-            await session.abortTransaction();
-            return { status: 403, message: "As free trial gives only 1 task" };
-          }
-
-          let taskObj = {
-            keywords: task.keywords,
-            dueDate: task.dueDate,
-            topic: task.topic,
-            type: task.type,
-            status: "Ready To Work",
-            published: true,
-            desiredNumberOfWords: task.wordCount,
-            project: project._id,
-            user: user._id,
-          };
-
-          // Create Project Task
-          const createdTask = await ProjectTask.create(taskObj);
-
-          // Update Project Information
-          await Projects.findByIdAndUpdate(
-            project._id,
-            {
-              $push: { projectTasks: createdTask._id },
-              $inc: { openTasks: 1 },
-            },
-            { new: true }
-          );
-
-          // Commit transaction
-          await session.commitTransaction();
-          session.endSession();
-
-          return { status: 200, data: createdTask };
-        } catch (error) {
-          await session.abortTransaction();
-          session.endSession();
-          return { status: 500, message: error.message };
-        }
-      };
-
-      // Logic for free trial or client
-      if (
-        user.role.title.toLowerCase() === "leads" ||
-        project.projectStatus.toLowerCase() === "free trial"
-      ) {
-        const result = await createOrUpdateTask(task, project, user, true);
-        return res
-          .status(result.status)
-          .send({ message: result.message, data: result.data });
-      } else if (user.role.title.toLowerCase() === "client") {
-        // Handle client subscription logic here
-        const result = await createOrUpdateTask(task, project, user, false);
-        return res
-          .status(result.status)
-          .send({ message: result.message, data: result.data });
-      } else {
-        return res.status(403).send({ message: "Project not found!" });
-      }
-    } catch (error) {
-      console.error(error);
-      return res.status(500).send({ message: "Something went wrong" });
+    // Check if user is project manager
+    if (!req.role || req.role.toLowerCase() !== "projectmanager") {
+      return res.status(401).send({ message: "You are not authorized" });
     }
-  });
-};
 
+    // Validate request body
+    const joiSchema = Joi.object({
+      projectId: Joi.string().required(),
+    });
+    const { error, value } = joiSchema.validate(req.body);
+    if (error) {
+      const message = error.details[0].message.replace(/"/g, "");
+      return res.status(400).send({ message });
+    }
+
+    // Check if a file was uploaded
+    if (!req.file) {
+      return res.status(400).send({ message: "No file uploaded" });
+    }
+
+    // Find project
+    const project = await Projects.findOne({ _id: req.body.projectId });
+    if (!project) {
+      return res.status(404).send({ message: "Project not found" });
+    }
+
+    // Find user associated with project
+    const user = await Users.findOne({ _id: project.user }).populate({
+      path: "role",
+      select: "title",
+    });
+    if (!user) {
+      return res.status(500).send({ message: "User does not exist" });
+    }
+
+    const filePath = req.file.path;
+
+    // Helper function to handle task creation
+    const createOrUpdateTask = async (task, project, user, isFreeTrial) => {
+      const session = await mongoose.startSession();
+      session.startTransaction();
+      try {
+        const taskCount = await ProjectTask.countDocuments({
+          project: project._id,
+        });
+
+        // Free Trial Restriction
+        if (isFreeTrial && taskCount > 0) {
+          await session.abortTransaction();
+          return { status: 403, message: "As free trial gives only 1 task" };
+        }
+
+        let taskObj = {
+          keywords: task.keywords,
+          dueDate: task.dueDate,
+          topic: task.topic,
+          type: task.type,
+          status: "Ready To Work",
+          published: true,
+          desiredNumberOfWords: task.wordCount,
+          project: project._id,
+          user: user._id,
+        };
+
+        // Create Project Task
+        const createdTask = await ProjectTask.create(taskObj);
+
+        // Update Project Information
+        await Projects.findByIdAndUpdate(
+          project._id,
+          {
+            $push: { projectTasks: createdTask._id },
+            $inc: { openTasks: 1 },
+          },
+          { new: true }
+        );
+
+        // Commit transaction
+        await session.commitTransaction();
+        session.endSession();
+
+        return { status: 200, data: createdTask };
+      } catch (error) {
+        await session.abortTransaction();
+        session.endSession();
+        return { status: 500, message: error.message };
+      }
+    };
+
+    // Logic for free trial or client
+    if (
+      user.role.title.toLowerCase() === "leads" ||
+      project.projectStatus.toLowerCase() === "free trial"
+    ) {
+      const result = await createOrUpdateTask(task, project, user, true);
+      return res
+        .status(result.status)
+        .send({ message: result.message, data: result.data });
+    } else if (user.role.title.toLowerCase() === "client") {
+      // Handle client subscription logic here
+      const result = await createOrUpdateTask(task, project, user, false);
+      return res
+        .status(result.status)
+        .send({ message: result.message, data: result.data });
+    } else {
+      return res.status(403).send({ message: "Project not found!" });
+    }
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send({ message: "Something went wrong" });
+  }
+  // });
+};
 
 exports.getAllTasks = async (req, res) => {
   try {
