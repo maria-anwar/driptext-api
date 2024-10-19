@@ -567,7 +567,8 @@ exports.projectTasksExport = async (req, res) => {
 };
 
 exports.importProjectTasks = async (req, res) => {
-  try {
+  res.setTimeout(600000, async () => {
+ try {
     console.log("inside project import tasks api ....");
     if (!req.role || req.role.toLowerCase() !== "projectmanger") {
       res.status(401).send({ message: "You are not authorized" });
@@ -1071,6 +1072,8 @@ exports.importProjectTasks = async (req, res) => {
   } catch (error) {
     res.status(500).send({ message: error.message || "Something went wrong" });
   }
+  })
+ 
 };
 
 exports.getAllTasks = async (req, res) => {
