@@ -4,7 +4,7 @@ const db = require("../../models");
 const mongoose = require("mongoose");
 const jwt = require("../../utils/jwt");
 const { drive, docs } = require("../../utils/googleService/googleService")
-const {getWordCount} = require("../../utils/googleService/actions")
+const {getWordCount, createInvoiceInGoogleSheets} = require("../../utils/googleService/actions")
 
 
 
@@ -13,11 +13,43 @@ const Users = db.User;
 const Roles = db.Role;
 const Billings = db.Billing.Billings;
 exports.test = async (req, res) => {
-    try {
-      const wordCount = await getWordCount(
-        "1_dG8YOIq1jKHe1al-ySNDjvnkfrPHSEHDXbsV0UiOOY"
-      );
-      res.status(200).send({message: "Success", wordCount})
+  try {
+    const invoiceData = {
+      creditNo: "2024-10-001",
+      date: "2024-10-22",
+      performancePeriod: "2024-09-01 to 2024-09-30",
+      clientName: "John Doe Ltd.",
+      items: [
+        {
+          pos: 1,
+          description: "AI-generated content for September 2024",
+          amount: 10,
+          price: 100,
+          total: 1000,
+        },
+        {
+          pos: 2,
+          description: "Editing services for AI content",
+          amount: 5,
+          price: 150,
+          total: 750,
+        },
+        {
+          pos: 3,
+          description: "Consultation on AI-driven content strategy",
+          amount: 2,
+          price: 200,
+          total: 400,
+        },
+      ],
+      subtotal: 2150, // Sum of all the item totals
+      vat: 0, // VAT percentage
+      total: 2150, // Subtotal + VAT
+    };
+    const data = await createInvoiceInGoogleSheets(invoiceData);
+    
+    res.status(200).send({message: "Success", data: data})
+     
         
     } catch (error) {
         res.status(500).json({error: error.message ||"Something went wrong"})

@@ -1,5 +1,6 @@
 const dayjs = require("dayjs");
-const { drive, docs, sheets } = require("./googleService");
+const { drive, docs, sheets, auth } = require("./googleService");
+const { google } = require("googleapis");
 
 exports.createFolder = async (folderName) => {
   const fileMetadata = {
@@ -56,6 +57,176 @@ exports.createTaskFile = async (folderId, taskName) => {
 
   // Save fileId and fileLink in MongoDB associated with the task
   return { fileId, fileLink };
+};
+
+exports.createInvoiceInGoogleSheets = async (invoiceData) => {
+  const sheetsClient = google.sheets({ version: "v4", auth });
+
+  // 1. Create a new spreadsheet for the invoice
+  const createSheetResponse = await sheetsClient.spreadsheets.create({
+    resource: {
+      properties: {
+        title: `Invoice ${invoiceData.creditNo}`, // Set the spreadsheet title
+      },
+    },
+  });
+
+  // Get the new spreadsheet ID
+  const spreadsheetId = createSheetResponse.data.spreadsheetId;
+
+  // Define the values to insert into the spreadsheet (based on the template layout)
+  const values = [
+    [
+      "DripText Ltd. – Poseidonos Ave 47, Limnaria Westblock A2, Office 25",
+      "",
+      "",
+      "",
+      "Credit No.:",
+      "",
+      invoiceData.creditNo,
+    ],
+    ["", "", "", "", "Date:", "", invoiceData.date],
+    ["", "", "", "", "Performance Period:", "", invoiceData.performancePeriod],
+    ["Julia Schmitt Ltd", "", "", "", "", "", ""],
+    ["Eptakomis 1", "", "", "", "", "", ""],
+    ["7100 Aradippou, Cyprus", "", "", "", "", "", ""],
+    ["VAT: CY10430062", "", "", "", "", "", ""],
+    ["", "", "", "", "", "", ""],
+    ["", "", "", "", "", "", ""],
+    ["Pos.", "Description", "", "Amount", "Price", "Total"],
+    ...invoiceData.items.map((item, index) => [
+      index + 1,
+      item.description,
+      "",
+      item.amount,
+      item.price,
+      item.total,
+    ]),
+    ["", "", "", "Subtotal", "", invoiceData.subtotal],
+    ["", "", "", "VAT", "", invoiceData.vat],
+    ["", "", "", "Total", "", invoiceData.total],
+    ["", "", "", "No VAT as the service is not taxed in the domestic market."],
+    ["", "", "", "", "", "", ""],
+    ["", "", "", "", "", "", ""],
+    ["", "", "", "", "", "", ""],
+    ["Bank account:", "", "", "", "", "", ""],
+    ["DripText Ltd.", "", "", "", "", "", ""],
+    ["IBAN: LT53 3250 0668 1851 9925", "", "", "", "", "", ""],
+    ["BIC: REVOLT21", "", "", "", "", "", ""],
+  ];
+
+  // 2. Update the values in the new spreadsheet
+  const updateValuesRequest = {
+    spreadsheetId: spreadsheetId,
+    range: "Sheet1!A1",
+    valueInputOption: "RAW",
+    resource: { values },
+  };
+  await sheetsClient.spreadsheets.values.update(updateValuesRequest);
+
+  // 3. Apply formatting to the new spreadsheet (same as the template)
+  const formatRequest = {
+    spreadsheetId: spreadsheetId,
+    resource: {
+      requests: [
+        {
+          repeatCell: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 9, // Row where the "Pos." header starts
+              endRowIndex: 10, // Next row after "Pos."
+            },
+            cell: {
+              userEnteredFormat: {
+                textFormat: { bold: true },
+                backgroundColor: {
+                  red: 0.8,
+                  green: 0.8,
+                  blue: 0.8,
+                },
+              },
+            },
+            fields:
+              "userEnteredFormat.textFormat.bold,userEnteredFormat.backgroundColor",
+          },
+        },
+        {
+          updateBorders: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 10, // First row of the items
+              endRowIndex: 10 + invoiceData.items.length, // Last row of the items
+              startColumnIndex: 0,
+              endColumnIndex: 6,
+            },
+            top: { style: "SOLID" },
+            bottom: { style: "SOLID" },
+            left: { style: "SOLID" },
+            right: { style: "SOLID" },
+          },
+        },
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 0,
+              endRowIndex: 1,
+              startColumnIndex: 0,
+              endColumnIndex: 4,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        {
+          updateDimensionProperties: {
+            range: {
+              sheetId: 0,
+              dimension: "COLUMNS",
+              startIndex: 0,
+              endIndex: 6,
+            },
+            properties: {
+              pixelSize: 150,
+            },
+            fields: "pixelSize",
+          },
+        },
+        {
+          repeatCell: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 10 + invoiceData.items.length,
+              endRowIndex: 10 + invoiceData.items.length + 3, // Subtotal, VAT, Total rows
+              startColumnIndex: 5,
+              endColumnIndex: 6,
+            },
+            cell: {
+              userEnteredFormat: {
+                horizontalAlignment: "RIGHT",
+              },
+            },
+            fields: "userEnteredFormat.horizontalAlignment",
+          },
+        },
+      ],
+    },
+  };
+
+  await sheetsClient.spreadsheets.batchUpdate(formatRequest);
+
+  // 4. Optionally set permissions to view-only
+  const driveClient = google.drive({ version: "v3", auth });
+  await driveClient.permissions.create({
+    fileId: spreadsheetId,
+    resource: {
+      role: "reader", // Set to 'reader' for view-only access
+      type: "anyone", // Allow anyone with the link to view
+    },
+  });
+
+  // 5. Return the view-only URL for the new spreadsheet
+  const sheetUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/view`;
+  return sheetUrl;
 };
 
 exports.getFileCount = async (folderId) => {
@@ -219,4 +390,4 @@ exports.getWordCount = async (docId) => {
     // console.error("Error fetching document:", error);
     throw error;
   }
-}
+};

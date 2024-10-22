@@ -37,4 +37,4 @@ const docs = google.docs({ version: "v1", auth });
 const sheets = google.sheets({ version: "v4", auth }); 
 
 // Export drive and docs so that they can be used in other files
-module.exports = { drive, docs, sheets };
+module.exports = { drive, docs, sheets, auth };

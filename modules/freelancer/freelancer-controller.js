@@ -12,7 +12,7 @@ const Roles = db.Role;
 const ProjectTask = db.ProjectTask;
 const Projects = db.Project;
 const freelancerPrices = db.FreelancerPrice;
-const freelancerEarnings = db.freelancerEarning;
+const freelancerEarnings = db.FreelancerEarning;
 
 exports.create = async (req, res) => {
   try {
