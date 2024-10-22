@@ -21,6 +21,10 @@ router.post("/taskStart", jwt.protect, (req, res) => {
   freelancerController.taskStart(req, res);
 });
 
+router.post("/getEarnings", jwt.protect, (req, res) => {
+  freelancerController.getEarnings(req, res);
+});
+
 router.post("/taskFinish", jwt.protect, (req, res) => {
   freelancerController.finishTask(req, res);
 });

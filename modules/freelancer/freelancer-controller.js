@@ -12,6 +12,7 @@ const Roles = db.Role;
 const ProjectTask = db.ProjectTask;
 const Projects = db.Project;
 const freelancerPrices = db.FreelancerPrice;
+const freelancerEarnings = db.freelancerEarning;
 
 exports.create = async (req, res) => {
   try {
@@ -245,6 +246,175 @@ exports.taskStart = async (req, res) => {
   }
 };
 
+const finalizeTask = async (task) => {
+  try {
+    let texterPrice = 0.017;
+    let lectorPrice = 0.352;
+    let seoOptimizerPrice = 0.32;
+    let metaLectorPrice = 0.352;
+    const prices = await freelancerPrices.find({});
+    texterPrice = prices && prices[0]?.texter ? prices[0]?.texter : texterPrice;
+    lectorPrice = prices && prices[0]?.lector ? prices[0]?.lector : lectorPrice;
+    seoOptimizerPrice =
+      prices && prices[0]?.seoOptimizer
+        ? prices[0]?.seoOptimizer
+        : seoOptimizerPrice;
+    metaLectorPrice =
+      prices && prices[0]?.metaLector ? prices[0]?.metaLector : metaLectorPrice;
+
+    // texter
+    if (task.texter) {
+      const desiredWords = task.desiredNumberOfWords;
+      const actualWords = task.actualNumberOfWords;
+
+      // Calculate 10% of the desired words
+      const tenPercentOfDesiredWords = desiredWords * 0.1;
+
+      let calculatedWords = 0;
+
+      // Check if actualWords are more than 10% greater than desiredWords
+      if (actualWords > desiredWords + tenPercentOfDesiredWords) {
+        calculatedWords = desiredWords * 1.1;
+      } else {
+        calculatedWords = actualWords;
+      }
+
+      const difference = task.desiredNumberOfWords - calculatedWords;
+      const price = calculatedWords * texterPrice;
+
+      await freelancerEarnings.findOneAndUpdate(
+        {
+          freelancer: task.texter,
+          project: task.projct,
+          task: task._id,
+          role: "Texter",
+        },
+        {
+          billedWords: calculatedWords,
+          difference: difference,
+          price: price,
+          finalize: true,
+        },
+        { new: true }
+      );
+    }
+
+    // lector
+    if (task.lector) {
+      const desiredWords = task.desiredNumberOfWords;
+      const actualWords = task.actualNumberOfWords;
+
+      // Calculate 10% of the desired words
+      const tenPercentOfDesiredWords = desiredWords * 0.1;
+
+      let calculatedWords = 0;
+
+      // Check if actualWords are more than 10% greater than desiredWords
+      if (actualWords > desiredWords + tenPercentOfDesiredWords) {
+        calculatedWords = desiredWords * 1.1;
+      } else {
+        calculatedWords = actualWords;
+      }
+
+      const difference = task.desiredNumberOfWords - calculatedWords;
+      const price = calculatedWords * lectorPrice;
+
+      await freelancerEarnings.findOneAndUpdate(
+        {
+          freelancer: task.lector,
+          project: task.projct,
+          task: task._id,
+          role: "Lector",
+        },
+        {
+          billedWords: calculatedWords,
+          difference: difference,
+          price: price,
+          finalize: true,
+        },
+        { new: true }
+      );
+    }
+
+    //SEO-Optimizer
+    if (task.seo) {
+      const desiredWords = task.desiredNumberOfWords;
+      const actualWords = task.actualNumberOfWords;
+
+      // Calculate 10% of the desired words
+      const tenPercentOfDesiredWords = desiredWords * 0.1;
+
+      let calculatedWords = 0;
+
+      // Check if actualWords are more than 10% greater than desiredWords
+      if (actualWords > desiredWords + tenPercentOfDesiredWords) {
+        calculatedWords = desiredWords * 1.1;
+      } else {
+        calculatedWords = actualWords;
+      }
+
+      const difference = task.desiredNumberOfWords - calculatedWords;
+      const price = calculatedWords * seoOptimizerPrice;
+
+      await freelancerEarnings.findOneAndUpdate(
+        {
+          freelancer: task.seo,
+          project: task.projct,
+          task: task._id,
+          role: "SEO Optimizer",
+        },
+        {
+          billedWords: calculatedWords,
+          difference: difference,
+          price: price,
+          finalize: true,
+        },
+        { new: true }
+      );
+    }
+
+    // Meta Lector
+    //SEO-Optimizer
+    if (task.metaLector) {
+      const desiredWords = task.desiredNumberOfWords;
+      const actualWords = task.actualNumberOfWords;
+
+      // Calculate 10% of the desired words
+      const tenPercentOfDesiredWords = desiredWords * 0.1;
+
+      let calculatedWords = 0;
+
+      // Check if actualWords are more than 10% greater than desiredWords
+      if (actualWords > desiredWords + tenPercentOfDesiredWords) {
+        calculatedWords = desiredWords * 1.1;
+      } else {
+        calculatedWords = actualWords;
+      }
+
+      const difference = task.desiredNumberOfWords - calculatedWords;
+      const price = calculatedWords * metaLectorPrice;
+
+      await freelancerEarnings.findOneAndUpdate(
+        {
+          freelancer: task.metaLector,
+          project: task.projct,
+          task: task._id,
+          role: "Meta Lector",
+        },
+        {
+          billedWords: calculatedWords,
+          difference: difference,
+          price: price,
+          finalize: true,
+        },
+        { new: true }
+      );
+    }
+  } catch (error) {
+    res.status(500).send({ message: "Could not finalize task" });
+  }
+};
+
 exports.finishTask = async (req, res) => {
   try {
     if (!req.role || req.role.toLowerCase() !== "freelancer") {
@@ -275,6 +445,33 @@ exports.finishTask = async (req, res) => {
       task.status.toLowerCase() === "in progress" ||
       task.status.toLowerCase() === "in rivision"
     ) {
+      const earning = await freelancerEarnings.findOne({
+        freelancer: task.texter,
+        project: task.project,
+        task: req.body.taskId,
+        role: "Texter",
+      });
+      if (earning) {
+        await freelancerEarnings.findOneAndUpdate(
+          { _id: earning._id },
+          {
+            finalize: false,
+            billedWords: null,
+            date: task.dueDate,
+            difference: null,
+            price: null,
+          },
+          { new: true }
+        );
+      } else {
+        const newEarning = await freelancerEarnings.create({
+          freelancer: task.texter,
+          task: req.body.taskId,
+          project: task.project,
+          date: task.dueDate,
+          role: "Texter",
+        });
+      }
       await ProjectTask.findOneAndUpdate(
         { _id: req.body.taskId },
         {
@@ -290,6 +487,33 @@ exports.finishTask = async (req, res) => {
       // }
 
       if (!req.body.feedback) {
+        const earning = await freelancerEarnings.findOne({
+          freelancer: task.lector,
+          project: task.project,
+          task: req.body.taskId,
+          role: "Lector",
+        });
+        if (earning) {
+          await freelancerEarnings.findOneAndUpdate(
+            { _id: earning._id },
+            {
+              finalize: false,
+              billedWords: null,
+              date: task.dueDate,
+              difference: null,
+              price: null,
+            },
+            { new: true }
+          );
+        } else {
+          const newEarning = await freelancerEarnings.create({
+            freelancer: task.lector,
+            task: req.body.taskId,
+            project: task.project,
+            date: task.dueDate,
+            role: "Lector",
+          });
+        }
         await ProjectTask.findOneAndUpdate(
           { _id: req.body.taskId },
           {
@@ -312,6 +536,33 @@ exports.finishTask = async (req, res) => {
     }
     if (task.status.toLowerCase() === "seo optimization in progress") {
       if (task.metaLector) {
+        const earning = await freelancerEarnings.findOne({
+          freelancer: task.seo,
+          project: task.project,
+          task: req.body.taskId,
+          role: "SEO Optimizer",
+        });
+        if (earning) {
+          await freelancerEarnings.findOneAndUpdate(
+            { _id: earning._id },
+            {
+              finalize: false,
+              billedWords: null,
+              date: task.dueDate,
+              difference: null,
+              price: null,
+            },
+            { new: true }
+          );
+        } else {
+          const newEarning = await freelancerEarnings.create({
+            freelancer: task.seo,
+            task: req.body.taskId,
+            project: task.project,
+            date: task.dueDate,
+            role: "SEO Optimizer",
+          });
+        }
         await ProjectTask.findOneAndUpdate(
           { _id: req.body.taskId },
           {
@@ -329,6 +580,8 @@ exports.finishTask = async (req, res) => {
           { new: true }
         );
 
+        await finalizeTask(task)
+
         const updatedProject = await Projects.findOneAndUpdate(
           { _id: task.project },
           {
@@ -339,6 +592,33 @@ exports.finishTask = async (req, res) => {
       }
     }
     if (task.status.toLowerCase() === "2nd proofreading in progress") {
+      const earning = await freelancerEarnings.findOne({
+        freelancer: task.metaLector,
+        project: task.project,
+        task: req.body.taskId,
+        role: "Meta Lector",
+      });
+      if (earning) {
+        await freelancerEarnings.findOneAndUpdate(
+          { _id: earning._id },
+          {
+            finalize: false,
+            billedWords: null,
+            date: task.dueDate,
+            difference: null,
+            price: null,
+          },
+          { new: true }
+        );
+      } else {
+        const newEarning = await freelancerEarnings.create({
+          freelancer: task.metaLector,
+          task: req.body.taskId,
+          project: task.project,
+          date: task.dueDate,
+          role: "Meta Lector",
+        });
+      }
       await ProjectTask.findOneAndUpdate(
         { _id: req.body.taskId },
         {
@@ -346,6 +626,7 @@ exports.finishTask = async (req, res) => {
         },
         { new: true }
       );
+      await finalizeTask(task)
       const updatedProject = await Projects.findOneAndUpdate(
         { _id: task.project },
         {
@@ -527,6 +808,34 @@ exports.updateWordCountTask = async (req, res) => {
     res.status(500).send({ message: error.message || "Something went wrong" });
   }
 };
+
+exports.getEarnings = async (req, res) => {
+  try {
+    if (!req.role || req.role.toLowerCase() !== "freelancer") {
+      res.status(401).send({ message: "Your are not freelancer" });
+      return;
+    }
+    const joiSchema = Joi.object({
+      freelancerId: Joi.string().required(),
+    });
+    const { error, value } = joiSchema.validate(req.body);
+
+    if (error) {
+      // emails.errorEmail(req, error);
+
+      const message = error.details[0].message.replace(/"/g, "");
+      res.status(401).send({
+        message: message,
+      });
+      return;
+    }
+    const earnings = await freelancerEarnings.find({ _id: req.body.freelancerId })
+    
+    res.status(200).send({message: "Success", data: earnings})
+  } catch (error) {
+    res.status(500).send({message: error.message || "Something went wrong"})
+  }
+}
 
 exports.emailCheck = async (req, res) => {
   try {
