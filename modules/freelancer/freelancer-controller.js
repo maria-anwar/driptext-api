@@ -285,7 +285,7 @@ const finalizeTask = async (task) => {
       await freelancerEarnings.findOneAndUpdate(
         {
           freelancer: task.texter,
-          project: task.projct,
+          project: task.project,
           task: task._id,
           role: "Texter",
         },
@@ -322,7 +322,7 @@ const finalizeTask = async (task) => {
       await freelancerEarnings.findOneAndUpdate(
         {
           freelancer: task.lector,
-          project: task.projct,
+          project: task.project,
           task: task._id,
           role: "Lector",
         },
@@ -359,7 +359,7 @@ const finalizeTask = async (task) => {
       await freelancerEarnings.findOneAndUpdate(
         {
           freelancer: task.seo,
-          project: task.projct,
+          project: task.project,
           task: task._id,
           role: "SEO Optimizer",
         },
@@ -397,7 +397,7 @@ const finalizeTask = async (task) => {
       await freelancerEarnings.findOneAndUpdate(
         {
           freelancer: task.metaLector,
-          project: task.projct,
+          project: task.project,
           task: task._id,
           role: "Meta Lector",
         },
