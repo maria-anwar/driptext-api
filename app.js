@@ -76,11 +76,11 @@ class Server {
       };
       server = https.createServer(options, this.app);
       // server.timeout(600000);
-      server.timeout = 600000;
+      // server.timeout = 600000;
     } else {
       server = http.createServer(this.app);
       // server.timeout(600000);
-      server.timeout = 600000;
+      // server.timeout = 600000;
     }
 
     // server.timeout = 600000;
