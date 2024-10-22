@@ -76,15 +76,20 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
 
   // Define the values to insert into the spreadsheet (based on the template layout)
   const values = [
+    ["", "", "", "", "", "", ""],
+    ["", "", "", "", "", "", ""],
     [
       "DripText Ltd. – Poseidonos Ave 47, Limnaria Westblock A2, Office 25",
       "",
       "",
       "",
-      "Credit No.:",
       "",
-      invoiceData.creditNo,
+      "",
+      "",
     ],
+    ["", "", "", "", "", "", ""],
+    ["", "", "", "", "", "", ""],
+    ["", "", "", "", "Credit No:", "", "Credit ..."],
     ["", "", "", "", "Date:", "", invoiceData.date],
     ["", "", "", "", "Performance Period:", "", invoiceData.performancePeriod],
     ["Julia Schmitt Ltd", "", "", "", "", "", ""],
@@ -133,8 +138,8 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
           repeatCell: {
             range: {
               sheetId: 0,
-              startRowIndex: 9, // Row where the "Pos." header starts
-              endRowIndex: 10, // Next row after "Pos."
+              startRowIndex: 13, // Row where the "Pos." header starts
+              endRowIndex: 14, // Next row after "Pos."
             },
             cell: {
               userEnteredFormat: {
@@ -172,7 +177,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
               startRowIndex: 0,
               endRowIndex: 1,
               startColumnIndex: 0,
-              endColumnIndex: 7,
+              endColumnIndex: 4,
             },
             mergeType: "MERGE_ALL",
           },
