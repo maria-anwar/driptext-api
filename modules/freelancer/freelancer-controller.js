@@ -829,7 +829,7 @@ exports.getEarnings = async (req, res) => {
       });
       return;
     }
-    const earnings = await freelancerEarnings.find({ freelancer: req.body.freelancerId })
+    const earnings = await freelancerEarnings.find({ freelancer: req.body.freelancerId }).populate(["project","task"])
     
     res.status(200).send({message: "Success", data: earnings})
   } catch (error) {

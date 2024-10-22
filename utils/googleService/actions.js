@@ -138,8 +138,8 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
           repeatCell: {
             range: {
               sheetId: 0,
-              startRowIndex: 13, // Row where the "Pos." header starts
-              endRowIndex: 14, // Next row after "Pos."
+              startRowIndex: 14, // Row where the "Pos." header starts
+              endRowIndex: 15, // Next row after "Pos."
             },
             cell: {
               userEnteredFormat: {
@@ -170,32 +170,104 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
             // right: { style: "SOLID" },
           },
         },
-        {
-          mergeCells: {
-            range: {
-              sheetId: 0,
-              startRowIndex: 0,
-              endRowIndex: 1,
-              startColumnIndex: 0,
-              endColumnIndex: 4,
-            },
-            mergeType: "MERGE_ALL",
-          },
-        },
-        {
-          updateDimensionProperties: {
-            range: {
-              sheetId: 0,
-              dimension: "COLUMNS",
-              startIndex: 0,
-              endIndex: 6,
-            },
-            properties: {
-              pixelSize: 150,
-            },
-            fields: "pixelSize",
-          },
-        },
+        // {
+        //   mergeCells: {
+        //     range: {
+        //       sheetId: 0,
+        //       startRowIndex: 2,
+        //       endRowIndex: 3,
+        //       startColumnIndex: 0,
+        //       endColumnIndex: 4,
+        //     },
+        //     mergeType: "MERGE_ALL",
+        //   },
+        // },
+        // {
+        //   mergeCells: {
+        //     range: {
+        //       sheetId: 0,
+        //       startRowIndex: 8,
+        //       endRowIndex: 9,
+        //       startColumnIndex: 0,
+        //       endColumnIndex: 2,
+        //     },
+        //     mergeType: "MERGE_ALL",
+        //   },
+        // },
+        // {
+        //   mergeCells: {
+        //     range: {
+        //       sheetId: 0,
+        //       startRowIndex: 9,
+        //       endRowIndex: 10,
+        //       startColumnIndex: 0,
+        //       endColumnIndex: 2,
+        //     },
+        //     mergeType: "MERGE_ALL",
+        //   },
+        // },
+        // {
+        //   mergeCells: {
+        //     range: {
+        //       sheetId: 0,
+        //       startRowIndex: 10,
+        //       endRowIndex: 11,
+        //       startColumnIndex: 0,
+        //       endColumnIndex: 2,
+        //     },
+        //     mergeType: "MERGE_ALL",
+        //   },
+        // },
+        // {
+        //   mergeCells: {
+        //     range: {
+        //       sheetId: 0,
+        //       startRowIndex: 11,
+        //       endRowIndex: 12,
+        //       startColumnIndex: 0,
+        //       endColumnIndex: 2,
+        //     },
+        //     mergeType: "MERGE_ALL",
+        //   },
+        // },
+        // {
+        //   mergeCells: {
+        //     range: {
+        //       sheetId: 0,
+        //       startRowIndex: 12,
+        //       endRowIndex: 13,
+        //       startColumnIndex: 0,
+        //       endColumnIndex: 2,
+        //     },
+        //     mergeType: "MERGE_ALL",
+        //   },
+        // },
+        // {
+        //   mergeCells: {
+        //     range: {
+        //       sheetId: 0,
+        //       startRowIndex: 7,
+        //       endRowIndex: 8,
+        //       startColumnIndex: 5,
+        //       endColumnIndex: 6,
+        //     },
+        //     mergeType: "MERGE_ALL",
+        //   },
+        // },
+        // {
+        //   updateDimensionProperties: {
+        //     range: {
+        //       sheetId: 0,
+        //       dimension: "COLUMNS",
+        //       startIndex: 0,
+        //       endIndex: 6,
+        //     },
+        //     properties: {
+        //       pixelSize: 150,
+        //     },
+        //     fields: "pixelSize",
+        //   },
+        // },
         {
           repeatCell: {
             range: {
