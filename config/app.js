@@ -15,14 +15,13 @@ class AppConfig {
 
     // You can log the decrypted value if needed
     // console.log(customCrypto.decrypt('UWRuejBBVlRwcm9xaEpoaFhoK2hEUT09'))
-
-    // this.app.use(cors({ origin: "*" }));
-    // Apply middleware globally or for a specific route
     this.app.use(timeout("10m"));
-    const allowedOrigins = [
-      "https://driptext-app.vercel.app",
-      "https://driptext-admin-panel.vercel.app",
-    ];
+    this.app.use(cors({ origin: "*" }));
+    // Apply middleware globally or for a specific route
+    // const allowedOrigins = [
+    //   "https://driptext-app.vercel.app",
+    //   "https://driptext-admin-panel.vercel.app",
+    // ];
     this.app.use(
       cors({
         origin: function (origin, callback) {
