@@ -572,6 +572,33 @@ exports.finishTask = async (req, res) => {
         );
       }
       if (!task.metaLector) {
+         const earning = await freelancerEarnings.findOne({
+           freelancer: task.seo,
+           project: task.project,
+           task: req.body.taskId,
+           role: "SEO Optimizer",
+         });
+         if (earning) {
+           await freelancerEarnings.findOneAndUpdate(
+             { _id: earning._id },
+             {
+               finalize: false,
+               billedWords: null,
+               date: task.dueDate,
+               difference: null,
+               price: null,
+             },
+             { new: true }
+           );
+         } else {
+           const newEarning = await freelancerEarnings.create({
+             freelancer: task.seo,
+             task: req.body.taskId,
+             project: task.project,
+             date: task.dueDate,
+             role: "SEO Optimizer",
+           });
+         }
         const updateTask = await ProjectTask.findOneAndUpdate(
           { _id: req.body.taskId },
           {

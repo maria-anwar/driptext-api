@@ -91,7 +91,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
     ["", "", "", "", "", "", ""],
     ["", "", "", "", "Credit No:", "", "Credit ..."],
     ["", "", "", "", "Date:", "", invoiceData.date],
-    ["", "", "", "", "Performance Period:", "", invoiceData.performancePeriod],
+    ["", "", "", "", "Performance Period:", "", "DD=MM-YYYY"],
     ["Julia Schmitt Ltd", "", "", "", "", "", ""],
     ["Eptakomis 1", "", "", "", "", "", ""],
     ["7100 Aradippou, Cyprus", "", "", "", "", "", ""],
@@ -110,7 +110,15 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
     ["", "", "", "Subtotal", "", invoiceData.subtotal],
     ["", "", "", "VAT", "", invoiceData.vat],
     ["", "", "", "Total", "", invoiceData.total],
-    ["", "", "", "No VAT as the service is not taxed in the domestic market."],
+    [
+      "",
+      "No VAT as the service is not taxed in the domestic market.",
+      "",
+      "",
+      "",
+      "",
+      "",
+    ],
     ["", "", "", "", "", "", ""],
     ["", "", "", "", "", "", ""],
     ["", "", "", "", "", "", ""],
@@ -268,6 +276,35 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
         //     fields: "pixelSize",
         //   },
         // },
+        {
+          updateDimensionProperties: {
+            range: {
+              sheetId: 0, // The sheet ID (usually 0 for the first sheet)
+              dimension: "COLUMNS", // You are adjusting the columns
+              startIndex: 0, // Start from the first column (A = 0)
+              endIndex: 8, // End at column Z (change this based on your number of columns)
+            },
+            properties: {
+              pixelSize: 100, // Set the desired width in pixels (smaller number for smaller columns)
+            },
+            fields: "pixelSize", // Specify that you're updating the pixel size
+          },
+        },
+        // Hide columns H and beyond
+        {
+          updateDimensionProperties: {
+            range: {
+              sheetId: 0, // The sheet ID
+              dimension: "COLUMNS", // Modifying columns
+              startIndex: 8, // Start from column H (index 7)
+              endIndex: 26, // End at column Z (adjust as needed)
+            },
+            properties: {
+              pixelSize: 0, // Set width to 0 to hide columns
+            },
+            fields: "pixelSize", // Adjusting pixel size to hide columns
+          },
+        },
         {
           repeatCell: {
             range: {
