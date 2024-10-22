@@ -54,5 +54,5 @@ module.exports = (mongoose) => {
     }
   );
 
-  return mongoose.model("FreelancerEarnings", freelancersEarningsSchema);
+  return mongoose.model("FreelancerEarning", freelancersEarningsSchema);
 };
