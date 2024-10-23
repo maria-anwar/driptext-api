@@ -206,8 +206,8 @@ exports.wordCountAllTasksInProject = async (req, res) => {
     res.status(401).send({ message: "Your are not admin" });
     return;
   }
-  const session = await mongoose.startSession();
-  session.startTransaction();
+  // const session = await mongoose.startSession();
+  // session.startTransaction();
   try {
     const joiSchema = Joi.object({
       projectId: Joi.string().required(),
@@ -216,8 +216,8 @@ exports.wordCountAllTasksInProject = async (req, res) => {
 
     if (error) {
       // emails.errorEmail(req, error);
-      await session.abortTransaction();
-      session.endSession();
+      // await session.abortTransaction();
+      // session.endSession();
 
       const message = error.details[0].message.replace(/"/g, "");
       res.status(401).send({
@@ -229,8 +229,8 @@ exports.wordCountAllTasksInProject = async (req, res) => {
       _id: req.body.projectId,
     }).populate({ path: "projectTasks", select: "fileId" });
     if (!project) {
-      await session.abortTransaction();
-      session.endSession();
+      // await session.abortTransaction();
+      // session.endSession();
       res.status(404).send({ message: "Project not found" });
     }
 
@@ -245,12 +245,12 @@ exports.wordCountAllTasksInProject = async (req, res) => {
       );
     }
 
-    await session.commitTransaction();
-    session.endSession();
+    // await session.commitTransaction();
+    // session.endSession();
     res.status(200).send({ message: "success" });
   } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
+    // await session.abortTransaction();
+    // session.endSession();
     res.status(500).send({ message: error.message || "Something went wrong" });
   }
 };

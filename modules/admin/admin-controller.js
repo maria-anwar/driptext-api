@@ -17,6 +17,9 @@ const Projects = db.Project;
 const UserPlan = db.UserPlan;
 const ProjectTask = db.ProjectTask;
 const Company = db.Company;
+const freelancerEarnings = db.FreelancerEarning;
+const freelancerPrices = db.FreelancerPrice;
+
 const {
   createFolder,
   createTaskFile,
@@ -81,6 +84,74 @@ exports.createProjectManager = async (req, res) => {
   }
 };
 
+exports.tracking = async (req, res) => {
+  try {
+    if (!req.role || req.role.toLowerCase() !== "projectmanger") {
+      res.status(401).send({ message: "Your are not admin" });
+      return;
+    }
+    const joiSchema = Joi.object({
+      clientId: Joi.string().required(),
+    });
+    const { error, value } = joiSchema.validate(req.body);
+
+    if (error) {
+      // emails.errorEmail(req, error);
+
+      const message = error.details[0].message.replace(/"/g, "");
+      res.status(401).send({
+        message: message,
+      });
+      return;
+    }
+
+    const projects = await Projects.find({
+      user: req.body.clientId,
+      plan: { $ne: null },
+    }).populate({
+      path: "projectTask",
+      match: { status: "Final" },
+    });
+
+    const finalData = projects.map(async (item) => {
+      let texterPrice = 0.017;
+      let lectorPrice = 0.352;
+      let seoOptimizerPrice = 0.32;
+      let metaLectorPrice = 0.352;
+      const prices = await freelancerPrices.find({});
+      texterPrice =
+        prices && prices[0]?.texter ? prices[0]?.texter : texterPrice;
+      lectorPrice =
+        prices && prices[0]?.lector ? prices[0]?.lector : lectorPrice;
+      seoOptimizerPrice =
+        prices && prices[0]?.seoOptimizer
+          ? prices[0]?.seoOptimizer
+          : seoOptimizerPrice;
+      metaLectorPrice =
+        prices && prices[0]?.metaLector
+          ? prices[0]?.metaLector
+          : metaLectorPrice;
+      let revenue = item.tasks.length * 0.764;
+      let cost =
+        texterPrice +
+        lectorPrice +
+        seoOptimizerPrice +
+        (item.metaLector ? metaLectorPrice : 0);
+      let margin = revenue - cost;
+      return {
+        revenue,
+        cost,
+        margin,
+        item,
+      };
+    });
+
+    res.status(200).send({message: "Success", data: finalData})
+  } catch (error) {
+    res.status(500).send({ message: error.message || "Something went wrong" });
+  }
+};
+
 exports.editProjectManager = async (req, res) => {
   try {
     if (!req.role || req.role.toLowerCase() !== "projectmanger") {
@@ -132,11 +203,11 @@ exports.editProjectManager = async (req, res) => {
       { new: true }
     );
 
-    res.status(200).send({ message: "success"});
+    res.status(200).send({ message: "success" });
   } catch (error) {
     res.status(500).send({ message: error.message || "something went wrong" });
   }
-}
+};
 
 exports.getAllUsers = async (req, res) => {
   try {
@@ -274,5 +345,3 @@ exports.updateAdminProfile = async (req, res) => {
     res.status(500).send({ message: error.message || "something went wrong" });
   }
 };
-
-

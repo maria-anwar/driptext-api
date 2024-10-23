@@ -43,6 +43,10 @@ router.post("/updateUserStatus", jwt.protect, (req, res) => {
   adminController.changeUserStatus(req, res);
 });
 
+router.post("/getTracking", jwt.protect, (req, res) => {
+  adminController.tracking(req, res);
+});
+
 router.post("/addTask", jwt.protect, (req, res) => {
   taskController.addTask(req, res);
 });

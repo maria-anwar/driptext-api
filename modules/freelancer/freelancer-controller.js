@@ -781,6 +781,7 @@ exports.updateWordCountAllTasks = async () => {
         { metaLector: req.body.freelancerId },
       ],
     });
+
     for (const task of tasks) {
       let wordCount = await getWordCount(task.fileId);
       await ProjectTask.findOneAndUpdate(
