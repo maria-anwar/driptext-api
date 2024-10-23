@@ -169,13 +169,19 @@ exports.create = async (req, res) => {
                 payment_method: paymentMethod,
               };
               // createBilling = await Billing.create(billingResponse);
+              // startAt = dayjs(
+              //   billResponse.subscription.subscription_items[0]
+              //     .current_term_start * 1000
+              // );
+              // endAt = dayjs(
+              //   billResponse.subscription.subscription_items[0]
+              //     .current_term_end * 1000
+              // );
               startAt = dayjs(
-                billResponse.subscription.subscription_items[0]
-                  .current_term_start * 1000
+                billResponse.subscription.current_term_start * 1000
               );
               endAt = dayjs(
-                billResponse.subscription.subscription_items[0]
-                  .current_term_end * 1000
+                billResponse.subscription.current_term_end * 1000
               );
               subscription = await Subscription.create({
                 startDate: dayjs(startAt).format("YYYY-MM-DD"),
@@ -438,14 +444,20 @@ exports.create = async (req, res) => {
                   payment_method: paymentMethod,
                 };
                 // createBilling = await Billing.create(billingResponse);
-                startAt = dayjs(
-                  billResponse.subscription.subscription_items[0]
-                    .current_term_start * 1000
-                );
-                endAt = dayjs(
-                  billResponse.subscription.subscription_items[0]
-                    .current_term_end * 1000
-                );
+                // startAt = dayjs(
+                //   billResponse.subscription.subscription_items[0]
+                //     .current_term_start * 1000
+                // );
+                // endAt = dayjs(
+                //   billResponse.subscription.subscription_items[0]
+                //     .current_term_end * 1000
+                // );
+                 startAt = dayjs(
+                   billResponse.subscription.current_term_start * 1000
+                 );
+                 endAt = dayjs(
+                   billResponse.subscription.current_term_end * 1000
+                 );
                 subscription = await Subscription.create({
                   startDate: dayjs(startAt).format("YYYY-MM-DD"),
                   endDate: dayjs(endAt).format("YYYY-MM-DD"),
@@ -742,13 +754,19 @@ exports.create = async (req, res) => {
                 customer_email: billResponse.customer.email,
                 payment_method: paymentMethod,
               };
+              // startAt = dayjs(
+              //   billResponse.subscription.subscription_items[0]
+              //     .current_term_start * 1000
+              // );
+              // endAt = dayjs(
+              //   billResponse.subscription.subscription_items[0]
+              //     .current_term_end * 1000
+              // );
               startAt = dayjs(
-                billResponse.subscription.subscription_items[0]
-                  .current_term_start * 1000
+                billResponse.subscription.current_term_start * 1000
               );
               endAt = dayjs(
-                billResponse.subscription.subscription_items[0]
-                  .current_term_end * 1000
+                billResponse.subscription.current_term_end * 1000
               );
               subscription = await Subscription.create({
                 startDate: dayjs(startAt).format("YYYY-MM-DD"),
