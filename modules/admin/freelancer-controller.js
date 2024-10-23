@@ -166,7 +166,7 @@ exports.assignFreelancersByProject = async (req, res) => {
         project?.projectTasks && project.projectTasks.length > 0
           ? project.projectTasks
           : null;
-      if (projectTasks && !updatedProject.plan) {
+      if (projectTasks && projectTasks.length === 1 && !updatedProject.plan) {
         for (const task of projectTasks) {
           await ProjectTask.findOneAndUpdate(
             { _id: task._id },
@@ -174,17 +174,18 @@ exports.assignFreelancersByProject = async (req, res) => {
             { new: true }
           );
         }
-      }
-      if (projectTasks && projectTasks.length > 1) {
-        let count = 0;
-        for (const task of projectTasks) {
-          count++;
-          if (count % 10 === 0) {
-            await ProjectTask.findOneAndUpdate(
-              { _id: task._id },
-              { metaLector: req.body.freelancerId },
-              { new: true }
-            );
+      } else {
+        if (projectTasks && projectTasks.length > 1) {
+          let count = 0;
+          for (const task of projectTasks) {
+            count++;
+            if (count % 10 === 0) {
+              await ProjectTask.findOneAndUpdate(
+                { _id: task._id },
+                { metaLector: req.body.freelancerId },
+                { new: true }
+              );
+            }
           }
         }
       }
