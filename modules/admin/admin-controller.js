@@ -152,6 +152,22 @@ exports.tracking = async (req, res) => {
   }
 };
 
+exports.getAllClients = async (req, res) => {
+  try {
+    if (!req.role || req.role.toLowerCase() !== "projectmanger") {
+      res.status(401).send({ message: "Your are not admin" });
+      return;
+    }
+    const users = await Users.find({}).populate({
+      path: "role",
+      match: {title: "Client"}
+    })
+    res.status(200).send({message: "Success", data: users})
+  } catch (error) {
+    res.status(500).send({message: error.message || "Something went wrong"})
+  }
+}
+
 exports.editProjectManager = async (req, res) => {
   try {
     if (!req.role || req.role.toLowerCase() !== "projectmanger") {
