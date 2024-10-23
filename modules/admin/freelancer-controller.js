@@ -166,7 +166,7 @@ exports.assignFreelancersByProject = async (req, res) => {
         project?.projectTasks && project.projectTasks.length > 0
           ? project.projectTasks
           : null;
-      if (projectTasks && projectTasks.length === 1 && !updatedProject.plan) {
+      if (projectTasks && !updatedProject.plan) {
         for (const task of projectTasks) {
           await ProjectTask.findOneAndUpdate(
             { _id: task._id },
