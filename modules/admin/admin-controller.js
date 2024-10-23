@@ -161,8 +161,9 @@ exports.getAllClients = async (req, res) => {
     const users = await Users.find({}).populate({
       path: "role",
       match: {title: "Client"}
-    })
-    res.status(200).send({message: "Success", data: users})
+    }).exec()
+    const clients = users.filter((user) => user.role !== null);
+    res.status(200).send({ message: "Success", data: clients });
   } catch (error) {
     res.status(500).send({message: error.message || "Something went wrong"})
   }
