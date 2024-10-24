@@ -131,7 +131,7 @@ exports.tracking = async (req, res) => {
 
     const finalData = filteredProjects.map(async (item) => {
       
-      let revenue = item.tasks.length * 0.764;
+      let revenue = item.projectTasks.length * 0.764;
       let cost =
         texterPrice +
         lectorPrice +
