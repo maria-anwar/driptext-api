@@ -131,28 +131,31 @@ exports.tracking = async (req, res) => {
     metaLectorPrice =
       prices && prices[0]?.metaLector ? prices[0]?.metaLector : metaLectorPrice;
 
-    const finalData = projects.map(async (item) => {
-      let revenue = 0;
-      let cost = 0;
-      let margin = 0;
+    // Use Promise.all to handle async mapping
+    const finalData = await Promise.all(
+      projects.map(async (item) => {
+        let revenue = 0;
+        let cost = 0;
+        let margin = 0;
 
-      revenue = (item?.projectTasks ? item.projectTasks.length : 0) * 0.764;
-      if (item?.projectTasks && item.projectTasks.length > 0) {
-        cost =
-          texterPrice +
-          lectorPrice +
-          seoOptimizerPrice +
-          (item.metaLector ? metaLectorPrice : 0);
-      }
+        revenue = (item?.projectTasks ? item.projectTasks.length : 0) * 0.764;
+        if (item?.projectTasks && item.projectTasks.length > 0) {
+          cost =
+            texterPrice +
+            lectorPrice +
+            seoOptimizerPrice +
+            (item.metaLector ? metaLectorPrice : 0);
+        }
 
-      margin = revenue - cost;
-      return {
-        revenue,
-        cost,
-        margin,
-        project: { ...item },
-      };
-    });
+        margin = revenue - cost;
+        return {
+          revenue,
+          cost,
+          margin,
+          project: item,
+        };
+      })
+    );
 
     res.status(200).send({ message: "Success", data: finalData });
   } catch (error) {
