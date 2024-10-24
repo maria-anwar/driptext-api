@@ -111,9 +111,12 @@ exports.tracking = async (req, res) => {
     }).populate({
       path: "projectTask",
       match: { status: "Final" },
-    });
+    }).exec()
+    const filteredProjects = projects.filter(
+      (project) => project.projectTask && project.projectTask.length > 0
+    );
 
-    const finalData = projects.map(async (item) => {
+    const finalData = filteredProjects.map(async (item) => {
       let texterPrice = 0.017;
       let lectorPrice = 0.352;
       let seoOptimizerPrice = 0.32;
