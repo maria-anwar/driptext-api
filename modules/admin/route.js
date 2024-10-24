@@ -51,6 +51,10 @@ router.post("/getTracking", jwt.protect, (req, res) => {
   adminController.tracking(req, res);
 });
 
+router.post("/getForecasting", jwt.protect, (req, res) => {
+  adminController.forecasting(req, res);
+});
+
 router.post("/addTask", jwt.protect, (req, res) => {
   taskController.addTask(req, res);
 });
