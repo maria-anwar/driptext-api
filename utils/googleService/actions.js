@@ -66,17 +66,16 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
   const createSheetResponse = await sheetsClient.spreadsheets.create({
     resource: {
       properties: {
-        title: `Invoice ${invoiceData.creditNo}`, // Set the spreadsheet title
+        title: `Invoice ${invoiceData.creditNo}`,
       },
     },
   });
 
-  // Get the new spreadsheet ID
   const spreadsheetId = createSheetResponse.data.spreadsheetId;
 
-  // Define the values to insert into the spreadsheet (based on the template layout)
+  // Hardcoded layout as per the template
   const values = [
-    ["", "", "", "", "", "", ""],
+    // Header
     ["", "", "", "", "", "", ""],
     [
       "DripText Ltd. – Poseidonos Ave 47, Limnaria Westblock A2, Office 25",
@@ -89,27 +88,27 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
     ],
     ["", "", "", "", "", "", ""],
     ["", "", "", "", "", "", ""],
-    ["", "", "", "", "Credit No:", "", "Credit ..."],
-    ["", "", "", "", "Date:", "", invoiceData.date],
-    ["", "", "", "", "Performance Period:", "", "DD=MM-YYYY"],
+    ["", "", "", "Credit No:", "", invoiceData.creditNo],
+    ["", "", "", "Date:", "", invoiceData.date],
+    ["", "", "", "Performance Period:", "", "01.08.2023-31.08.2023"],
     ["Julia Schmitt Ltd", "", "", "", "", "", ""],
     ["Eptakomis 1", "", "", "", "", "", ""],
     ["7100 Aradippou, Cyprus", "", "", "", "", "", ""],
     ["VAT: CY10430062", "", "", "", "", "", ""],
-    ["", "", "", "", "", "", ""],
-    ["", "", "", "", "", "", ""],
+
+    // Column Headers for Items
     ["Pos.", "Description", "", "Amount", "Price", "Total"],
-    ...invoiceData.items.map((item, index) => [
-      index + 1,
-      item.description,
-      "",
-      item.amount,
-      item.price,
-      item.total,
-    ]),
-    ["", "", "", "Subtotal", "", invoiceData.subtotal],
-    ["", "", "", "VAT", "", invoiceData.vat],
-    ["", "", "", "Total", "", invoiceData.total],
+
+    // Items (example hardcoded items)
+    [1, "Service A", "", 2, 100, 200],
+
+    // Totals
+    ["", "", "", "Subtotal", "", 850],
+    ["", "", "", "VAT", "", 0],
+    ["", "", "", "Total", "", 850],
+    ["", "", "", "", "", "", ""],
+
+    // Footer (bank account details)
     [
       "",
       "No VAT as the service is not taxed in the domestic market.",
@@ -117,18 +116,53 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
       "",
       "",
       "",
+    ],
+    ["", "", "", "", "", "", ""],
+    // ["", "", "", "", "", "", ""],
+
+    // Footer (bank account details)
+    [
+      "",
+      "No VAT as the service is not taxed in the domestic market.",
+      "",
+      "",
+      "",
       "",
     ],
     ["", "", "", "", "", "", ""],
+    // ["", "", "", "", "", "", ""],
+
+    // Footer (bank account details)
+    [
+      "",
+      "No VAT as the service is not taxed in the domestic market.",
+      "",
+      "",
+      "",
+      "",
+    ],
     ["", "", "", "", "", "", ""],
-    ["", "", "", "", "", "", ""],
-    ["Bank account:", "", "", "", "", "", ""],
-    ["DripText Ltd.", "", "", "", "", "", ""],
-    ["IBAN: LT53 3250 0668 1851 9925", "", "", "", "", "", ""],
-    ["BIC: REVOLT21", "", "", "", "", "", ""],
+
+    ["DripText Ltd.:", "", "", "Contact", "", "Bank Account:"],
+    [
+      "Makariou Avenue 59,3rd Floor, Office 301",
+      "",
+      "",
+      "hallo@driptext.de",
+      "",
+      "DripText Ltd.",
+    ],
+    [
+      "6017 Laranaca,Cyprus",
+      "",
+      "",
+      "Accounting:",
+      "",
+      "IBAN: LT53 3250 0668 1851 9925",
+    ],
+    ["VAT:CY10424462P", "", "", "backoffice@driptext.de", "", "BIC: REVOLT21"],
   ];
 
-  // 2. Update the values in the new spreadsheet
   const updateValuesRequest = {
     spreadsheetId: spreadsheetId,
     range: "Sheet1!A1",
@@ -137,38 +171,96 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
   };
   await sheetsClient.spreadsheets.values.update(updateValuesRequest);
 
-  // 3. Apply formatting to the new spreadsheet (same as the template)
+  // 2. Format the spreadsheet
   const formatRequest = {
     spreadsheetId: spreadsheetId,
     resource: {
       requests: [
+        // Merge Cells for the Address Header
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 1,
+              endRowIndex: 2,
+              startColumnIndex: 0,
+              endColumnIndex: 7,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        // Merge Cells for the Company Name
+        // {
+        //   mergeCells: {
+        //     range: {
+        //       sheetId: 0,
+        //       startRowIndex: 4,
+        //       endRowIndex: 5,
+        //       startColumnIndex: 0,
+        //       endColumnIndex: 7,
+        //     },
+        //     mergeType: "MERGE_ALL",
+        //   },
+        // },
+        // Set background for "Pos." header
         {
           repeatCell: {
             range: {
               sheetId: 0,
-              startRowIndex: 14, // Row where the "Pos." header starts
-              endRowIndex: 15, // Next row after "Pos."
+              startRowIndex: 11,
+              endRowIndex: 12,
+              startColumnIndex: 0,
+              endColumnIndex: 6,
             },
             cell: {
               userEnteredFormat: {
-                textFormat: { bold: true },
                 backgroundColor: {
                   red: 0.8,
                   green: 0.8,
                   blue: 0.8,
                 },
+                textFormat: {
+                  bold: true,
+                },
               },
             },
             fields:
-              "userEnteredFormat.textFormat.bold,userEnteredFormat.backgroundColor",
+              "userEnteredFormat.backgroundColor,userEnteredFormat.textFormat.bold",
           },
         },
+        // Set background for "Pos." header
+        {
+          repeatCell: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 13,
+              endRowIndex: 16,
+              startColumnIndex: 3,
+              endColumnIndex: 6,
+            },
+            cell: {
+              userEnteredFormat: {
+                // backgroundColor: {
+                //   red: 0.8,
+                //   green: 0.8,
+                //   blue: 0.8,
+                // },
+                textFormat: {
+                  bold: true,
+                },
+              },
+            },
+            fields:
+              "userEnteredFormat.textFormat.bold",
+          },
+        },
+        // Add borders for item list and totals
         {
           updateBorders: {
             range: {
               sheetId: 0,
-              startRowIndex: 10, // First row of the items
-              endRowIndex: 10 + invoiceData.items.length, // Last row of the items
+              startRowIndex: 12,
+              endRowIndex: 13, // Adjust based on number of items
               startColumnIndex: 0,
               endColumnIndex: 6,
             },
@@ -178,140 +270,14 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
             // right: { style: "SOLID" },
           },
         },
-        // {
-        //   mergeCells: {
-        //     range: {
-        //       sheetId: 0,
-        //       startRowIndex: 2,
-        //       endRowIndex: 3,
-        //       startColumnIndex: 0,
-        //       endColumnIndex: 4,
-        //     },
-        //     mergeType: "MERGE_ALL",
-        //   },
-        // },
-        // {
-        //   mergeCells: {
-        //     range: {
-        //       sheetId: 0,
-        //       startRowIndex: 8,
-        //       endRowIndex: 9,
-        //       startColumnIndex: 0,
-        //       endColumnIndex: 2,
-        //     },
-        //     mergeType: "MERGE_ALL",
-        //   },
-        // },
-        // {
-        //   mergeCells: {
-        //     range: {
-        //       sheetId: 0,
-        //       startRowIndex: 9,
-        //       endRowIndex: 10,
-        //       startColumnIndex: 0,
-        //       endColumnIndex: 2,
-        //     },
-        //     mergeType: "MERGE_ALL",
-        //   },
-        // },
-        // {
-        //   mergeCells: {
-        //     range: {
-        //       sheetId: 0,
-        //       startRowIndex: 10,
-        //       endRowIndex: 11,
-        //       startColumnIndex: 0,
-        //       endColumnIndex: 2,
-        //     },
-        //     mergeType: "MERGE_ALL",
-        //   },
-        // },
-        // {
-        //   mergeCells: {
-        //     range: {
-        //       sheetId: 0,
-        //       startRowIndex: 11,
-        //       endRowIndex: 12,
-        //       startColumnIndex: 0,
-        //       endColumnIndex: 2,
-        //     },
-        //     mergeType: "MERGE_ALL",
-        //   },
-        // },
-        // {
-        //   mergeCells: {
-        //     range: {
-        //       sheetId: 0,
-        //       startRowIndex: 12,
-        //       endRowIndex: 13,
-        //       startColumnIndex: 0,
-        //       endColumnIndex: 2,
-        //     },
-        //     mergeType: "MERGE_ALL",
-        //   },
-        // },
-        // {
-        //   mergeCells: {
-        //     range: {
-        //       sheetId: 0,
-        //       startRowIndex: 7,
-        //       endRowIndex: 8,
-        //       startColumnIndex: 5,
-        //       endColumnIndex: 6,
-        //     },
-        //     mergeType: "MERGE_ALL",
-        //   },
-        // },
-        // {
-        //   updateDimensionProperties: {
-        //     range: {
-        //       sheetId: 0,
-        //       dimension: "COLUMNS",
-        //       startIndex: 0,
-        //       endIndex: 6,
-        //     },
-        //     properties: {
-        //       pixelSize: 150,
-        //     },
-        //     fields: "pixelSize",
-        //   },
-        // },
-        {
-          updateDimensionProperties: {
-            range: {
-              sheetId: 0, // The sheet ID (usually 0 for the first sheet)
-              dimension: "COLUMNS", // You are adjusting the columns
-              startIndex: 0, // Start from the first column (A = 0)
-              endIndex: 8, // End at column Z (change this based on your number of columns)
-            },
-            properties: {
-              pixelSize: 100, // Set the desired width in pixels (smaller number for smaller columns)
-            },
-            fields: "pixelSize", // Specify that you're updating the pixel size
-          },
-        },
-        // Hide columns H and beyond
-        {
-          updateDimensionProperties: {
-            range: {
-              sheetId: 0, // The sheet ID
-              dimension: "COLUMNS", // Modifying columns
-              startIndex: 8, // Start from column H (index 7)
-              endIndex: 26, // End at column Z (adjust as needed)
-            },
-            properties: {
-              pixelSize: 0, // Set width to 0 to hide columns
-            },
-            fields: "pixelSize", // Adjusting pixel size to hide columns
-          },
-        },
+        // Footer Formatting (Bank details)
         {
           repeatCell: {
             range: {
               sheetId: 0,
-              startRowIndex: 10 + invoiceData.items.length,
-              endRowIndex: 10 + invoiceData.items.length + 3, // Subtotal, VAT, Total rows
-              startColumnIndex: 5,
+              startRowIndex: 11,
+              endRowIndex: 12,
+              startColumnIndex: 0,
               endColumnIndex: 6,
             },
             cell: {
@@ -322,26 +288,42 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
             fields: "userEnteredFormat.horizontalAlignment",
           },
         },
+        // Resize columns for the layout
+        {
+          updateDimensionProperties: {
+            range: {
+              sheetId: 0,
+              dimension: "COLUMNS",
+              startIndex: 0,
+              endIndex: 6,
+            },
+            properties: {
+              pixelSize: 120, // Adjust width based on your needs
+            },
+            fields: "pixelSize",
+          },
+        },
       ],
     },
   };
 
   await sheetsClient.spreadsheets.batchUpdate(formatRequest);
 
-  // 4. Optionally set permissions to view-only
+  // 3. Set view-only permissions
   const driveClient = google.drive({ version: "v3", auth });
   await driveClient.permissions.create({
     fileId: spreadsheetId,
     resource: {
-      role: "reader", // Set to 'reader' for view-only access
-      type: "anyone", // Allow anyone with the link to view
+      role: "reader",
+      type: "anyone",
     },
   });
 
-  // 5. Return the view-only URL for the new spreadsheet
   const sheetUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/view`;
   return sheetUrl;
 };
+
+
 
 exports.getFileCount = async (folderId) => {
   console.log("inside file count- folder id: ", folderId);

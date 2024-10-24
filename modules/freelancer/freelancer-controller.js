@@ -475,6 +475,7 @@ exports.finishTask = async (req, res) => {
       await ProjectTask.findOneAndUpdate(
         { _id: req.body.taskId },
         {
+          dueDate: dayjs().add(24, 'hour').toDate(),
           status: "Ready For Proofreading",
         },
         { new: true }
@@ -517,6 +518,7 @@ exports.finishTask = async (req, res) => {
         await ProjectTask.findOneAndUpdate(
           { _id: req.body.taskId },
           {
+            dueDate: dayjs().add(24, "hour").toDate(),
             status: "Ready For SEO Optimization",
             feedback: null,
           },
@@ -527,6 +529,7 @@ exports.finishTask = async (req, res) => {
         await ProjectTask.findOneAndUpdate(
           { _id: req.body.taskId },
           {
+            dueDate: dayjs().add(24, "hour").toDate(),
             status: "In Rivision",
             feedback: req.body.feedback,
           },
@@ -566,6 +569,7 @@ exports.finishTask = async (req, res) => {
         await ProjectTask.findOneAndUpdate(
           { _id: req.body.taskId },
           {
+            dueDate: dayjs().add(24, "hour").toDate(),
             status: "Ready For 2nd Proofreading",
           },
           { new: true }

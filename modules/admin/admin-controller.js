@@ -163,6 +163,84 @@ exports.tracking = async (req, res) => {
   }
 };
 
+exports.forecasting = async (req, res) => {
+  try {
+    if (!req.role || req.role.toLowerCase() !== "projectmanger") {
+      res.status(401).send({ message: "Your are not admin" });
+      return;
+    }
+    const joiSchema = Joi.object({
+      clientId: Joi.string().required(),
+    });
+    const { error, value } = joiSchema.validate(req.body);
+
+    if (error) {
+      // emails.errorEmail(req, error);
+
+      const message = error.details[0].message.replace(/"/g, "");
+      res.status(401).send({
+        message: message,
+      });
+      return;
+    }
+
+    const projects = await Projects.find({
+      user: req.body.clientId,
+      plan: { $ne: null },
+    })
+      .populate({
+        path: "projectTasks",
+        match: { status: {$ne: "Final"} },
+      })
+      .exec();
+    // const filteredProjects = projects.filter(
+    //   (project) => project.projectTask && project.projectTask.length > 0
+    // );
+    let texterPrice = 0.017;
+    let lectorPrice = 0.352;
+    let seoOptimizerPrice = 0.32;
+    let metaLectorPrice = 0.352;
+    const prices = await freelancerPrices.find({});
+    texterPrice = prices && prices[0]?.texter ? prices[0]?.texter : texterPrice;
+    lectorPrice = prices && prices[0]?.lector ? prices[0]?.lector : lectorPrice;
+    seoOptimizerPrice =
+      prices && prices[0]?.seoOptimizer
+        ? prices[0]?.seoOptimizer
+        : seoOptimizerPrice;
+    metaLectorPrice =
+      prices && prices[0]?.metaLector ? prices[0]?.metaLector : metaLectorPrice;
+
+    // Use Promise.all to handle async mapping
+    const finalData = await Promise.all(
+      projects.map(async (item) => {
+        let revenue = 0;
+        let cost = 0;
+        let margin = 0;
+
+        revenue = (item?.projectTasks ? item.projectTasks.length : 0) * 0.764;
+        if (item?.projectTasks && item.projectTasks.length > 0) {
+          cost =
+            texterPrice +
+            lectorPrice +
+            seoOptimizerPrice
+        }
+
+        margin = revenue - cost;
+        return {
+          revenue,
+          cost,
+          margin,
+          project: item,
+        };
+      })
+    );
+
+    res.status(200).send({ message: "Success", data: finalData });
+  } catch (error) {
+    res.status(500).send({ message: error.message || "Something went wrong" });
+  }
+};
+
 exports.getAllClients = async (req, res) => {
   try {
     if (!req.role || req.role.toLowerCase() !== "projectmanger") {
