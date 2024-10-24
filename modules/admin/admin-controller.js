@@ -108,13 +108,15 @@ exports.tracking = async (req, res) => {
     const projects = await Projects.find({
       user: req.body.clientId,
       plan: { $ne: null },
-    }).populate({
-      path: "projectTasks",
-      match: { status: "Final" },
-    }).exec()
-    const filteredProjects = projects.filter(
-      (project) => project.projectTask && project.projectTask.length > 0
-    );
+    })
+      .populate({
+        path: "projectTasks",
+        match: { status: "Final" },
+      })
+      .exec();
+    // const filteredProjects = projects.filter(
+    //   (project) => project.projectTask && project.projectTask.length > 0
+    // );
     let texterPrice = 0.017;
     let lectorPrice = 0.352;
     let seoOptimizerPrice = 0.32;
@@ -129,24 +131,30 @@ exports.tracking = async (req, res) => {
     metaLectorPrice =
       prices && prices[0]?.metaLector ? prices[0]?.metaLector : metaLectorPrice;
 
-    const finalData = filteredProjects.map(async (item) => {
-      
-      let revenue = item.projectTask.length * 0.764;
-      let cost =
-        texterPrice +
-        lectorPrice +
-        seoOptimizerPrice +
-        (item.metaLector ? metaLectorPrice : 0);
-      let margin = revenue - cost;
+    const finalData = projects.map(async (item) => {
+      let revenue = 0;
+      let cost = 0;
+      let margin = 0;
+
+      revenue = (item?.projectTasks ? item.projectTasks.length : 0) * 0.764;
+      if (item?.projectTasks && item.projectTasks.length > 0) {
+        cost =
+          texterPrice +
+          lectorPrice +
+          seoOptimizerPrice +
+          (item.metaLector ? metaLectorPrice : 0);
+      }
+
+      margin = revenue - cost;
       return {
         revenue,
         cost,
         margin,
-        project: {...item},
+        project: { ...item },
       };
     });
 
-    res.status(200).send({message: "Success", data: finalData})
+    res.status(200).send({ message: "Success", data: finalData });
   } catch (error) {
     res.status(500).send({ message: error.message || "Something went wrong" });
   }
@@ -158,16 +166,18 @@ exports.getAllClients = async (req, res) => {
       res.status(401).send({ message: "Your are not admin" });
       return;
     }
-    const users = await Users.find({}).populate({
-      path: "role",
-      match: {title: "Client"}
-    }).exec()
+    const users = await Users.find({})
+      .populate({
+        path: "role",
+        match: { title: "Client" },
+      })
+      .exec();
     const clients = users.filter((user) => user.role !== null);
     res.status(200).send({ message: "Success", data: clients });
   } catch (error) {
-    res.status(500).send({message: error.message || "Something went wrong"})
+    res.status(500).send({ message: error.message || "Something went wrong" });
   }
-}
+};
 
 exports.editProjectManager = async (req, res) => {
   try {
