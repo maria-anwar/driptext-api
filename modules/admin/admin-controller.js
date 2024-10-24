@@ -109,7 +109,7 @@ exports.tracking = async (req, res) => {
       user: req.body.clientId,
       plan: { $ne: null },
     }).populate({
-      path: "projectTask",
+      path: "projectTasks",
       match: { status: "Final" },
     }).exec()
     const filteredProjects = projects.filter(
@@ -131,7 +131,7 @@ exports.tracking = async (req, res) => {
 
     const finalData = filteredProjects.map(async (item) => {
       
-      let revenue = item.projectTasks.length * 0.764;
+      let revenue = item.projectTask.length * 0.764;
       let cost =
         texterPrice +
         lectorPrice +
