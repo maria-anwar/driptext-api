@@ -115,25 +115,22 @@ exports.tracking = async (req, res) => {
     const filteredProjects = projects.filter(
       (project) => project.projectTask && project.projectTask.length > 0
     );
+    let texterPrice = 0.017;
+    let lectorPrice = 0.352;
+    let seoOptimizerPrice = 0.32;
+    let metaLectorPrice = 0.352;
+    const prices = await freelancerPrices.find({});
+    texterPrice = prices && prices[0]?.texter ? prices[0]?.texter : texterPrice;
+    lectorPrice = prices && prices[0]?.lector ? prices[0]?.lector : lectorPrice;
+    seoOptimizerPrice =
+      prices && prices[0]?.seoOptimizer
+        ? prices[0]?.seoOptimizer
+        : seoOptimizerPrice;
+    metaLectorPrice =
+      prices && prices[0]?.metaLector ? prices[0]?.metaLector : metaLectorPrice;
 
     const finalData = filteredProjects.map(async (item) => {
-      let texterPrice = 0.017;
-      let lectorPrice = 0.352;
-      let seoOptimizerPrice = 0.32;
-      let metaLectorPrice = 0.352;
-      const prices = await freelancerPrices.find({});
-      texterPrice =
-        prices && prices[0]?.texter ? prices[0]?.texter : texterPrice;
-      lectorPrice =
-        prices && prices[0]?.lector ? prices[0]?.lector : lectorPrice;
-      seoOptimizerPrice =
-        prices && prices[0]?.seoOptimizer
-          ? prices[0]?.seoOptimizer
-          : seoOptimizerPrice;
-      metaLectorPrice =
-        prices && prices[0]?.metaLector
-          ? prices[0]?.metaLector
-          : metaLectorPrice;
+      
       let revenue = item.tasks.length * 0.764;
       let cost =
         texterPrice +
@@ -145,7 +142,7 @@ exports.tracking = async (req, res) => {
         revenue,
         cost,
         margin,
-        item,
+        project: {...item},
       };
     });
 
