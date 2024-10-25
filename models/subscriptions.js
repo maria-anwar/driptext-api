@@ -36,22 +36,7 @@ module.exports = (mongoose) => {
         required: true,
       },
 
-      subscriptionItem: {
-        default: {},
-      },
-      paymentMethod: {
-        default: {},
-      },
-      userBilling: {
-        pricePerText: { type: String, default: null },
-        subscriptonEnd: { type: Date, default: null },
-        street: { type: String, default: null },
-        companyName: { type: String, default: null },
-        postCode: { type: String, default: null },
-        city: { type: String, default: null },
-        vatId: { type: String, default: null },
-        vatType: { type: String, default: null },
-      },
+      subscriptionData:{}
     },
     {
       toJSON: {

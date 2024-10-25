@@ -186,8 +186,7 @@ exports.create = async (req, res) => {
               subscription = await Subscription.create({
                 startDate: dayjs(startAt).format("YYYY-MM-DD"),
                 endDate: dayjs(endAt).format("YYYY-MM-DD"),
-                subscriptionItem: subscriptionItems,
-                paymentMethod: paymentMethod,
+                subscriptionData: req.body.response
               });
             }
 
@@ -461,8 +460,7 @@ exports.create = async (req, res) => {
                 subscription = await Subscription.create({
                   startDate: dayjs(startAt).format("YYYY-MM-DD"),
                   endDate: dayjs(endAt).format("YYYY-MM-DD"),
-                  subscriptionItem: subscriptionItems,
-                  paymentMethod: paymentMethod,
+                  subscriptionData: req.body.response,
                 });
                 projectStatus = "Ready";
               }
@@ -771,8 +769,7 @@ exports.create = async (req, res) => {
               subscription = await Subscription.create({
                 startDate: dayjs(startAt).format("YYYY-MM-DD"),
                 endDate: dayjs(endAt).format("YYYY-MM-DD"),
-                subscriptionItem: subscriptionItems,
-                paymentMethod: paymentMethod,
+                subscriptionData: req.body.response,
               });
               projectStatus = "Ready"
 
