@@ -14,6 +14,7 @@ const {
   createTaskFile,
   getFileCount,
 } = require("../../utils/googleService/actions");
+const { getSubscriptionInvoice } = require("../../utils/chargebee/actions");
 
 const Users = db.User;
 const Roles = db.Role;
@@ -259,28 +260,43 @@ exports.create = async (req, res) => {
 
             if (createUserPlan && createProject) {
               if (subscription !== "") {
-                const clientData = {
-                  clientName: `${req.body.firstName} ${req.body.lastName}`,
-                  clientEmail: `${req.body.email}`,
-                  subscriptionStatus: `${billResponse.subscription.status}`,
-                  subscriptionStartDate: `${billResponse.subscription.subscription_items[0].current_term_start}`,
-                  subscriptionEndDate: `${billResponse.subscription.subscription_items[0].current_term_end}`,
-                  paymentMethodType: `${billResponse.customer.payment_method.type}`,
-                  amount: `${billResponse.subscription.subscription_items[0].unit_price}`,
-                };
+                // const clientData = {
+                //   clientName: `${req.body.firstName} ${req.body.lastName}`,
+                //   clientEmail: `${req.body.email}`,
+                //   subscriptionStatus: `${billResponse.subscription.status}`,
+                //   subscriptionStartDate: `${billResponse.subscription.subscription_items[0].current_term_start}`,
+                //   subscriptionEndDate: `${billResponse.subscription.subscription_items[0].current_term_end}`,
+                //   paymentMethodType: `${billResponse.customer.payment_method.type}`,
+                //   amount: `${billResponse.subscription.subscription_items[0].unit_price}`,
+                // };
+                const subscriptionInvoice = await getSubscriptionInvoice(subscription.subscriptionData.invoice.id)
+                if (subscriptionInvoice && subscriptionInvoice.download) {
+                   emails
+                     .sendInvoiceToCustomer(
+                       req.body.email,
+                       subscriptionInvoice.download.download_url
+                     )
+                     .then((res) => {
+                       console.log("billing email success: ", res);
+                     })
+                     .catch((err) => {
+                       console.log("billing email error: ", err);
+                     });
+                  
+                }
                 // Send email
-                emails
-                  .sendBillingInfo(
-                    clientData.clientEmail,
-                    "Your Billing Information",
-                    clientData
-                  )
-                  .then((res) => {
-                    console.log("billing email success: ", res);
-                  })
-                  .catch((err) => {
-                    console.log("billing email error: ", err);
-                  });
+                // emails
+                //   .sendBillingInfo(
+                //     clientData.clientEmail,
+                //     "Your Billing Information",
+                //     clientData
+                //   )
+                //   .then((res) => {
+                //     console.log("billing email success: ", res);
+                //   })
+                //   .catch((err) => {
+                //     console.log("billing email error: ", err);
+                //   });
               }
               await emails.AwsEmailPassword(user);
               let getuser = await Users.findOne({ _id: user._id })
@@ -582,28 +598,44 @@ exports.create = async (req, res) => {
               //   { new: true }
               // );
               if (subscription !== "") {
-                const clientData = {
-                  clientName: `${req.body.firstName} ${req.body.lastName}`,
-                  clientEmail: `${req.body.email}`,
-                  subscriptionStatus: `${billResponse.subscription.status}`,
-                  subscriptionStartDate: `${billResponse.subscription.subscription_items[0].current_term_start}`,
-                  subscriptionEndDate: `${billResponse.subscription.subscription_items[0].current_term_end}`,
-                  paymentMethodType: `${billResponse.customer.payment_method.type}`,
-                  amount: `${billResponse.subscription.subscription_items[0].unit_price}`,
-                };
+                // const clientData = {
+                //   clientName: `${req.body.firstName} ${req.body.lastName}`,
+                //   clientEmail: `${req.body.email}`,
+                //   subscriptionStatus: `${billResponse.subscription.status}`,
+                //   subscriptionStartDate: `${billResponse.subscription.subscription_items[0].current_term_start}`,
+                //   subscriptionEndDate: `${billResponse.subscription.subscription_items[0].current_term_end}`,
+                //   paymentMethodType: `${billResponse.customer.payment_method.type}`,
+                //   amount: `${billResponse.subscription.subscription_items[0].unit_price}`,
+                // };
                 // Send email
-                emails
-                  .sendBillingInfo(
-                    clientData.clientEmail,
-                    "Your Billing Information",
-                    clientData
-                  )
-                  .then((res) => {
-                    console.log("billing email success: ", res);
-                  })
-                  .catch((err) => {
-                    console.log("billing email error: ", err);
-                  });
+                 const subscriptionInvoice = await getSubscriptionInvoice(
+                   subscription.subscriptionData.invoice.id
+                 );
+                 if (subscriptionInvoice && subscriptionInvoice.download) {
+                   emails
+                     .sendInvoiceToCustomer(
+                       req.body.email,
+                       subscriptionInvoice.download.download_url
+                     )
+                     .then((res) => {
+                       console.log("billing email success: ", res);
+                     })
+                     .catch((err) => {
+                       console.log("billing email error: ", err);
+                     });
+                 }
+                // emails
+                //   .sendBillingInfo(
+                //     clientData.clientEmail,
+                //     "Your Billing Information",
+                //     clientData
+                //   )
+                //   .then((res) => {
+                //     console.log("billing email success: ", res);
+                //   })
+                //   .catch((err) => {
+                //     console.log("billing email error: ", err);
+                //   });
               }
               if (final_project) {
                 emails.AwsEmailPassword(user);
@@ -896,28 +928,44 @@ exports.create = async (req, res) => {
             // let createBilling = await Billing.create(billingResponse);
 
             if (final_project && subscription) {
-              const clientData = {
-                clientName: `${req.body.firstName} ${req.body.lastName}`,
-                clientEmail: `${req.body.email}`,
-                subscriptionStatus: `${billResponse.subscription.status}`,
-                subscriptionStartDate: `${billResponse.subscription.subscription_items[0].current_term_start}`,
-                subscriptionEndDate: `${billResponse.subscription.subscription_items[0].current_term_end}`,
-                paymentMethodType: `${billResponse.customer.payment_method.type}`,
-                amount: `${billResponse.subscription.subscription_items[0].unit_price}`,
-              };
+              // const clientData = {
+              //   clientName: `${req.body.firstName} ${req.body.lastName}`,
+              //   clientEmail: `${req.body.email}`,
+              //   subscriptionStatus: `${billResponse.subscription.status}`,
+              //   subscriptionStartDate: `${billResponse.subscription.subscription_items[0].current_term_start}`,
+              //   subscriptionEndDate: `${billResponse.subscription.subscription_items[0].current_term_end}`,
+              //   paymentMethodType: `${billResponse.customer.payment_method.type}`,
+              //   amount: `${billResponse.subscription.subscription_items[0].unit_price}`,
+              // };
+               const subscriptionInvoice = await getSubscriptionInvoice(
+                 subscription.subscriptionData.invoice.id
+               );
+               if (subscriptionInvoice && subscriptionInvoice.download) {
+                 emails
+                   .sendInvoiceToCustomer(
+                     req.body.email,
+                     subscriptionInvoice.download.download_url
+                   )
+                   .then((res) => {
+                     console.log("billing email success: ", res);
+                   })
+                   .catch((err) => {
+                     console.log("billing email error: ", err);
+                   });
+               }
               // Send email
-              emails
-                .sendBillingInfo(
-                  clientData.clientEmail,
-                  "Your Billing Information",
-                  clientData
-                )
-                .then((res) => {
-                  console.log("billing email success: ", res);
-                })
-                .catch((err) => {
-                  console.log("billing email error: ", err);
-                });
+              // emails
+              //   .sendBillingInfo(
+              //     clientData.clientEmail,
+              //     "Your Billing Information",
+              //     clientData
+              //   )
+              //   .then((res) => {
+              //     console.log("billing email success: ", res);
+              //   })
+              //   .catch((err) => {
+              //     console.log("billing email error: ", err);
+              //   });
 
               await emails.AwsEmailPassword(user);
 
