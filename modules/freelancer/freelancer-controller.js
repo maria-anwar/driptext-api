@@ -80,7 +80,7 @@ exports.create = async (req, res) => {
       street: req.body.street,
       city: req.body.city,
       role: role._id,
-      freelancerBillingInfo: {
+      billingInfo: {
         iban: req.body.iban,
         vatRegulation: req.body.vatRegulation,
       },
