@@ -51,7 +51,7 @@ class Server {
   }
 
   startCornJob() {
-    cron.schedule("0 */2 * * *", () => {
+    cron.schedule("0 0 * * *", () => {
       cornJobs.onBoardingReminder();
     });
     cron.schedule("0 0 * * *", () => {

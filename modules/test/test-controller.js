@@ -6,6 +6,7 @@ const jwt = require("../../utils/jwt");
 const { drive, docs } = require("../../utils/googleService/googleService")
 const {getWordCount, createInvoiceInGoogleSheets} = require("../../utils/googleService/actions");
 const { getSubscriptionInvoice } = require("../../utils/chargebee/actions");
+const freelancerEmails = require("../../utils/sendEmail/freelancer/emails")
 
 
 
@@ -68,6 +69,15 @@ exports.test = async (req, res) => {
         res.status(500).json({error: error.message ||"Something went wrong"})
     }
 
+}
+
+exports.sendEmail = async (req, res) => {
+  try {
+    freelancerEmails.welcomeFreelancer({firstName:"Abdullah", lastName:"Munir", email:"abdullahmuneer402@gmail.com"}).then((res) => console.log("email sent")).catch(err => console.log("error sending email: ", err))
+    res.status(200).send({message: "Success"})
+  } catch (error) {
+    res.status(500).send({messagee: error?.message || "Something went wrong"})
+  }
 }
 
 exports.createFolder = async (req, res) => {

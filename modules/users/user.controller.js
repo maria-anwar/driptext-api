@@ -273,7 +273,7 @@ exports.create = async (req, res) => {
                 if (subscriptionInvoice && subscriptionInvoice.download) {
                    emails
                      .sendInvoiceToCustomer(
-                       req.body.email,
+                       user,
                        subscriptionInvoice.download.download_url
                      )
                      .then((res) => {
@@ -614,7 +614,7 @@ exports.create = async (req, res) => {
                  if (subscriptionInvoice && subscriptionInvoice.download) {
                    emails
                      .sendInvoiceToCustomer(
-                       req.body.email,
+                       user,
                        subscriptionInvoice.download.download_url
                      )
                      .then((res) => {
@@ -943,7 +943,7 @@ exports.create = async (req, res) => {
                if (subscriptionInvoice && subscriptionInvoice.download) {
                  emails
                    .sendInvoiceToCustomer(
-                     req.body.email,
+                     user,
                      subscriptionInvoice.download.download_url
                    )
                    .then((res) => {

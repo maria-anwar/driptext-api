@@ -14,6 +14,10 @@ router.get("/subscriptionInvoice", (req, res) => {
   testController.customerInvoice(req, res);
 });
 
+router.get("/sendEmail", (req, res) => {
+  testController.sendEmail(req, res);
+});
+
 router.get("/createFolder", (req, res) => {
   testController.createFolder(req, res);
 });

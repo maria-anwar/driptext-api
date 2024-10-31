@@ -430,7 +430,7 @@ Email.onBoadingSuccess = async (user) => {
   }
 };
 
-Email.sendInvoiceToCustomer = async (email, link) => {
+Email.sendInvoiceToCustomer = async (user, link) => {
   try {
     // const data = fs.readFileSync("./templates/awsPasswordUpdateEmail.html", "utf8");
     // const filePath = path.join(__dirname, "templates", "awsPasswordUpdateEmail.html");
@@ -448,11 +448,14 @@ Email.sendInvoiceToCustomer = async (email, link) => {
     // const link = `https://driptext-app.vercel.app/auth/forgetkey/${forgetPasswordToken}`;
     // text = text.replace("[USER_NAME]", `${user.firstName} ${user.lastName}`);
     text = text.replace("[DOWNLOAD_INVOICE_LINK]", link);
+    text = text.replace("[CLIENT_NAME]", `${user.firtName} ${user.lastName}`);
+    text = text.replace("[CLIENT_EMAIL]", user.email);
+
 
     const params = {
       Source: `DripText <noreply@driptext.de>`,
       Destination: {
-        ToAddresses: [email],
+        ToAddresses: [user.email],
       },
       Message: {
         Subject: {

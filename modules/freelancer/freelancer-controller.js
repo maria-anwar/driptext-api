@@ -5,6 +5,7 @@ const mongoose = require("mongoose");
 const jwt = require("../../utils/jwt");
 const dayjs = require("dayjs");
 const { getWordCount } = require("../../utils/googleService/actions");
+const freelancerEmails = require("../../utils/sendEmail/freelancer/emails");
 
 const Freelancers = db.Freelancer;
 const Users = db.User;
@@ -87,6 +88,10 @@ exports.create = async (req, res) => {
       password: req.body.password ? req.body.password : "123456@123456",
     };
     const user = await Freelancers.create(tempUser);
+    freelancerEmails
+      .welcomeFreelancer(user)
+      .then((res) => console.log("email sent"))
+      .catch((err) => console.log("email error"));
     await session.commitTransaction();
     session.endSession();
 
@@ -475,7 +480,7 @@ exports.finishTask = async (req, res) => {
       await ProjectTask.findOneAndUpdate(
         { _id: req.body.taskId },
         {
-          dueDate: dayjs().add(24, 'hour').toDate(),
+          dueDate: dayjs().add(24, "hour").toDate(),
           status: "Ready For Proofreading",
         },
         { new: true }
@@ -576,33 +581,33 @@ exports.finishTask = async (req, res) => {
         );
       }
       if (!task.metaLector) {
-         const earning = await freelancerEarnings.findOne({
-           freelancer: task.seo,
-           project: task.project,
-           task: req.body.taskId,
-           role: "SEO Optimizer",
-         });
-         if (earning) {
-           await freelancerEarnings.findOneAndUpdate(
-             { _id: earning._id },
-             {
-               finalize: false,
-               billedWords: null,
-               date: task.dueDate,
-               difference: null,
-               price: null,
-             },
-             { new: true }
-           );
-         } else {
-           const newEarning = await freelancerEarnings.create({
-             freelancer: task.seo,
-             task: req.body.taskId,
-             project: task.project,
-             date: task.dueDate,
-             role: "SEO Optimizer",
-           });
-         }
+        const earning = await freelancerEarnings.findOne({
+          freelancer: task.seo,
+          project: task.project,
+          task: req.body.taskId,
+          role: "SEO Optimizer",
+        });
+        if (earning) {
+          await freelancerEarnings.findOneAndUpdate(
+            { _id: earning._id },
+            {
+              finalize: false,
+              billedWords: null,
+              date: task.dueDate,
+              difference: null,
+              price: null,
+            },
+            { new: true }
+          );
+        } else {
+          const newEarning = await freelancerEarnings.create({
+            freelancer: task.seo,
+            task: req.body.taskId,
+            project: task.project,
+            date: task.dueDate,
+            role: "SEO Optimizer",
+          });
+        }
         const updateTask = await ProjectTask.findOneAndUpdate(
           { _id: req.body.taskId },
           {
@@ -611,7 +616,7 @@ exports.finishTask = async (req, res) => {
           { new: true }
         );
 
-        await finalizeTask(task)
+        await finalizeTask(task);
 
         const updatedProject = await Projects.findOneAndUpdate(
           { _id: task.project },
@@ -657,7 +662,7 @@ exports.finishTask = async (req, res) => {
         },
         { new: true }
       );
-      await finalizeTask(task)
+      await finalizeTask(task);
       const updatedProject = await Projects.findOneAndUpdate(
         { _id: task.project },
         {
@@ -861,13 +866,15 @@ exports.getEarnings = async (req, res) => {
       });
       return;
     }
-    const earnings = await freelancerEarnings.find({ freelancer: req.body.freelancerId }).populate(["project","task"])
-    
-    res.status(200).send({message: "Success", data: earnings})
+    const earnings = await freelancerEarnings
+      .find({ freelancer: req.body.freelancerId })
+      .populate(["project", "task"]);
+
+    res.status(200).send({ message: "Success", data: earnings });
   } catch (error) {
-    res.status(500).send({message: error.message || "Something went wrong"})
+    res.status(500).send({ message: error.message || "Something went wrong" });
   }
-}
+};
 
 exports.emailCheck = async (req, res) => {
   try {

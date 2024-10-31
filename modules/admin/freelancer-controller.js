@@ -6,6 +6,7 @@ const dayjs = require("dayjs");
 const csvParser = require("csv-parser");
 const fs = require("fs");
 const path = require("path");
+const freelancerEmails = require("../../utils/sendEmail/freelancer/emails")
 
 // const { RDS } = require("aws-sdk");
 
@@ -249,6 +250,7 @@ exports.assignFreelancerByTask = async (req, res) => {
         { texter: req.body.freelancerId },
         { new: true }
       );
+      freelancerEmails.taskAssign(freelancer.email,{name: updatedTask.taskName, keyword: updatedTask.keywords}, "Texter")
     }
 
     // Lector
@@ -258,6 +260,12 @@ exports.assignFreelancerByTask = async (req, res) => {
         { lector: req.body.freelancerId },
         { new: true }
       );
+      freelancerEmails.taskAssign(
+        freelancer.email,
+        { name: updatedTask.taskName, keyword: updatedTask.keywords },
+        "Lector"
+      );
+
     }
 
     // SEO-Optimizer
@@ -267,6 +275,12 @@ exports.assignFreelancerByTask = async (req, res) => {
         { seo: req.body.freelancerId },
         { new: true }
       );
+      freelancerEmails.taskAssign(
+        freelancer.email,
+        { name: updatedTask.taskName, keyword: updatedTask.keywords },
+        "SEO-Optimizer"
+      );
+
     }
     res.status(200).send({ message: "success" });
   } catch (error) {
