@@ -12,6 +12,7 @@ module.exports = (mongoose) => {
       },
       keywords: { type: String, required: false, unique: false, default: null },
       dueDate: { type: Date, required: false, unique: false, default: null },
+      finishedDate: { type: Date, required: false, unique: false, default: null },
       topic: { type: String, required: false, unique: false, default: null },
       type: { type: String, required: false, unique: false, default: null },
       fileLink: { type: String, required: false, unique: false, default: null },
