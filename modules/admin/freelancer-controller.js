@@ -34,7 +34,7 @@ exports.getFreelancers = async (req, res) => {
       res.status(401).send({ message: "Your are not admin" });
       return;
     }
-    const freelancers = await Freelancers.find({isActive: "Y"});
+    const freelancers = await Freelancers.find({ isActive: "Y" });
     res.status(200).send({ message: "success", freelancers: freelancers });
   } catch (error) {
     res.status(500).send({ message: error.message || "Something went wrong" });
@@ -113,6 +113,15 @@ exports.assignFreelancersByProject = async (req, res) => {
             { name: task.taskName, keyword: task.keywords },
             "Texter"
           );
+          freelancerEmails.reminder24Hours(
+            freelancer.email,
+            {
+              name: task.taskName,
+              keyword: task.keywords,
+              documentLink: task.fileLink,
+            },
+            "Texter"
+          );
         }
       }
     }
@@ -135,11 +144,11 @@ exports.assignFreelancersByProject = async (req, res) => {
             { lector: req.body.freelancerId },
             { new: true }
           );
-           freelancerEmails.taskAssign(
-             freelancer.email,
-             { name: task.taskName, keyword: task.keywords },
-             "Lector"
-           );
+          freelancerEmails.taskAssign(
+            freelancer.email,
+            { name: task.taskName, keyword: task.keywords },
+            "Lector"
+          );
         }
       }
     }
@@ -162,11 +171,11 @@ exports.assignFreelancersByProject = async (req, res) => {
             { seo: req.body.freelancerId },
             { new: true }
           );
-           freelancerEmails.taskAssign(
-             freelancer.email,
-             { name: task.taskName, keyword: task.keywords },
-             "SEO-Optimizer"
-           );
+          freelancerEmails.taskAssign(
+            freelancer.email,
+            { name: task.taskName, keyword: task.keywords },
+            "SEO-Optimizer"
+          );
         }
       }
     }
@@ -205,11 +214,11 @@ exports.assignFreelancersByProject = async (req, res) => {
                 { metaLector: req.body.freelancerId },
                 { new: true }
               );
-               freelancerEmails.taskAssign(
-                 freelancer.email,
-                 { name: task.taskName, keyword: task.keywords },
-                 "Meta Lector"
-               );
+              freelancerEmails.taskAssign(
+                freelancer.email,
+                { name: task.taskName, keyword: task.keywords },
+                "Meta Lector"
+              );
             }
           }
         }
@@ -273,6 +282,11 @@ exports.assignFreelancerByTask = async (req, res) => {
       freelancerEmails.taskAssign(
         freelancer.email,
         { name: updatedTask.taskName, keyword: updatedTask.keywords },
+        "Texter"
+      );
+      freelancerEmails.reminder24Hours(
+        freelancer.email,
+        { name: updatedTask.taskName, keyword: updatedTask.keywords, documentLink: updatedTask.fileLink },
         "Texter"
       );
     }

@@ -160,6 +160,19 @@ exports.addTask = async (req, res) => {
                 );
 
                 let createProjectTask = await ProjectTask.create(proectTaskObj);
+                const freelancer = await Freelancers.findOne({
+                  _id: project.metaLector,
+                });
+                if (freelancer) {
+                  freelancerEmails.taskAssign(
+                    freelancer.email,
+                    {
+                      name: createProjectTask.taskName,
+                      keyword: createProjectTask.keywords,
+                    },
+                    "Meta Lector"
+                  );
+                }
                 const totalFiles = await getFileCount(project.folderId);
                 const fileName = `${project.id}-${totalFiles + 1}-${
                   createProjectTask.keywords || "No Keywords"
@@ -220,7 +233,23 @@ exports.addTask = async (req, res) => {
                 if (upadteProject && createProjectTask) {
                   await session.commitTransaction();
                   session.endSession();
-                  await emails.onBoadingSuccess(getuser);
+                  // await emails.onBoadingSuccess(getuser);
+                  if (updateProjectTask.texter) {
+                    const taskTexter = await Freelancers.findOne({
+                      _id: updateProjectTask.texter,
+                    });
+                    if (taskTexter) {
+                      freelancerEmails.reminder24Hours(
+                        taskTexter.email,
+                        {
+                          name: updateProjectTask.taskName,
+                          keyword: updateProjectTask.keywords,
+                          documentLink: updateProjectTask.fileLink,
+                        },
+                        "Texter"
+                      );
+                    }
+                  }
 
                   res.send({
                     message: "OnBoarding successful",
@@ -307,6 +336,21 @@ exports.addTask = async (req, res) => {
               };
 
               let createProjectTask = await ProjectTask.create(proectTaskObj);
+              if (taskCount % 9 === 0) {
+                const freelancer = await Freelancers.findOne({
+                  _id: project.metaLector,
+                });
+                if (freelancer) {
+                  freelancerEmails.taskAssign(
+                    freelancer.email,
+                    {
+                      name: createProjectTask.taskName,
+                      keyword: createProjectTask.keywords,
+                    },
+                    "Meta Lector"
+                  );
+                }
+              }
               const totalFiles = await getFileCount(project.folderId);
               const fileName = `${project.id}-${totalFiles + 1}-${
                 createProjectTask.keywords || "No Keywords"
@@ -379,7 +423,23 @@ exports.addTask = async (req, res) => {
               if (upadteProject && createProjectTask) {
                 await session.commitTransaction();
                 session.endSession();
-                await emails.onBoadingSuccess(getuser);
+                // await emails.onBoadingSuccess(getuser);
+                if (updateProjectTask.texter) {
+                  const taskTexter = await Freelancers.findOne({
+                    _id: updateProjectTask.texter,
+                  });
+                  if (taskTexter) {
+                    freelancerEmails.reminder24Hours(
+                      taskTexter.email,
+                      {
+                        name: updateProjectTask.taskName,
+                        keyword: updateProjectTask.keywords,
+                        documentLink: updateProjectTask.fileLink,
+                      },
+                      "Texter"
+                    );
+                  }
+                }
 
                 res.send({
                   message: "OnBoarding successful",
@@ -715,7 +775,7 @@ exports.importProjectTasks = async (req, res) => {
             let idChar = createProjectTask._id.toString().slice(-4);
             let taskId = nameChar + "-" + idChar;
 
-            let updateTaskId = await ProjectTask.findByIdAndUpdate(
+            let updatedTask = await ProjectTask.findByIdAndUpdate(
               { _id: createProjectTask._id },
               {
                 taskName: taskId,
@@ -728,7 +788,23 @@ exports.importProjectTasks = async (req, res) => {
             if (upadteProject && createProjectTask) {
               await session.commitTransaction();
               session.endSession();
-              emails.onBoadingSuccess(user);
+              // emails.onBoadingSuccess(user);
+              if (updatedTask.texter) {
+                const taskTexter = await Freelancers.findOne({
+                  _id: updatedTask.texter,
+                });
+                if (taskTexter) {
+                  freelancerEmails.reminder24Hours(
+                    taskTexter.email,
+                    {
+                      name: updatedTask.taskName,
+                      keyword: updatedTask.keywords,
+                      documentLink: updatedTask.fileLink,
+                    },
+                    "Texter"
+                  );
+                }
+              }
 
               // res.send({
               //   message: "OnBoarding successful",
@@ -898,7 +974,7 @@ exports.importProjectTasks = async (req, res) => {
           let idChar = createProjectTask._id.toString().slice(-4);
           let taskId = nameChar + "-" + idChar;
 
-          let updateTaskId = await ProjectTask.findByIdAndUpdate(
+          let updatedTask = await ProjectTask.findByIdAndUpdate(
             { _id: createProjectTask._id },
             {
               taskName: taskId,
@@ -911,7 +987,23 @@ exports.importProjectTasks = async (req, res) => {
           if (upadteProject && createProjectTask) {
             await session.commitTransaction();
             session.endSession();
-            emails.onBoadingSuccess(user);
+            // emails.onBoadingSuccess(user);
+              if (updatedTask.texter) {
+                const taskTexter = await Freelancers.findOne({
+                  _id: updatedTask.texter,
+                });
+                if (taskTexter) {
+                  freelancerEmails.reminder24Hours(
+                    taskTexter.email,
+                    {
+                      name: updatedTask.taskName,
+                      keyword: updatedTask.keywords,
+                      documentLink: updatedTask.fileLink,
+                    },
+                    "Texter"
+                  );
+                }
+              }
 
             // res.send({
             //   message: "OnBoarding successful",

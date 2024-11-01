@@ -6,7 +6,7 @@ const jwt = require("../../utils/jwt");
 const dayjs = require("dayjs");
 const { getWordCount } = require("../../utils/googleService/actions");
 const freelancerEmails = require("../../utils/sendEmail/freelancer/emails");
-const emails = require("../../utils/emails")
+const emails = require("../../utils/emails");
 
 const Freelancers = db.Freelancer;
 const Users = db.User;
@@ -93,7 +93,7 @@ exports.create = async (req, res) => {
       .welcomeFreelancer(user)
       .then((res) => console.log("email sent"))
       .catch((err) => console.log("email error"));
-    emails.AwsEmailPassword(user)
+    emails.AwsEmailPassword(user);
     await session.commitTransaction();
     session.endSession();
 
@@ -487,6 +487,20 @@ exports.finishTask = async (req, res) => {
         },
         { new: true }
       );
+      if (task.lector) {
+        const taskLector = await Freelancers.findOne({ _id: task.lector });
+        if (taskLector) {
+          freelancerEmails.reminder24Hours(
+            taskLector.email,
+            {
+              name: task.taskName,
+              keyword: task.keywords,
+              documentLink: task.fileLink,
+            },
+            "Lector"
+          );
+        }
+      }
     }
     if (task.status.toLowerCase() === "proofreading in progress") {
       // if (!req.body.pass) {
@@ -531,6 +545,20 @@ exports.finishTask = async (req, res) => {
           },
           { new: true }
         );
+        if (task.seo) {
+          const taskSeo = await Freelancers.findOne({ _id: task.seo });
+          if (taskSeo) {
+            freelancerEmails.reminder24Hours(
+              taskSeo.email,
+              {
+                name: task.taskName,
+                keyword: task.keywords,
+                documentLink: task.fileLink,
+              },
+              "SEO-Optimizer"
+            );
+          }
+        }
       }
       if (req.body.feedback) {
         const updatedTask = await ProjectTask.findOneAndUpdate(
@@ -543,8 +571,10 @@ exports.finishTask = async (req, res) => {
           { new: true }
         );
 
-        const texterFreelancer = await Freelancers.findOne({ _id: task.texter })
-        const project = await Projects.findOne({_id: task.project})
+        const texterFreelancer = await Freelancers.findOne({
+          _id: task.texter,
+        });
+        const project = await Projects.findOne({ _id: task.project });
         if (texterFreelancer) {
           const taskBody = {
             name: task.taskName,
@@ -552,13 +582,10 @@ exports.finishTask = async (req, res) => {
             editorName: "Lector",
             projectName: project?.projectName,
             role: "Texter",
-            feedback: req.body.feedback
-          }
-          freelancerEmails.taskInRevision(texterFreelancer.email, taskBody)
+            feedback: req.body.feedback,
+          };
+          freelancerEmails.taskInRevision(texterFreelancer.email, taskBody);
         }
-
-
-
       }
     }
     if (task.status.toLowerCase() === "seo optimization in progress") {
@@ -598,6 +625,20 @@ exports.finishTask = async (req, res) => {
           },
           { new: true }
         );
+        if (task.metaLector) {
+          const taskMetaLector = await Freelancers.findOne({ _id: task.metaLector });
+          if (taskMetaLector) {
+            freelancerEmails.reminder24Hours(
+              taskMetaLector.email,
+              {
+                name: task.taskName,
+                keyword: task.keywords,
+                documentLink: task.fileLink,
+              },
+              "Meta Lector"
+            );
+          }
+        }
       }
       if (!task.metaLector) {
         const earning = await freelancerEarnings.findOne({
@@ -631,7 +672,7 @@ exports.finishTask = async (req, res) => {
           { _id: req.body.taskId },
           {
             status: "Final",
-            finishedDate: new Date()
+            finishedDate: new Date(),
           },
           { new: true }
         );
