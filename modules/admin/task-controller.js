@@ -6,6 +6,7 @@ const dayjs = require("dayjs");
 const csvParser = require("csv-parser");
 const fs = require("fs");
 const path = require("path");
+const freelancerEmails = require("../../utils/sendEmail/freelancer/emails");
 
 // const { RDS } = require("aws-sdk");
 
@@ -100,7 +101,9 @@ exports.addTask = async (req, res) => {
               select: "email role",
               populate: { path: "role", select: "title" },
             })
-            .select("id projectName keywords folderId projectStatus metaLector");
+            .select(
+              "id projectName keywords folderId projectStatus metaLector"
+            );
 
           if (getuser && project) {
             if (
@@ -659,6 +662,19 @@ exports.importProjectTasks = async (req, res) => {
             );
 
             let createProjectTask = await ProjectTask.create(proectTaskObj);
+            const freelancer = await Freelancers.findOne({
+              _id: project.metaLector,
+            });
+            if (freelancer) {
+              freelancerEmails.taskAssign(
+                freelancer.email,
+                {
+                  name: createProjectTask.taskName,
+                  keyword: createProjectTask.keywords,
+                },
+                "Meta Lector"
+              );
+            }
             //console.log("before creating file");
             const totalFiles = await getFileCount(project.folderId);
             const fileName = `${project.projectId}-${totalFiles + 1}-${
@@ -812,6 +828,21 @@ exports.importProjectTasks = async (req, res) => {
           };
 
           let createProjectTask = await ProjectTask.create(proectTaskObj);
+          if (taskCount % 9 === 0) {
+            const freelancer = await Freelancers.findOne({
+              _id: project.metaLector,
+            });
+            if (freelancer) {
+              freelancerEmails.taskAssign(
+                freelancer.email,
+                {
+                  name: createProjectTask.taskName,
+                  keyword: createProjectTask.keywords,
+                },
+                "Meta Lector"
+              );
+            }
+          }
           //console.log("before creating file");
           const totalFiles = await getFileCount(project.folderId);
           const fileName = `${project.projectId}-${totalFiles + 1}-${
