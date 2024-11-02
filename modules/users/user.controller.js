@@ -1122,7 +1122,7 @@ exports.onboarding = async (req, res) => {
         },
         { new: true }
       );
-
+      emails.onBoadingSuccess()
       await session.commitTransaction();
       session.endSession();
       res.status(200).send({ message: "success" });

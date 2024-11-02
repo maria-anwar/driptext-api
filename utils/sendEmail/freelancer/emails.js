@@ -86,7 +86,9 @@ Email.welcomeFreelancer = async (freelancer) => {
     await ses.sendEmail(params).promise();
     //console.log("on boarding request sent");
   } catch (error) {
-    throw error;
+      // throw error;
+    console.log("error sending email: ", error);
+      
   }
 };
 
@@ -146,7 +148,9 @@ Email.taskAssign = async (email, task, role) => {
     await ses.sendEmail(params).promise();
     //console.log("on boarding request sent");
   } catch (error) {
-    throw error;
+      // throw error;
+    console.log("error sending email: ", error);
+      
   }
 };
 
@@ -207,7 +211,9 @@ Email.reminder24Hours = async (email, task, role) => {
     await ses.sendEmail(params).promise();
     //console.log("on boarding request sent");
   } catch (error) {
-    throw error;
+      // throw error;
+    console.log("error sending email: ", error);
+      
   }
 };
 
@@ -272,7 +278,9 @@ Email.taskInRevision = async (email, task) => {
     await ses.sendEmail(params).promise();
     //console.log("on boarding request sent");
   } catch (error) {
-    throw error;
+      // throw error;
+    console.log("error sending email: ", error);
+      
   }
 };
 

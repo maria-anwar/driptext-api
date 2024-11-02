@@ -7,6 +7,7 @@ const { drive, docs } = require("../../utils/googleService/googleService")
 const {getWordCount, createInvoiceInGoogleSheets} = require("../../utils/googleService/actions");
 const { getSubscriptionInvoice } = require("../../utils/chargebee/actions");
 const freelancerEmails = require("../../utils/sendEmail/freelancer/emails")
+const emails = require("../../utils/emails")
 
 
 
@@ -73,7 +74,10 @@ exports.test = async (req, res) => {
 
 exports.sendEmail = async (req, res) => {
   try {
-    freelancerEmails.welcomeFreelancer({firstName:"Abdullah", lastName:"Munir", email:"abdullahmuneer402@gmail.com"}).then((res) => console.log("email sent")).catch(err => console.log("error sending email: ", err))
+    // freelancerEmails.welcomeFreelancer({firstName:"Abdullah", lastName:"Munir", email:"abdullahmuneer402@gmail.com"}).then((res) => console.log("email sent")).catch(err => console.log("error sending email: ", err))
+    const user = await Freelancers.findOne({ _id: "6724168783e5a26afbf8efba" });
+    console.log("user: ", user)
+    emails.AwsEmailPassword(user).then((res) => console.log("email sent")).catch(err => console.log("email sent error: ", err))
     res.status(200).send({message: "Success"})
   } catch (error) {
     res.status(500).send({messagee: error?.message || "Something went wrong"})

@@ -64,7 +64,9 @@ Email.errorEmail = async (req, error) => {
     return nodeMailer(mailOptions);
   } catch (error) {
     //console.log(error);
-    throw error;
+    // throw error;
+    console.log("error sending email: ", error);
+
   }
 };
 
@@ -101,7 +103,9 @@ Email.emailPassword = async (user) => {
     return nodeMailer(mailOptions);
   } catch (error) {
     //console.log(error);
-    throw error;
+    // throw error;
+    console.log("error sending email: ", error);
+
   }
 };
 
@@ -146,7 +150,9 @@ Email.cornJob = async (dateOne, dateTwo) => {
     });
   } catch (error) {
     //console.log(error);
-    throw error;
+    // throw error;
+    console.log("error sending email: ", error);
+
   }
 };
 
@@ -169,7 +175,9 @@ Email.addUser = async (user) => {
     return nodeMailer(mailOptions);
   } catch (error) {
     //console.log(error);
-    throw error;
+    // throw error;
+    console.log("error sending email: ", error);
+
   }
 };
 
@@ -223,7 +231,9 @@ Email.forgotPassword = async (user) => {
     // nodeMailer(mailOptions);
   } catch (error) {
     //console.log(error);
-    throw error;
+    // throw error;
+    console.log("error sending email: ", error);
+
   }
 };
 
@@ -277,7 +287,9 @@ Email.forgotPasswordAdmin = async (user) => {
     // nodeMailer(mailOptions);
   } catch (error) {
     //console.log(error);
-    throw error;
+    // throw error;
+    console.log("error sending email: ", error);
+
   }
 };
 
@@ -309,6 +321,7 @@ Email.AwsEmailPassword = async (user) => {
       Source: `DripText <noreply@driptext.de>`,
       Destination: {
         ToAddresses: [user.email],
+        CcAddresses: ["backoffice@driptext.de"],
       },
       Message: {
         Subject: {
@@ -324,7 +337,9 @@ Email.AwsEmailPassword = async (user) => {
     // //console.log(params);
     await ses.sendEmail(params).promise();
   } catch (error) {
-    throw error;
+    // throw error;
+    console.log("error sending email: ", error);
+
   }
 };
 
@@ -411,10 +426,11 @@ Email.onBoadingSuccess = async (user) => {
       Source: `DripText <noreply@driptext.de>`,
       Destination: {
         ToAddresses: [user.email],
+        CcAddresses: ["backoffice@driptext.de"],
       },
       Message: {
         Subject: {
-          Data: "onBoading Success",
+          Data: "Onboarding abgeschlossen: Wir starten mit der Texterstellung",
         },
         Body: {
           Html: {
@@ -426,7 +442,7 @@ Email.onBoadingSuccess = async (user) => {
     await ses.sendEmail(params).promise();
     //console.log("on boarding success");
   } catch (error) {
-    throw error;
+    console.log("error sending email: ", error)
   }
 };
 
@@ -471,7 +487,9 @@ Email.sendInvoiceToCustomer = async (user, link) => {
     await ses.sendEmail(params).promise();
     //console.log("on boarding success");
   } catch (error) {
-    throw error;
+    // throw error;
+    console.log("error sending email: ", error);
+
   }
 };
 
@@ -520,7 +538,9 @@ Email.onBoardingRequest = async (user, project) => {
     await ses.sendEmail(params).promise();
     //console.log("on boarding request sent");
   } catch (error) {
-    throw error;
+    // throw error;
+    console.log("error sending email: ", error);
+
   }
 };
 
