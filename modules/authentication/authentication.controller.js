@@ -10,7 +10,6 @@ const Users = db.User;
 const Roles = db.Role;
 const Freelancers = db.Freelancer;
 
-
 exports.login = async (req, res) => {
   try {
     const joiSchema = Joi.object({
@@ -26,50 +25,12 @@ exports.login = async (req, res) => {
         message: message,
       });
     }
-     const FreelancerExists = await Freelancers.findOne({
-       email: req.body.email.trim(),
-       isActive: "Y",
-     }).select("firstName lastName email role password");
-     if (FreelancerExists) {
-       const freelancer = await Freelancers.findOne({
-         email: req.body.email.trim(),
-         password: req.body.password,
-         isActive: "Y",
-       })
-         .select("firstName lastName email role password")
-         .populate({ path: "role", select: "title" });
-
-       if (FreelancerExists && freelancer.password == req.body.password) {
-         // encryptHelper(user);
-         console.log("logdin");
-         const token = jwt.signToken({
-           userId: freelancer._id,
-           roleId: freelancer.role,
-           role: freelancer.role.title,
-         });
-         res.status(200).send({
-           message: "Logged in successful",
-           data: { user: freelancer },
-           token,
-         });
-       } else {
-         res.status(403).send({
-           title: "Incorrect Logins",
-           message: "Incorrect Logins",
-         });
-       }
-     } else {
-    //    res.status(401).send({
-    //      title: "Incorrect Email.",
-    //      message:
-    //        "Email does not exist in our system, Please verify you have entered correct email.",
-		 //    });
-		  const userExist = await Users.findOne({
+    const FreelancerExists = await Freelancers.findOne({
       email: req.body.email.trim(),
       isActive: "Y",
     }).select("firstName lastName email role password");
-    if (userExist) {
-      const user = await Users.findOne({
+    if (FreelancerExists) {
+      const freelancer = await Freelancers.findOne({
         email: req.body.email.trim(),
         password: req.body.password,
         isActive: "Y",
@@ -77,17 +38,17 @@ exports.login = async (req, res) => {
         .select("firstName lastName email role password")
         .populate({ path: "role", select: "title" });
 
-      if (userExist && user.password == req.body.password) {
+      if (FreelancerExists && freelancer.password == req.body.password) {
         // encryptHelper(user);
         console.log("logdin");
         const token = jwt.signToken({
-          userId: user._id,
-          roleId: user.role,
-          role: user.role.title,
+          userId: freelancer._id,
+          roleId: freelancer.role,
+          role: freelancer.role.title,
         });
         res.status(200).send({
           message: "Logged in successful",
-          data: { user },
+          data: { user: freelancer },
           token,
         });
       } else {
@@ -97,51 +58,89 @@ exports.login = async (req, res) => {
         });
       }
     } else {
-    //   res.status(401).send({
-    //   	title: "Incorrect Email.",
-    //   	message: "Email does not exist in our system, Please verify you have entered correct email."
-		//   });
-		 const userExist = await Users.findOne({
-       email: req.body.email.trim(),
-       isActive: "Y",
-     }).select("firstName lastName email role password");
-     if (userExist) {
-       const user = await Users.findOne({
-         email: req.body.email.trim(),
-         password: req.body.password,
-         isActive: "Y",
-       })
-         .select("firstName lastName email role password")
-         .populate({ path: "role", select: "title" });
+      //    res.status(401).send({
+      //      title: "Incorrect Email.",
+      //      message:
+      //        "Email does not exist in our system, Please verify you have entered correct email.",
+      //    });
+      const userExist = await Users.findOne({
+        email: req.body.email.trim(),
+        isActive: "Y",
+      }).select("firstName lastName email role password");
+      if (userExist) {
+        const user = await Users.findOne({
+          email: req.body.email.trim(),
+          password: req.body.password,
+          isActive: "Y",
+        })
+          .select("firstName lastName email role password")
+          .populate({ path: "role", select: "title" });
 
-       if (userExist && user.password == req.body.password) {
-         // encryptHelper(user);
-         console.log("logdin");
-         const token = jwt.signToken({
-           userId: user._id,
-           roleId: user.role,
-           role: user.role.title,
-         });
-         res.status(200).send({
-           message: "Logged in successful",
-           data: { user },
-           token,
-         });
-       } else {
-         res.status(403).send({
-           title: "Incorrect Logins",
-           message: "Incorrect Logins",
-         });
-       }
-     } else {
-       res.status(401).send({
-         title: "Incorrect Email.",
-         message:
-           "Email does not exist in our system, Please verify you have entered correct email.",
-       });
-     }
+        if (userExist && user.password == req.body.password) {
+          // encryptHelper(user);
+          console.log("logdin");
+          const token = jwt.signToken({
+            userId: user._id,
+            roleId: user.role,
+            role: user.role.title,
+          });
+          res.status(200).send({
+            message: "Logged in successful",
+            data: { user },
+            token,
+          });
+        } else {
+          res.status(403).send({
+            title: "Incorrect Logins",
+            message: "Incorrect Logins",
+          });
+        }
+      } else {
+        //   res.status(401).send({
+        //   	title: "Incorrect Email.",
+        //   	message: "Email does not exist in our system, Please verify you have entered correct email."
+        //   });
+        const userExist = await Users.findOne({
+          email: req.body.email.trim(),
+          isActive: "Y",
+        }).select("firstName lastName email role password");
+        if (userExist) {
+          const user = await Users.findOne({
+            email: req.body.email.trim(),
+            password: req.body.password,
+            isActive: "Y",
+          })
+            .select("firstName lastName email role password")
+            .populate({ path: "role", select: "title" });
+
+          if (userExist && user.password == req.body.password) {
+            // encryptHelper(user);
+            console.log("logdin");
+            const token = jwt.signToken({
+              userId: user._id,
+              roleId: user.role,
+              role: user.role.title,
+            });
+            res.status(200).send({
+              message: "Logged in successful",
+              data: { user },
+              token,
+            });
+          } else {
+            res.status(403).send({
+              title: "Incorrect Logins",
+              message: "Incorrect Logins",
+            });
+          }
+        } else {
+          res.status(401).send({
+            title: "Incorrect Email.",
+            message:
+              "Email does not exist in our system, Please verify you have entered correct email.",
+          });
+        }
+      }
     }
-     }
   } catch (err) {
     // emails.errorEmail(req, err);
     console.log(err);
@@ -215,7 +214,9 @@ exports.forgotPassword = async (req, res) => {
     var email = req.body.email.trim();
     const user = await Users.findOne({ email: email }).populate("role");
     if (!user) {
-      const freelancer = await Freelancers.findOne({ email: req.body.email.trim() })
+      const freelancer = await Freelancers.findOne({
+        email: req.body.email.trim(),
+      });
       if (freelancer) {
         emails.forgotPassword(freelancer);
         res.status(200).send({ message: "Email send to user." });
@@ -226,7 +227,6 @@ exports.forgotPassword = async (req, res) => {
             "Email does not exist in our system, Please verify you have entered correct email.",
         });
       }
-      
     }
     console.log("user: ", user);
     if (user) {
@@ -234,10 +234,9 @@ exports.forgotPassword = async (req, res) => {
         emails.forgotPasswordAdmin(user);
         res.status(200).send({ message: "Email send to user." });
       } else {
-         emails.forgotPassword(user);
-         res.status(200).send({ message: "Email send to user." });
+        emails.forgotPassword(user);
+        res.status(200).send({ message: "Email send to user." });
       }
-     
     } else {
       res.status(401).send({
         title: "Incorrect Email.",
@@ -269,10 +268,14 @@ exports.resetPassword = async (req, res) => {
       });
     } else {
       var email = req.email;
-      const user = await Users.findOne({
+      let user = "";
+      user = await Users.findOne({
         email: email,
         isActive: "Y",
       });
+      if (!user) {
+        user = await Freelancers.findOne({ email: email, isActive: "Y" });
+      }
 
       if (user) {
         var password = req.body.password;
