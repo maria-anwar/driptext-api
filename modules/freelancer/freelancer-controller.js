@@ -626,7 +626,9 @@ exports.finishTask = async (req, res) => {
           { new: true }
         );
         if (task.metaLector) {
-          const taskMetaLector = await Freelancers.findOne({ _id: task.metaLector });
+          const taskMetaLector = await Freelancers.findOne({
+            _id: task.metaLector,
+          });
           if (taskMetaLector) {
             freelancerEmails.reminder24Hours(
               taskMetaLector.email,
@@ -677,6 +679,15 @@ exports.finishTask = async (req, res) => {
           { new: true }
         );
 
+        const client = await Users.findOne({ _id: updateTask.user });
+        if (client) {
+          freelancerEmails.finishTask(client.email, {
+            name: updateTask.taskName,
+            keyword: updateTask.keywords,
+            documentLink: updateTask.fileLink,
+          });
+        }
+
         await finalizeTask(task);
 
         const updatedProject = await Projects.findOneAndUpdate(
@@ -716,7 +727,7 @@ exports.finishTask = async (req, res) => {
           role: "Meta Lector",
         });
       }
-      await ProjectTask.findOneAndUpdate(
+      const updatedTask = await ProjectTask.findOneAndUpdate(
         { _id: req.body.taskId },
         {
           status: "Final",
@@ -725,6 +736,14 @@ exports.finishTask = async (req, res) => {
         { new: true }
       );
       await finalizeTask(task);
+      const client = await Users.findOne({ _id: updatedTask.user });
+      if (client) {
+        freelancerEmails.finishTask(client.email, {
+          name: updatedTask.taskName,
+          keyword: updatedTask.keywords,
+          documentLink: updatedTask.fileLink,
+        });
+      }
       const updatedProject = await Projects.findOneAndUpdate(
         { _id: task.project },
         {
