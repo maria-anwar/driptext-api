@@ -267,15 +267,17 @@ exports.resetPassword = async (req, res) => {
         message: message,
       });
     } else {
-      var email = req.email;
+      var email = req.email.trim();
       let user = "";
-      user = await Users.findOne({
+      let freelancer = ""
+       user = await Users.findOne({
         email: email,
         isActive: "Y",
-      });
+       });
       if (!user) {
-        user = await Freelancers.findOne({ email: email, isActive: "Y" });
+        freelancer = await Freelancers.findOne({email: email, isActive: "Y"})
       }
+    
 
       if (user) {
         var password = req.body.password;
@@ -296,12 +298,30 @@ exports.resetPassword = async (req, res) => {
               message: "Error while reset User password",
             });
           });
+      } else if (freelancer) {
+          Freelancers.findOneAndUpdate(
+            { email: email.trim() },
+            { password: password },
+            { new: true }
+          )
+            .then((result) => {
+              res.send({
+                message: "Freelancer password reset successfully.",
+              });
+            })
+            .catch((err) => {
+              emails.errorEmail(req, err);
+              res.status(500).send({
+                message: "Error while reset User password",
+              });
+            });
+       
       } else {
-        res.status(401).send({
-          title: "Incorrect Email.",
-          message:
-            "Email does not exist in our system, Please verify you have entered correct email.",
-        });
+         res.status(401).send({
+           title: "Incorrect Email.",
+           message:
+             "Email does not exist in our system, Please verify you have entered correct email.",
+         });
       }
     }
   } catch (err) {
