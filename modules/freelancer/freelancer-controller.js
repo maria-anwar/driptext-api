@@ -6,6 +6,7 @@ const jwt = require("../../utils/jwt");
 const dayjs = require("dayjs");
 const { getWordCount } = require("../../utils/googleService/actions");
 const freelancerEmails = require("../../utils/sendEmail/freelancer/emails");
+const adminEmails = require("../../utils/sendEmail/admin/emails")
 const emails = require("../../utils/emails");
 
 const Freelancers = db.Freelancer;
@@ -585,6 +586,13 @@ exports.finishTask = async (req, res) => {
             feedback: req.body.feedback,
           };
           freelancerEmails.taskInRevision(texterFreelancer.email, taskBody);
+          const admins = await Users.find({ "role.title": "ProjectManger" }).populate("role")
+          if (admins && admins.length > 0) {
+            for (const admin of admins) {
+              adminEmails.taskInRevision(admin.email, taskBody);
+            }
+          }
+          
         }
       }
     }

@@ -334,7 +334,7 @@ Email.finishTask = async (clientEmail, task) => {
       },
       Message: {
         Subject: {
-          Data: `Auftrag ${task.name} (${task.keyword}) wurde zurückgegeben - Bitte überarbeiten`,
+          Data: `Auftrag ${task.name} (${task.keyword}) ist abgeschlossen`,
         },
         Body: {
           Html: {
