@@ -6,7 +6,7 @@ const jwt = require("../../utils/jwt");
 const dayjs = require("dayjs");
 const { getWordCount } = require("../../utils/googleService/actions");
 const freelancerEmails = require("../../utils/sendEmail/freelancer/emails");
-const adminEmails = require("../../utils/sendEmail/admin/emails")
+const adminEmails = require("../../utils/sendEmail/admin/emails");
 const emails = require("../../utils/emails");
 
 const Freelancers = db.Freelancer;
@@ -586,13 +586,23 @@ exports.finishTask = async (req, res) => {
             feedback: req.body.feedback,
           };
           freelancerEmails.taskInRevision(texterFreelancer.email, taskBody);
-          const admins = await Users.find({ "role.title": "ProjectManger" }).populate("role")
+          const admins = await Users.aggregate([
+            {
+              $lookup: {
+                from: "roles", // The collection name where roles are stored
+                localField: "role", // Field in Users referencing the Role document
+                foreignField: "_id", // The primary field in Role that Users reference
+                as: "role",
+              },
+            },
+            { $unwind: "$role" }, // Unwind to treat each role as a separate document
+            { $match: { "role.title": "ProjectManger" } }, // Filter for specific title
+          ]);
           if (admins && admins.length > 0) {
             for (const admin of admins) {
               adminEmails.taskInRevision(admin.email, taskBody);
             }
           }
-          
         }
       }
     }

@@ -87,7 +87,7 @@ const subscriptonCheck = async () => {
 
 const taskDeadlineCheck = async () => {
   try {
-    const allTasks = await ProjectTask.find({ isActive: "Y" }).populate([
+    const allTasks = await ProjectTask.find({ isActive: "Y", status: {$ne: "Final"} }).populate([
       "texter",
       "lector",
       "seo",
