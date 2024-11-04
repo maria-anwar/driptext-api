@@ -15,8 +15,8 @@ router.post("/update", jwt.protect, (req, res) => {
 	usersController.update(req, res);
 });
 
-router.post("/contact-support", jwt.protect, (req, res) => {
-  usersController.update(req, res);
+router.post("/contactSupport", jwt.protect, (req, res) => {
+  usersController.contactSupport(req, res);
 });
 
 router.post("/create/onboarding", (req, res) => {

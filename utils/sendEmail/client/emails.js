@@ -30,7 +30,7 @@ const awsNoreplySource = process.env.AWS_NOREPLY_SOURCE;
  */
 function Email() {}
 
-Email.taskInRevision = async (email, info) => {
+Email.contactSupport = async (email, info) => {
   try {
     // const data = fs.readFileSync("./templates/awsPasswordUpdateEmail.html", "utf8");
     // const filePath = path.join(__dirname, "templates", "awsPasswordUpdateEmail.html");
@@ -58,7 +58,12 @@ Email.taskInRevision = async (email, info) => {
 
  
       text = text.replace("[CLIENT_FIRST_NAME]", info.firstName);
-    text = text.replace("[CLIENT_LAST_NAME]", info.lastName);
+      text = text.replace("[CLIENT_LAST_NAME]", info.lastName);
+      text = text.replace("[EMAIL]", info.email);
+      text = text.replace("[MESSAGE]", info.message);
+
+      
+      
       
     
 
@@ -73,7 +78,7 @@ Email.taskInRevision = async (email, info) => {
       },
       Message: {
         Subject: {
-          Data: `Auftrag ${task.name} (${task.keyword}) wurde zurückgegeben - Bitte überarbeiten`,
+          Data: `Sample Contact Support Template`,
         },
         Body: {
           Html: {

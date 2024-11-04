@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const db = require("../../models");
 const encryptHelper = require("../../utils/encryptHelper");
 const emails = require("../../utils/emails");
+const clientEmails = require("../../utils/sendEmail/client/emails")
 const crypto = require("../../utils/crypto");
 const fs = require("fs");
 const handlebars = require("handlebars");
@@ -1005,6 +1006,7 @@ exports.contactSupport = async (req, res) => {
       firstName: Joi.string().required(),
       lastName: Joi.string().required(),
       email: Joi.string().required(),
+      message: Joi.string().required(),
     });
     const { error, value } = joiSchema.validate(req.body);
 
@@ -1017,6 +1019,31 @@ exports.contactSupport = async (req, res) => {
       });
       return;
     }
+    const emailBody = {
+      firstName: req.body.firstName,
+      lastName: req.body.lastName,
+      email: req.body.email,
+      message: req.body.message
+    }
+     const admins = await Users.aggregate([
+       {
+         $lookup: {
+           from: "roles", // The collection name where roles are stored
+           localField: "role", // Field in Users referencing the Role document
+           foreignField: "_id", // The primary field in Role that Users reference
+           as: "role",
+         },
+       },
+       { $unwind: "$role" }, // Unwind to treat each role as a separate document
+       { $match: { "role.title": "ProjectManger" } }, // Filter for specific title
+     ]);
+     if (admins && admins.length > 0) {
+       for (const admin of admins) {
+         clientEmails.contactSupport(admin.email, emailBody)
+       }
+     }
+    
+    res.status(200).send({message: "Success"})
   } catch (error) {
     res.status(500).send({ message: error?.message || "Something went wrong" });
   }
