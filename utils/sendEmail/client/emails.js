@@ -30,8 +30,7 @@ const awsNoreplySource = process.env.AWS_NOREPLY_SOURCE;
  */
 function Email() {}
 
-
-Email.taskInRevision = async (email, task) => {
+Email.taskInRevision = async (email, info) => {
   try {
     // const data = fs.readFileSync("./templates/awsPasswordUpdateEmail.html", "utf8");
     // const filePath = path.join(__dirname, "templates", "awsPasswordUpdateEmail.html");
@@ -41,8 +40,8 @@ Email.taskInRevision = async (email, task) => {
       "..",
       "..",
       "templates",
-      "admin",
-      "taskInRevision.html"
+      "client",
+      "contactSupport.html"
     );
     //console.log(filePath);
     const data = fs.readFileSync(filePath, "utf8");
@@ -57,16 +56,11 @@ Email.taskInRevision = async (email, task) => {
     // const link = `https://driptext-app.vercel.app/auth/forgetkey/${forgetPasswordToken}`;
     // text = text.replace("[USER_NAME]", `${user.firstName} ${user.lastName}`);
 
-    text = text.replace(/\[TASK_NAME\]/g, task.name);
-    text = text.replace("[KEYWORD]", task.keyword);
-    text = text.replace("[EDITOR_NAME]", task.editorName);
-    text = text.replace(
-      "[TASK_LINK]",
-      "https://driptext-app.vercel.app/freelancer-dashboard"
-    );
-    text = text.replace("[PROJECT_NAME]", task.projectName);
-    text = text.replace("[ROLE]", task.role);
-    text = text.replace("[FEEDBACK]", task.feedback);
+ 
+      text = text.replace("[CLIENT_FIRST_NAME]", info.firstName);
+    text = text.replace("[CLIENT_LAST_NAME]", info.lastName);
+      
+    
 
     //console.log("projectName: ", `${project.projectName}`);
     // text = text.replace(/{{project\.domain}}/g, `${project.projectName}`);
@@ -95,7 +89,5 @@ Email.taskInRevision = async (email, task) => {
     console.log("error sending email: ", error);
   }
 };
-
-
 
 module.exports = Email;

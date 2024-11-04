@@ -14,6 +14,11 @@ router.post("/create", (req, res) => {
 router.post("/update", jwt.protect, (req, res) => {
 	usersController.update(req, res);
 });
+
+router.post("/contact-support", jwt.protect, (req, res) => {
+  usersController.update(req, res);
+});
+
 router.post("/create/onboarding", (req, res) => {
 	usersController.onboarding(req, res);
 });

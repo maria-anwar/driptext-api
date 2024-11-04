@@ -181,13 +181,11 @@ exports.create = async (req, res) => {
               startAt = dayjs(
                 billResponse.subscription.current_term_start * 1000
               );
-              endAt = dayjs(
-                billResponse.subscription.current_term_end * 1000
-              );
+              endAt = dayjs(billResponse.subscription.current_term_end * 1000);
               subscription = await Subscription.create({
                 startDate: dayjs(startAt).format("YYYY-MM-DD"),
                 endDate: dayjs(endAt).format("YYYY-MM-DD"),
-                subscriptionData: req.body.response
+                subscriptionData: req.body.response,
               });
             }
 
@@ -269,20 +267,21 @@ exports.create = async (req, res) => {
                 //   paymentMethodType: `${billResponse.customer.payment_method.type}`,
                 //   amount: `${billResponse.subscription.subscription_items[0].unit_price}`,
                 // };
-                const subscriptionInvoice = await getSubscriptionInvoice(subscription.subscriptionData.invoice.id)
+                const subscriptionInvoice = await getSubscriptionInvoice(
+                  subscription.subscriptionData.invoice.id
+                );
                 if (subscriptionInvoice && subscriptionInvoice.download) {
-                   emails
-                     .sendInvoiceToCustomer(
-                       user,
-                       subscriptionInvoice.download.download_url
-                     )
-                     .then((res) => {
-                       console.log("billing email success: ", res);
-                     })
-                     .catch((err) => {
-                       console.log("billing email error: ", err);
-                     });
-                  
+                  emails
+                    .sendInvoiceToCustomer(
+                      user,
+                      subscriptionInvoice.download.download_url
+                    )
+                    .then((res) => {
+                      console.log("billing email success: ", res);
+                    })
+                    .catch((err) => {
+                      console.log("billing email error: ", err);
+                    });
                 }
                 // Send email
                 // emails
@@ -467,12 +466,12 @@ exports.create = async (req, res) => {
                 //   billResponse.subscription.subscription_items[0]
                 //     .current_term_end * 1000
                 // );
-                 startAt = dayjs(
-                   billResponse.subscription.current_term_start * 1000
-                 );
-                 endAt = dayjs(
-                   billResponse.subscription.current_term_end * 1000
-                 );
+                startAt = dayjs(
+                  billResponse.subscription.current_term_start * 1000
+                );
+                endAt = dayjs(
+                  billResponse.subscription.current_term_end * 1000
+                );
                 subscription = await Subscription.create({
                   startDate: dayjs(startAt).format("YYYY-MM-DD"),
                   endDate: dayjs(endAt).format("YYYY-MM-DD"),
@@ -608,22 +607,22 @@ exports.create = async (req, res) => {
                 //   amount: `${billResponse.subscription.subscription_items[0].unit_price}`,
                 // };
                 // Send email
-                 const subscriptionInvoice = await getSubscriptionInvoice(
-                   subscription.subscriptionData.invoice.id
-                 );
-                 if (subscriptionInvoice && subscriptionInvoice.download) {
-                   emails
-                     .sendInvoiceToCustomer(
-                       user,
-                       subscriptionInvoice.download.download_url
-                     )
-                     .then((res) => {
-                       console.log("billing email success: ", res);
-                     })
-                     .catch((err) => {
-                       console.log("billing email error: ", err);
-                     });
-                 }
+                const subscriptionInvoice = await getSubscriptionInvoice(
+                  subscription.subscriptionData.invoice.id
+                );
+                if (subscriptionInvoice && subscriptionInvoice.download) {
+                  emails
+                    .sendInvoiceToCustomer(
+                      user,
+                      subscriptionInvoice.download.download_url
+                    )
+                    .then((res) => {
+                      console.log("billing email success: ", res);
+                    })
+                    .catch((err) => {
+                      console.log("billing email error: ", err);
+                    });
+                }
                 // emails
                 //   .sendBillingInfo(
                 //     clientData.clientEmail,
@@ -739,7 +738,7 @@ exports.create = async (req, res) => {
             let subscription = "";
             let startAt = "";
             let endAt = "";
-            let projectStatus = "Free Trial"
+            let projectStatus = "Free Trial";
             if (billResponse !== "" && billResponse !== null) {
               subscriptionItems = {
                 item_price_id:
@@ -795,16 +794,13 @@ exports.create = async (req, res) => {
               startAt = dayjs(
                 billResponse.subscription.current_term_start * 1000
               );
-              endAt = dayjs(
-                billResponse.subscription.current_term_end * 1000
-              );
+              endAt = dayjs(billResponse.subscription.current_term_end * 1000);
               subscription = await Subscription.create({
                 startDate: dayjs(startAt).format("YYYY-MM-DD"),
                 endDate: dayjs(endAt).format("YYYY-MM-DD"),
                 subscriptionData: req.body.response,
               });
-              projectStatus = "Ready"
-
+              projectStatus = "Ready";
             }
 
             let final_project = "";
@@ -937,22 +933,22 @@ exports.create = async (req, res) => {
               //   paymentMethodType: `${billResponse.customer.payment_method.type}`,
               //   amount: `${billResponse.subscription.subscription_items[0].unit_price}`,
               // };
-               const subscriptionInvoice = await getSubscriptionInvoice(
-                 subscription.subscriptionData.invoice.id
-               );
-               if (subscriptionInvoice && subscriptionInvoice.download) {
-                 emails
-                   .sendInvoiceToCustomer(
-                     user,
-                     subscriptionInvoice.download.download_url
-                   )
-                   .then((res) => {
-                     console.log("billing email success: ", res);
-                   })
-                   .catch((err) => {
-                     console.log("billing email error: ", err);
-                   });
-               }
+              const subscriptionInvoice = await getSubscriptionInvoice(
+                subscription.subscriptionData.invoice.id
+              );
+              if (subscriptionInvoice && subscriptionInvoice.download) {
+                emails
+                  .sendInvoiceToCustomer(
+                    user,
+                    subscriptionInvoice.download.download_url
+                  )
+                  .then((res) => {
+                    console.log("billing email success: ", res);
+                  })
+                  .catch((err) => {
+                    console.log("billing email error: ", err);
+                  });
+              }
               // Send email
               // emails
               //   .sendBillingInfo(
@@ -999,6 +995,30 @@ exports.create = async (req, res) => {
     res.status(500).send({
       message: err.message || "Some error occurred.",
     });
+  }
+};
+
+exports.contactSupport = async (req, res) => {
+  try {
+    const joiSchema = Joi.object({
+      // userId: Joi.string().required(),
+      firstName: Joi.string().required(),
+      lastName: Joi.string().required(),
+      email: Joi.string().required(),
+    });
+    const { error, value } = joiSchema.validate(req.body);
+
+    if (error) {
+      emails.errorEmail(req, error);
+
+      const message = error.details[0].message.replace(/"/g, "");
+      res.status(401).send({
+        message: message,
+      });
+      return;
+    }
+  } catch (error) {
+    res.status(500).send({ message: error?.message || "Something went wrong" });
   }
 };
 
@@ -1122,7 +1142,7 @@ exports.onboarding = async (req, res) => {
         },
         { new: true }
       );
-      emails.onBoadingSuccess()
+      emails.onBoadingSuccess();
       await session.commitTransaction();
       session.endSession();
       res.status(200).send({ message: "success" });
