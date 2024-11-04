@@ -79,6 +79,8 @@ exports.create = async (req, res) => {
       lastName: req.body.lastName,
       email: req.body.email,
       country: req.body.country,
+      companyName: req.body.companyName,
+      vatIdNo: req.body.vatId,
       postCode: req.body.postCode,
       street: req.body.street,
       city: req.body.city,
@@ -101,6 +103,91 @@ exports.create = async (req, res) => {
     res.status(200).json({ message: "freelancer created", freelancer: user });
   } catch (error) {
     res.status(500).json({ message: error?.message || "Something went wrong" });
+  }
+};
+
+exports.getFreelancerDetails = async (req, res) => {
+  try {
+    if (!req.role || req.role.toLowerCase() !== "freelancer") {
+      res.status(401).send({ message: "Your are not freelancer" });
+      return;
+    }
+    const joiSchema = Joi.object({
+      freelancerId: Joi.string().required(),
+    });
+    const { error, value } = joiSchema.validate(req.body);
+    if (error) {
+      //   emails.errorEmail(req, error);
+
+      const message = error.details[0].message.replace(/"/g, "");
+      return res.status(401).send({
+        message: message,
+      });
+    }
+
+    const freelancer = await Freelancers.findOne({
+      _id: req.body.freelancerId,
+    });
+
+    res.status(200).send({ message: "Success", freelancer: freelancer });
+  } catch (error) {
+    res.status(500).send({ message: error?.message || "Something went wrong" });
+  }
+};
+
+exports.updateFreelancer = async (req, res) => {
+  try {
+    if (!req.role || req.role.toLowerCase() !== "freelancer") {
+      res.status(401).send({ message: "Your are not freelancer" });
+      return;
+    }
+    const joiSchema = Joi.object({
+      freelancerId: Joi.string().required(),
+      firstName: Joi.string().required(),
+      lastName: Joi.string().required(),
+      email: Joi.string().email().required(),
+      country: Joi.string().optional().allow(null).allow(""),
+      companyName: Joi.string().optional().allow(null).allow(""),
+      vatId: Joi.string().required(),
+      iban: Joi.string().required(),
+      vatRegulation: Joi.string().required(),
+      street: Joi.string().required(),
+      postCode: Joi.string().required(),
+      city: Joi.string().required(),
+    });
+    const { error, value } = joiSchema.validate(req.body);
+    if (error) {
+      //   emails.errorEmail(req, error);
+
+      const message = error.details[0].message.replace(/"/g, "");
+      return res.status(401).send({
+        message: message,
+      });
+    }
+    const tempFreelancer = {
+      firstName: req.body.firstName,
+      lastName: req.body.lastName,
+      email: req.body.email,
+      country: req.body.country,
+      companyName: req.body.companyName,
+      vatIdNo: req.body.vatId,
+      postCode: req.body.postCode,
+      street: req.body.street,
+      city: req.body.city,
+
+      billingInfo: {
+        iban: req.body.iban,
+        vatRegulation: req.body.vatRegulation,
+      },
+    };
+    const updatedFreelancer = await Freelancers.findOneAndUpdate(
+      { _id: req.body.freelancerId },
+      tempFreelancer,
+      { new: true }
+    );
+    res.status(200).send({message: "Success"})
+  } catch (error) {
+    res.status(500).send({ message: error?.message || "Something went wrong" });
   }
 };
 

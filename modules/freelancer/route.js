@@ -41,4 +41,14 @@ router.post("/emailCheck", (req, res) => {
   freelancerController.emailCheck(req, res);
 });
 
+router.get("/getFreelancer",jwt.protect, (req, res) => {
+  freelancerController.getFreelancerDetails(req, res);
+});
+
+router.post("/updateFreelancer", jwt.protect, (req, res) => {
+  freelancerController.updateFreelancer(req, res);
+});
+
+
+
 module.exports = router;
