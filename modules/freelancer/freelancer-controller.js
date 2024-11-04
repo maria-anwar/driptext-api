@@ -31,6 +31,7 @@ exports.create = async (req, res) => {
       street: Joi.string().required(),
       postCode: Joi.string().required(),
       city: Joi.string().required(),
+      phone: Joi.string().required(),
     });
     const { error, value } = joiSchema.validate(req.body);
     if (error) {
@@ -84,6 +85,7 @@ exports.create = async (req, res) => {
       postCode: req.body.postCode,
       street: req.body.street,
       city: req.body.city,
+      phone: req.body.phone,
       role: role._id,
       billingInfo: {
         iban: req.body.iban,
@@ -154,6 +156,7 @@ exports.updateFreelancer = async (req, res) => {
       street: Joi.string().required(),
       postCode: Joi.string().required(),
       city: Joi.string().required(),
+      phone: Joi.string().required(),
     });
     const { error, value } = joiSchema.validate(req.body);
     if (error) {
@@ -174,7 +177,7 @@ exports.updateFreelancer = async (req, res) => {
       postCode: req.body.postCode,
       street: req.body.street,
       city: req.body.city,
-
+      phone: req.body.phone,
       billingInfo: {
         iban: req.body.iban,
         vatRegulation: req.body.vatRegulation,
