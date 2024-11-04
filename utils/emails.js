@@ -398,7 +398,7 @@ Email.sendBillingInfo = async (to, subject, clientData) => {
   }
 };
 
-Email.onBoadingSuccess = async (user) => {
+Email.onBoadingSuccess = async (email, project) => {
   try {
     // const data = fs.readFileSync("./templates/awsPasswordUpdateEmail.html", "utf8");
     // const filePath = path.join(__dirname, "templates", "awsPasswordUpdateEmail.html");
@@ -411,12 +411,23 @@ Email.onBoadingSuccess = async (user) => {
     //console.log(filePath);
     const data = fs.readFileSync(filePath, "utf8");
     let text = data;
+
+    text = text.replace("[PROJECT_NAME]", project.projectName);
+    text = text.replace(
+      "[PROJECT_LINK]",
+      "https://driptext-app.vercel.app/client-dashboard"
+    );
+    text = text.replace(
+      "[DASHBOARD_LINK]",
+      "https://driptext-app.vercel.app/client-dashboard"
+    );
+
     //console.log(text);
-    const forgetPasswordToken = jwt.signToken({
-      userId: user.id,
-      roleId: user.role,
-      email: user.email,
-    });
+    // const forgetPasswordToken = jwt.signToken({
+    //   userId: user.id,
+    //   roleId: user.role,
+    //   email: user.email,
+    // });
 
     // const link = `https://driptext-app.vercel.app/auth/forgetkey/${forgetPasswordToken}`;
     // text = text.replace("[USER_NAME]", `${user.firstName} ${user.lastName}`);
@@ -425,7 +436,7 @@ Email.onBoadingSuccess = async (user) => {
     const params = {
       Source: `DripText <noreply@driptext.de>`,
       Destination: {
-        ToAddresses: [user.email],
+        ToAddresses: [email],
         CcAddresses: ["backoffice@driptext.de"],
       },
       Message: {
@@ -475,7 +486,7 @@ Email.sendInvoiceToCustomer = async (user, link) => {
       },
       Message: {
         Subject: {
-          Data: "onBoading Success",
+          Data: "Project Subscription",
         },
         Body: {
           Html: {

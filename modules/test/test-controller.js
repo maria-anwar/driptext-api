@@ -74,20 +74,8 @@ exports.test = async (req, res) => {
 
 exports.sendEmail = async (req, res) => {
   try {
-    //  const data = await Users.find({"role.title": "ProjectManger"}).populate("role")
-    const data = await Users.aggregate([
-      {
-        $lookup: {
-          from: "roles", // The collection name where roles are stored
-          localField: "role", // Field in Users referencing the Role document
-          foreignField: "_id", // The primary field in Role that Users reference
-          as: "role",
-        },
-      },
-      { $unwind: "$role" }, // Unwind to treat each role as a separate document
-      { $match: { "role.title": "ProjectManger" } }, // Filter for specific title
-    ]);
-    res.status(200).send({message: "Success", data})
+    emails.onBoadingSuccess({email: "abdullahmuneer402@gmail.com"}).then(res => console.log("on boarding email sent")).catch(err => console.log("sent email error: ", err))
+    res.status(200).send({message: "Success"})
   } catch (error) {
     res.status(500).send({messagee: error?.message || "Something went wrong"})
   }

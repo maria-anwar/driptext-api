@@ -1169,7 +1169,7 @@ exports.onboarding = async (req, res) => {
         },
         { new: true }
       );
-      emails.onBoadingSuccess();
+      emails.onBoadingSuccess(user.email, {projectName: updatedProject.projectName});
       await session.commitTransaction();
       session.endSession();
       res.status(200).send({ message: "success" });
