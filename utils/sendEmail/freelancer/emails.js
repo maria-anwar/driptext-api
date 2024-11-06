@@ -70,7 +70,7 @@ Email.welcomeFreelancer = async (freelancer) => {
       Source: `DripText <noreply@driptext.de>`,
       Destination: {
         ToAddresses: [freelancer.email],
-        CcAddresses: ["backoffice@driptext.de"],
+        // CcAddresses: ["backoffice@driptext.de"],
       },
       Message: {
         Subject: {
@@ -132,7 +132,7 @@ Email.taskAssign = async (email, task, role) => {
       Source: `DripText <noreply@driptext.de>`,
       Destination: {
         ToAddresses: [email],
-        CcAddresses: ["backoffice@driptext.de"],
+        // CcAddresses: ["backoffice@driptext.de"],
       },
       Message: {
         Subject: {
@@ -195,7 +195,7 @@ Email.reminder24Hours = async (email, task, role) => {
       Source: `DripText <noreply@driptext.de>`,
       Destination: {
         ToAddresses: [email],
-        CcAddresses: ["backoffice@driptext.de"],
+        // CcAddresses: ["backoffice@driptext.de"],
       },
       Message: {
         Subject: {
@@ -262,7 +262,7 @@ Email.taskInRevision = async (email, task) => {
       Source: `DripText <noreply@driptext.de>`,
       Destination: {
         ToAddresses: [email],
-        CcAddresses: ["backoffice@driptext.de"],
+        // CcAddresses: ["backoffice@driptext.de"],
       },
       Message: {
         Subject: {
@@ -330,7 +330,7 @@ Email.finishTask = async (clientEmail, task) => {
       Source: `DripText <noreply@driptext.de>`,
       Destination: {
         ToAddresses: [clientEmail],
-        CcAddresses: ["backoffice@driptext.de"],
+        // CcAddresses: ["backoffice@driptext.de"],
       },
       Message: {
         Subject: {

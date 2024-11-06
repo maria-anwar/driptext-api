@@ -68,7 +68,7 @@ Email.contactSupport = async (email, info) => {
       Source: `DripText <noreply@driptext.de>`,
       Destination: {
         ToAddresses: [email],
-        CcAddresses: ["backoffice@driptext.de"],
+        // CcAddresses: ["backoffice@driptext.de"],
       },
       Message: {
         Subject: {
@@ -128,7 +128,7 @@ Email.onBoardingReminder = async (email, obj) => {
       Source: `DripText <noreply@driptext.de>`,
       Destination: {
         ToAddresses: [email],
-        CcAddresses: ["backoffice@driptext.de"],
+        // CcAddresses: ["backoffice@driptext.de"],
       },
       Message: {
         Subject: {
@@ -191,7 +191,7 @@ Email.taskCompleted = async (email, obj) => {
       Source: `DripText <noreply@driptext.de>`,
       Destination: {
         ToAddresses: [email],
-        CcAddresses: ["backoffice@driptext.de"],
+        // CcAddresses: ["backoffice@driptext.de"],
       },
       Message: {
         Subject: {

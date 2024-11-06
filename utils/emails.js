@@ -262,7 +262,7 @@ Email.forgotPasswordAdmin = async (user) => {
       Source: `DripText <noreply@driptext.de>`,
       Destination: {
         ToAddresses: [user.email],
-        CcAddresses: ["backoffice@driptext.de"],
+        // CcAddresses: ["backoffice@driptext.de"],
       },
       Message: {
         Subject: {
@@ -322,7 +322,7 @@ Email.AwsEmailPassword = async (user) => {
       Source: `DripText <noreply@driptext.de>`,
       Destination: {
         ToAddresses: [user.email],
-        CcAddresses: ["backoffice@driptext.de"],
+        // CcAddresses: ["backoffice@driptext.de"],
       },
       Message: {
         Subject: {
@@ -438,7 +438,7 @@ Email.onBoadingSuccess = async (email, project) => {
       Source: `DripText <noreply@driptext.de>`,
       Destination: {
         ToAddresses: [email],
-        CcAddresses: ["backoffice@driptext.de"],
+        // CcAddresses: ["backoffice@driptext.de"],
       },
       Message: {
         Subject: {
@@ -488,7 +488,7 @@ Email.sendInvoiceToCustomer = async (user, link) => {
       Source: `DripText <noreply@driptext.de>`,
       Destination: {
         ToAddresses: [user.email],
-        CcAddresses: ["backoffice@driptext.de"],
+        // CcAddresses: ["backoffice@driptext.de"],
         // CcAddresses: ["backoffice@driptext.de"],
       },
       Message: {
@@ -541,7 +541,7 @@ Email.onBoardingRequest = async (user, project) => {
       Source: `DripText <noreply@driptext.de>`,
       Destination: {
         ToAddresses: [user.email],
-        CcAddresses: ["backoffice@driptext.de"],
+        // CcAddresses: ["backoffice@driptext.de"],
       },
       Message: {
         Subject: {
