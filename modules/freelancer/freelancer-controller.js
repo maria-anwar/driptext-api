@@ -833,81 +833,128 @@ exports.finishTask = async (req, res) => {
       }
     }
     if (task.status.toLowerCase() === "2nd proofreading in progress") {
-      const earning = await freelancerEarnings.findOne({
-        freelancer: task.metaLector,
-        project: task.project,
-        task: req.body.taskId,
-        role: "Meta Lector",
-      });
-      if (earning) {
-        await freelancerEarnings.findOneAndUpdate(
-          { _id: earning._id },
+      if (req.body.feedback) {
+        const updatedTask = await ProjectTask.findOneAndUpdate(
+          { _id: req.body.taskId },
           {
-            finalize: false,
-            billedWords: null,
-            date: task.dueDate,
-            difference: null,
-            price: null,
+            dueDate: dayjs().add(24, "hour").toDate(),
+            status: "In Rivision",
+            feedback: req.body.feedback,
           },
           { new: true }
         );
-      } else {
-        const newEarning = await freelancerEarnings.create({
-          freelancer: task.metaLector,
-          task: req.body.taskId,
-          project: task.project,
-          date: task.dueDate,
-          role: "Meta Lector",
+
+        const texterFreelancer = await Freelancers.findOne({
+          _id: task.texter,
         });
-      }
-      const updatedTask = await ProjectTask.findOneAndUpdate(
-        { _id: req.body.taskId },
-        {
-          status: "Final",
-          finishedDate: new Date(),
-        },
-        { new: true }
-      );
-      await finalizeTask(task);
-      const client = await Users.findOne({ _id: updatedTask.user });
-      if (client) {
-        freelancerEmails.finishTask(client.email, {
-          name: updatedTask.taskName,
-          keyword: updatedTask.keywords,
-          documentLink: updatedTask.fileLink,
-        });
-        clientEmails.taskCompleted(client.email, {
-          taskName: updateTask.taskName,
-          keyword: updateTask.keywords,
-          documentLink: updateTask.fileLink,
-        });
-        const admins = await Users.aggregate([
-          {
-            $lookup: {
-              from: "roles", // The collection name where roles are stored
-              localField: "role", // Field in Users referencing the Role document
-              foreignField: "_id", // The primary field in Role that Users reference
-              as: "role",
+        const project = await Projects.findOne({ _id: task.project });
+        if (texterFreelancer) {
+          const taskBody = {
+            name: task.taskName,
+            keyword: task.keywords,
+            editorName: "Lector",
+            projectName: project?.projectName,
+            role: "Texter",
+            feedback: req.body.feedback,
+          };
+          freelancerEmails.taskInRevision(texterFreelancer.email, taskBody);
+          const admins = await Users.aggregate([
+            {
+              $lookup: {
+                from: "roles", // The collection name where roles are stored
+                localField: "role", // Field in Users referencing the Role document
+                foreignField: "_id", // The primary field in Role that Users reference
+                as: "role",
+              },
             },
-          },
-          { $unwind: "$role" }, // Unwind to treat each role as a separate document
-          { $match: { "role.title": "ProjectManger" } }, // Filter for specific title
-        ]);
-        for (const admin of admins) {
-          adminEmails.taskCompleted(admin.email, {
-            taskName: updateTask.taskName,
-            keyword: updateTask.keywords,
-            documentLink: updateTask.fileLink,
-          });
+            { $unwind: "$role" }, // Unwind to treat each role as a separate document
+            { $match: { "role.title": "ProjectManger" } }, // Filter for specific title
+          ]);
+          if (admins && admins.length > 0) {
+            for (const admin of admins) {
+              adminEmails.taskInRevision(admin.email, taskBody);
+            }
+          }
         }
       }
-      const updatedProject = await Projects.findOneAndUpdate(
-        { _id: task.project },
-        {
-          $inc: { openTasks: -1, finalTasks: 1 },
-        },
-        { new: true }
-      );
+
+      if (!req.body.feedback) {
+        const earning = await freelancerEarnings.findOne({
+          freelancer: task.metaLector,
+          project: task.project,
+          task: req.body.taskId,
+          role: "Meta Lector",
+        });
+        if (earning) {
+          await freelancerEarnings.findOneAndUpdate(
+            { _id: earning._id },
+            {
+              finalize: false,
+              billedWords: null,
+              date: task.dueDate,
+              difference: null,
+              price: null,
+            },
+            { new: true }
+          );
+        } else {
+          const newEarning = await freelancerEarnings.create({
+            freelancer: task.metaLector,
+            task: req.body.taskId,
+            project: task.project,
+            date: task.dueDate,
+            role: "Meta Lector",
+          });
+        }
+        const updatedTask = await ProjectTask.findOneAndUpdate(
+          { _id: req.body.taskId },
+          {
+            status: "Final",
+            finishedDate: new Date(),
+          },
+          { new: true }
+        );
+        await finalizeTask(task);
+        const client = await Users.findOne({ _id: updatedTask.user });
+        if (client) {
+          freelancerEmails.finishTask(client.email, {
+            name: updatedTask.taskName,
+            keyword: updatedTask.keywords,
+            documentLink: updatedTask.fileLink,
+          });
+          clientEmails.taskCompleted(client.email, {
+            taskName: updatedTask.taskName,
+            keyword: updatedTask.keywords,
+            documentLink: updatedTask.fileLink,
+          });
+          const admins = await Users.aggregate([
+            {
+              $lookup: {
+                from: "roles", // The collection name where roles are stored
+                localField: "role", // Field in Users referencing the Role document
+                foreignField: "_id", // The primary field in Role that Users reference
+                as: "role",
+              },
+            },
+            { $unwind: "$role" }, // Unwind to treat each role as a separate document
+            { $match: { "role.title": "ProjectManger" } }, // Filter for specific title
+          ]);
+          for (const admin of admins) {
+            adminEmails.taskCompleted(admin.email, {
+              taskName: updatedTask.taskName,
+              keyword: updatedTask.keywords,
+              documentLink: updatedTask.fileLink,
+            });
+          }
+        }
+        const updatedProject = await Projects.findOneAndUpdate(
+          { _id: task.project },
+          {
+            $inc: { openTasks: -1, finalTasks: 1 },
+          },
+          { new: true }
+        );
+      }
     }
 
     res.status(200).send({ message: "success" });
