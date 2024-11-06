@@ -940,7 +940,7 @@ exports.create = async (req, res) => {
             let projectId = nameChar + "-" + idChar;
             const folderObj = await createFolder(projectId);
 
-            let updateProjectId = await Projects.findByIdAndUpdate(
+            let updatedProject = await Projects.findByIdAndUpdate(
               { _id: final_project._id },
               {
                 projectId: projectId,
