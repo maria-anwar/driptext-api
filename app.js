@@ -57,6 +57,10 @@ class Server {
     cron.schedule("0 0 * * *", () => {
       cornJobs.subscriptonCheck();
     });
+     cron.schedule("0 0 * * *", () => {
+       cornJobs.taskDeadlineCheck();
+     });
+    
   }
 
   async appExecute() {

@@ -3,6 +3,8 @@ const db = require("../../models");
 const emails = require("../emails");
 const dayjs = require("dayjs");
 const freelancerEmails = require("../../utils/sendEmail/freelancer/emails");
+const adminEmails = require("../../utils/sendEmail/admin/emails");
+const clientEmails = require("../../utils/sendEmail/client/emails")
 // const { projectName } = require("../../config/secrets");
 
 const Users = db.User;
@@ -27,7 +29,8 @@ const onBoardingReminder = async () => {
         // }
         if (!user) {
           console.log("not found: ", item.user);
-          await emails.onBoardingRequest(item.user, item);
+
+          await clientEmails.onBoardingReminder(item.user.email, {projectDomain: item.projectName})
         }
       });
     }
@@ -114,6 +117,24 @@ const taskDeadlineCheck = async () => {
             },
             { new: true }
           );
+            const admins = await Users.aggregate([
+              {
+                $lookup: {
+                  from: "roles", // The collection name where roles are stored
+                  localField: "role", // Field in Users referencing the Role document
+                  foreignField: "_id", // The primary field in Role that Users reference
+                  as: "role",
+                },
+              },
+              { $unwind: "$role" }, // Unwind to treat each role as a separate document
+              { $match: { "role.title": "ProjectManger" } }, // Filter for specific title
+            ]);
+          
+          for (const admin of admins) {
+            
+          }
+
+
         } else if (hoursDifference >= 24) {
           const freelancer = await Freelancers.findOne({ _id: task.texter });
           if (freelancer) {

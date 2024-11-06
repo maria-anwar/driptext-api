@@ -56,16 +56,10 @@ Email.contactSupport = async (email, info) => {
     // const link = `https://driptext-app.vercel.app/auth/forgetkey/${forgetPasswordToken}`;
     // text = text.replace("[USER_NAME]", `${user.firstName} ${user.lastName}`);
 
- 
-      text = text.replace("[CLIENT_FIRST_NAME]", info.firstName);
-      text = text.replace("[CLIENT_LAST_NAME]", info.lastName);
-      text = text.replace("[EMAIL]", info.email);
-      text = text.replace("[MESSAGE]", info.message);
-
-      
-      
-      
-    
+    text = text.replace("[CLIENT_FIRST_NAME]", info.firstName);
+    text = text.replace("[CLIENT_LAST_NAME]", info.lastName);
+    text = text.replace("[EMAIL]", info.email);
+    text = text.replace("[MESSAGE]", info.message);
 
     //console.log("projectName: ", `${project.projectName}`);
     // text = text.replace(/{{project\.domain}}/g, `${project.projectName}`);
@@ -79,6 +73,129 @@ Email.contactSupport = async (email, info) => {
       Message: {
         Subject: {
           Data: `Sample Contact Support Template`,
+        },
+        Body: {
+          Html: {
+            Data: text,
+          },
+        },
+      },
+    };
+    await ses.sendEmail(params).promise();
+    //console.log("on boarding request sent");
+  } catch (error) {
+    // throw error;
+    console.log("error sending email: ", error);
+  }
+};
+
+Email.onBoardingReminder = async (email, obj) => {
+  try {
+    // const data = fs.readFileSync("./templates/awsPasswordUpdateEmail.html", "utf8");
+    // const filePath = path.join(__dirname, "templates", "awsPasswordUpdateEmail.html");
+    const filePath = path.join(
+      __dirname,
+      "..",
+      "..",
+      "..",
+      "templates",
+      "client",
+      "onBoardingReminder.html"
+    );
+    //console.log(filePath);
+    const data = fs.readFileSync(filePath, "utf8");
+    let text = data;
+    // //console.log(text);
+    // const forgetPasswordToken = jwt.signToken({
+    //   userId: user.id,
+    //   roleId: user.role,
+    //   email: user.email,
+    // });
+
+    // const link = `https://driptext-app.vercel.app/auth/forgetkey/${forgetPasswordToken}`;
+    // text = text.replace("[USER_NAME]", `${user.firstName} ${user.lastName}`);
+
+    text = text.replace(/\[PROJECT_DOMAIN\]/g, obj.projectDomain);
+    text = text.replace(
+      "[DASHBOARD_LINK]",
+      "https://driptext-app.vercel.app/client-dashboard"
+    );
+
+    //console.log("projectName: ", `${project.projectName}`);
+    // text = text.replace(/{{project\.domain}}/g, `${project.projectName}`);
+
+    const params = {
+      Source: `DripText <noreply@driptext.de>`,
+      Destination: {
+        ToAddresses: [email],
+        CcAddresses: ["backoffice@driptext.de"],
+      },
+      Message: {
+        Subject: {
+          Data: `Erinnerung: Bitte fülle das Onboarding aus`,
+        },
+        Body: {
+          Html: {
+            Data: text,
+          },
+        },
+      },
+    };
+    await ses.sendEmail(params).promise();
+    //console.log("on boarding request sent");
+  } catch (error) {
+    // throw error;
+    console.log("error sending email: ", error);
+  }
+};
+
+Email.taskCompleted = async (email, obj) => {
+  try {
+    // const data = fs.readFileSync("./templates/awsPasswordUpdateEmail.html", "utf8");
+    // const filePath = path.join(__dirname, "templates", "awsPasswordUpdateEmail.html");
+    const filePath = path.join(
+      __dirname,
+      "..",
+      "..",
+      "..",
+      "templates",
+      "client",
+      "taskCompleted.html"
+    );
+    //console.log(filePath);
+    const data = fs.readFileSync(filePath, "utf8");
+    let text = data;
+    // //console.log(text);
+    // const forgetPasswordToken = jwt.signToken({
+    //   userId: user.id,
+    //   roleId: user.role,
+    //   email: user.email,
+    // });
+
+    // const link = `https://driptext-app.vercel.app/auth/forgetkey/${forgetPasswordToken}`;
+    // text = text.replace("[USER_NAME]", `${user.firstName} ${user.lastName}`);
+
+    text = text.replace("[TASK_NAME]", obj.taskName);
+      text = text.replace("[TASK_LINK]", obj.documentLink);
+    text = text.replace("[KEYWORD]", obj.keyword);
+      
+    text = text.replace(
+      "[DASHBOARD_LINK]",
+      "https://driptext-app.vercel.app/client-dashboard"
+    );
+
+    //console.log("projectName: ", `${project.projectName}`);
+    // text = text.replace(/{{project\.domain}}/g, `${project.projectName}`);
+
+    const params = {
+      Source: `DripText <noreply@driptext.de>`,
+      Destination: {
+        ToAddresses: [email],
+        CcAddresses: ["backoffice@driptext.de"],
+      },
+      Message: {
+        Subject: {
+          Data: `Auftrag ${obj.taskName} (${obj.keyword}) ist abgeschlossen`,
         },
         Body: {
           Html: {

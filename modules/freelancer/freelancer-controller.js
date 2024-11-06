@@ -7,6 +7,7 @@ const dayjs = require("dayjs");
 const { getWordCount } = require("../../utils/googleService/actions");
 const freelancerEmails = require("../../utils/sendEmail/freelancer/emails");
 const adminEmails = require("../../utils/sendEmail/admin/emails");
+const clientEmails = require("../../utils/sendEmail/client/emails");
 const emails = require("../../utils/emails");
 
 const Freelancers = db.Freelancer;
@@ -188,7 +189,7 @@ exports.updateFreelancer = async (req, res) => {
       tempFreelancer,
       { new: true }
     );
-    res.status(200).send({message: "Success"})
+    res.status(200).send({ message: "Success" });
   } catch (error) {
     res.status(500).send({ message: error?.message || "Something went wrong" });
   }
@@ -794,6 +795,30 @@ exports.finishTask = async (req, res) => {
             keyword: updateTask.keywords,
             documentLink: updateTask.fileLink,
           });
+          clientEmails.taskCompleted(client.email, {
+            taskName: updateTask.taskName,
+            keyword: updateTask.keywords,
+            documentLink: updateTask.fileLink,
+          });
+          const admins = await Users.aggregate([
+            {
+              $lookup: {
+                from: "roles", // The collection name where roles are stored
+                localField: "role", // Field in Users referencing the Role document
+                foreignField: "_id", // The primary field in Role that Users reference
+                as: "role",
+              },
+            },
+            { $unwind: "$role" }, // Unwind to treat each role as a separate document
+            { $match: { "role.title": "ProjectManger" } }, // Filter for specific title
+          ]);
+          for (const admin of admins) {
+            adminEmails.taskCompleted(admin.email, {
+              taskName: updateTask.taskName,
+              keyword: updateTask.keywords,
+              documentLink: updateTask.fileLink,
+            });
+          }
         }
 
         await finalizeTask(task);
@@ -851,6 +876,30 @@ exports.finishTask = async (req, res) => {
           keyword: updatedTask.keywords,
           documentLink: updatedTask.fileLink,
         });
+        clientEmails.taskCompleted(client.email, {
+          taskName: updateTask.taskName,
+          keyword: updateTask.keywords,
+          documentLink: updateTask.fileLink,
+        });
+        const admins = await Users.aggregate([
+          {
+            $lookup: {
+              from: "roles", // The collection name where roles are stored
+              localField: "role", // Field in Users referencing the Role document
+              foreignField: "_id", // The primary field in Role that Users reference
+              as: "role",
+            },
+          },
+          { $unwind: "$role" }, // Unwind to treat each role as a separate document
+          { $match: { "role.title": "ProjectManger" } }, // Filter for specific title
+        ]);
+        for (const admin of admins) {
+          adminEmails.taskCompleted(admin.email, {
+            taskName: updateTask.taskName,
+            keyword: updateTask.keywords,
+            documentLink: updateTask.fileLink,
+          });
+        }
       }
       const updatedProject = await Projects.findOneAndUpdate(
         { _id: task.project },

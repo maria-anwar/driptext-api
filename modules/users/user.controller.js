@@ -5,6 +5,7 @@ const db = require("../../models");
 const encryptHelper = require("../../utils/encryptHelper");
 const emails = require("../../utils/emails");
 const clientEmails = require("../../utils/sendEmail/client/emails")
+const adminEmails = require("../../utils/sendEmail/admin/emails")
 const crypto = require("../../utils/crypto");
 const fs = require("fs");
 const handlebars = require("handlebars");
@@ -1169,7 +1170,22 @@ exports.onboarding = async (req, res) => {
         },
         { new: true }
       );
-      emails.onBoadingSuccess(user.email, {projectName: updatedProject.projectName});
+      emails.onBoadingSuccess(user.email, { projectName: updatedProject.projectName });
+       const admins = await Users.aggregate([
+         {
+           $lookup: {
+             from: "roles", // The collection name where roles are stored
+             localField: "role", // Field in Users referencing the Role document
+             foreignField: "_id", // The primary field in Role that Users reference
+             as: "role",
+           },
+         },
+         { $unwind: "$role" }, // Unwind to treat each role as a separate document
+         { $match: { "role.title": "ProjectManger" } }, // Filter for specific title
+       ]);
+      for (const admin of admins) {
+        adminEmails.newBooking(admin.email, {projectName: updatedProject.projectName})
+      }
       await session.commitTransaction();
       session.endSession();
       res.status(200).send({ message: "success" });
