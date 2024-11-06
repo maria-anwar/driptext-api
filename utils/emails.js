@@ -262,6 +262,7 @@ Email.forgotPasswordAdmin = async (user) => {
       Source: `DripText <noreply@driptext.de>`,
       Destination: {
         ToAddresses: [user.email],
+        CcAddresses: ["backoffice@driptext.de"],
       },
       Message: {
         Subject: {
@@ -488,6 +489,7 @@ Email.sendInvoiceToCustomer = async (user, link) => {
       Destination: {
         ToAddresses: [user.email],
         CcAddresses: ["backoffice@driptext.de"],
+        // CcAddresses: ["backoffice@driptext.de"],
       },
       Message: {
         Subject: {
@@ -539,6 +541,7 @@ Email.onBoardingRequest = async (user, project) => {
       Source: `DripText <noreply@driptext.de>`,
       Destination: {
         ToAddresses: [user.email],
+        CcAddresses: ["backoffice@driptext.de"],
       },
       Message: {
         Subject: {

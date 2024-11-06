@@ -310,7 +310,7 @@ Email.onBoardingCompleted = async (email, obj) => {
     );
     text = text.replace("[CUSTOMER_NAME]", `${obj.firstName} ${obj.lastName}`);
     text = text.replace("[CUSTOMER_EMAIL]", obj.email);
-    text = text.replace("[PROJECT_NAME]", obj.projectName);
+    text = text.replace(/\[PROJECT_NAME\]/g, obj.projectName);
 
     //console.log("projectName: ", `${project.projectName}`);
     // text = text.replace(/{{project\.domain}}/g, `${project.projectName}`);
