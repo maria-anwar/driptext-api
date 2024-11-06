@@ -476,7 +476,7 @@ Email.sendInvoiceToCustomer = async (user, link) => {
     // const link = `https://driptext-app.vercel.app/auth/forgetkey/${forgetPasswordToken}`;
     // text = text.replace("[USER_NAME]", `${user.firstName} ${user.lastName}`);
     text = text.replace("[DOWNLOAD_INVOICE_LINK]", link);
-    text = text.replace("[CUSTOMER_NAME]", `${user.firtName} ${user.lastName}`);
+    text = text.replace("[CUSTOMER_NAME]", `${user.firstName} ${user.lastName}`);
     text = text.replace("[EMAIL]", user.email);
      text = text.replace(
        "[DASHBOARD_LINK]",
