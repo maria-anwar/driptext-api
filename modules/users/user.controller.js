@@ -239,7 +239,7 @@ exports.create = async (req, res) => {
             console.log("create user plan: ", createUserPlan);
             const folderObj = await createFolder(projectId);
 
-            await Projects.findByIdAndUpdate(
+            const updatedProject = await Projects.findByIdAndUpdate(
               createProject._id,
               {
                 projectId: projectId,
@@ -601,7 +601,7 @@ exports.create = async (req, res) => {
               let projectId = nameChar + "-" + idChar;
               const folderObj = await createFolder(projectId);
 
-              await Projects.findByIdAndUpdate(
+              const updatedProject = await Projects.findByIdAndUpdate(
                 { _id: final_project._id },
                 {
                   projectId: projectId,

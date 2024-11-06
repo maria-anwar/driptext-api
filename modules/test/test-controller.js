@@ -61,6 +61,9 @@ exports.test = async (req, res) => {
       vat: 0, // VAT percentage
       total: 2150, // Subtotal + VAT
     };
+
+    
+
     const data = await createInvoiceInGoogleSheets(invoiceData);
     
     res.status(200).send({message: "Success", data: data})
