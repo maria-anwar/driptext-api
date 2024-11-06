@@ -4,8 +4,9 @@ const mongoose = require("mongoose");
 const db = require("../../models");
 const encryptHelper = require("../../utils/encryptHelper");
 const emails = require("../../utils/emails");
-const clientEmails = require("../../utils/sendEmail/client/emails")
-const adminEmails = require("../../utils/sendEmail/admin/emails")
+const clientEmails = require("../../utils/sendEmail/client/emails");
+const adminEmails = require("../../utils/sendEmail/admin/emails");
+const adminEmails = require("../../utils/sendEmail/admin/emails");
 const crypto = require("../../utils/crypto");
 const fs = require("fs");
 const handlebars = require("handlebars");
@@ -284,6 +285,23 @@ exports.create = async (req, res) => {
                     .catch((err) => {
                       console.log("billing email error: ", err);
                     });
+                  const admins = await Users.aggregate([
+                    {
+                      $lookup: {
+                        from: "roles", // The collection name where roles are stored
+                        localField: "role", // Field in Users referencing the Role document
+                        foreignField: "_id", // The primary field in Role that Users reference
+                        as: "role",
+                      },
+                    },
+                    { $unwind: "$role" }, // Unwind to treat each role as a separate document
+                    { $match: { "role.title": "ProjectManger" } }, // Filter for specific title
+                  ]);
+                  for (const admin of admins) {
+                    adminEmails.newBooking(admin.email, {
+                      projectName: updatedProject.projectName,
+                    });
+                  }
                 }
                 // Send email
                 // emails
@@ -624,6 +642,23 @@ exports.create = async (req, res) => {
                     .catch((err) => {
                       console.log("billing email error: ", err);
                     });
+                     const admins = await Users.aggregate([
+                       {
+                         $lookup: {
+                           from: "roles", // The collection name where roles are stored
+                           localField: "role", // Field in Users referencing the Role document
+                           foreignField: "_id", // The primary field in Role that Users reference
+                           as: "role",
+                         },
+                       },
+                       { $unwind: "$role" }, // Unwind to treat each role as a separate document
+                       { $match: { "role.title": "ProjectManger" } }, // Filter for specific title
+                     ]);
+                     for (const admin of admins) {
+                       adminEmails.newBooking(admin.email, {
+                         projectName: updatedProject.projectName,
+                       });
+                     }
                 }
                 // emails
                 //   .sendBillingInfo(
@@ -950,6 +985,23 @@ exports.create = async (req, res) => {
                   .catch((err) => {
                     console.log("billing email error: ", err);
                   });
+                   const admins = await Users.aggregate([
+                     {
+                       $lookup: {
+                         from: "roles", // The collection name where roles are stored
+                         localField: "role", // Field in Users referencing the Role document
+                         foreignField: "_id", // The primary field in Role that Users reference
+                         as: "role",
+                       },
+                     },
+                     { $unwind: "$role" }, // Unwind to treat each role as a separate document
+                     { $match: { "role.title": "ProjectManger" } }, // Filter for specific title
+                   ]);
+                   for (const admin of admins) {
+                     adminEmails.newBooking(admin.email, {
+                       projectName: updatedProject.projectName,
+                     });
+                   }
               }
               // Send email
               // emails
@@ -1024,27 +1076,27 @@ exports.contactSupport = async (req, res) => {
       firstName: req.body.firstName,
       lastName: req.body.lastName,
       email: req.body.email,
-      message: req.body.message
+      message: req.body.message,
+    };
+    const admins = await Users.aggregate([
+      {
+        $lookup: {
+          from: "roles", // The collection name where roles are stored
+          localField: "role", // Field in Users referencing the Role document
+          foreignField: "_id", // The primary field in Role that Users reference
+          as: "role",
+        },
+      },
+      { $unwind: "$role" }, // Unwind to treat each role as a separate document
+      { $match: { "role.title": "ProjectManger" } }, // Filter for specific title
+    ]);
+    if (admins && admins.length > 0) {
+      for (const admin of admins) {
+        clientEmails.contactSupport(admin.email, emailBody);
+      }
     }
-     const admins = await Users.aggregate([
-       {
-         $lookup: {
-           from: "roles", // The collection name where roles are stored
-           localField: "role", // Field in Users referencing the Role document
-           foreignField: "_id", // The primary field in Role that Users reference
-           as: "role",
-         },
-       },
-       { $unwind: "$role" }, // Unwind to treat each role as a separate document
-       { $match: { "role.title": "ProjectManger" } }, // Filter for specific title
-     ]);
-     if (admins && admins.length > 0) {
-       for (const admin of admins) {
-         clientEmails.contactSupport(admin.email, emailBody)
-       }
-     }
-    
-    res.status(200).send({message: "Success"})
+
+    res.status(200).send({ message: "Success" });
   } catch (error) {
     res.status(500).send({ message: error?.message || "Something went wrong" });
   }
@@ -1170,7 +1222,9 @@ exports.onboarding = async (req, res) => {
         },
         { new: true }
       );
-      emails.onBoadingSuccess(user.email, { projectName: updatedProject.projectName });
+      emails.onBoadingSuccess(user.email, {
+        projectName: updatedProject.projectName,
+      });
        const admins = await Users.aggregate([
          {
            $lookup: {
@@ -1184,7 +1238,12 @@ exports.onboarding = async (req, res) => {
          { $match: { "role.title": "ProjectManger" } }, // Filter for specific title
        ]);
       for (const admin of admins) {
-        adminEmails.newBooking(admin.email, {projectName: updatedProject.projectName})
+        adminEmails.onBoardingCompleted(admin.email, {
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          projectName: updatedProject.projectName
+        })
       }
       await session.commitTransaction();
       session.endSession();
