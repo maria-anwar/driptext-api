@@ -18,13 +18,6 @@ module.exports = (mongoose) => {
       role: { type: String, required: false, unique: false, default: null },
       date: { type: Date, required: false, unique: false, default: null },
       finishedDate: { type: Date, required: false, unique: false, default: null },
-
-      finishedDate: {
-        type: Date,
-        required: false,
-        unique: false,
-        default: null,
-      },
       billedWords: {
         type: Number,
         required: false,

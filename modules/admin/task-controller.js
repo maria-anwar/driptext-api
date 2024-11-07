@@ -1200,12 +1200,13 @@ const sortTasks = (tasks) => {
   const currentDate = new Date();
 
   return tasks.sort((a, b) => {
-    // Condition 1: Due date close, equal, or past to current date
-    const aDueDate = new Date(a.dueDate);
-    const bDueDate = new Date(b.dueDate);
-    const aIsDue = aDueDate <= currentDate;
-    const bIsDue = bDueDate <= currentDate;
+    // Handle due dates, treating null as a past due date (final tasks)
+    const aDueDate = a.dueDate ? new Date(a.dueDate) : null;
+    const bDueDate = b.dueDate ? new Date(b.dueDate) : null;
+    const aIsDue = aDueDate === null || aDueDate <= currentDate;
+    const bIsDue = bDueDate === null || bDueDate <= currentDate;
 
+    // Condition 1: Due date close, equal, or past to current date
     if (aIsDue && !bIsDue) return -1;
     if (!aIsDue && bIsDue) return 1;
 
@@ -1223,14 +1224,21 @@ const sortTasks = (tasks) => {
     if (aStatus.includes("ready") && !bStatus.includes("ready")) return -1;
     if (!aStatus.includes("ready") && bStatus.includes("ready")) return 1;
 
-    // Condition 4: Status contains "final"
-    if (aStatus.includes("final") && !bStatus.includes("final")) return -1;
-    if (!aStatus.includes("final") && bStatus.includes("final")) return 1;
+    // Condition 4: Status contains "final" or due date is null (null dates treated as final)
+    if (
+      (aStatus.includes("final") || aDueDate === null) &&
+      !(bStatus.includes("final") || bDueDate === null)
+    )
+      return -1;
+    if (
+      !(aStatus.includes("final") || aDueDate === null) &&
+      (bStatus.includes("final") || bDueDate === null)
+    )
+      return 1;
 
     return 0; // If all conditions are equal, maintain original order
   });
 };
-
 exports.getAllTasks = async (req, res) => {
   try {
     if (!req.role || req.role.toLowerCase() !== "projectmanger") {
