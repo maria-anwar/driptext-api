@@ -322,7 +322,7 @@ exports.addTask = async (req, res) => {
               let proectTaskObj = {
                 keywords: req.body.keyword,
                 type: req.body.keywordType,
-                dueDate: req.body.dueDate,
+                dueDate: dayjs(req.body.dueDate).startOf("day"),
                 topic: req.body.topic,
                 comments: req.body.comment,
                 desiredNumberOfWords: req.body.wordCount,
@@ -521,7 +521,7 @@ exports.editTask = async (req, res) => {
     const task = await projectTasks.findOneAndUpdate(
       { _id: req.body.taskId },
       {
-        dueDate: req.body.dueDate,
+        dueDate: dayjs(req.body.dueDate).startOf("day"),
         topic: req.body.topic,
         keywords: req.body.keyword,
         desiredNumberOfWords: req.body.wordCount,

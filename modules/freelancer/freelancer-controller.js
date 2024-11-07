@@ -783,7 +783,7 @@ exports.finishTask = async (req, res) => {
           { _id: req.body.taskId },
           {
             status: "Final",
-            finishedDate: new Date(),
+            finishedDate: dayjs().startOf("day"),
           },
           { new: true }
         );
@@ -910,7 +910,7 @@ exports.finishTask = async (req, res) => {
           { _id: req.body.taskId },
           {
             status: "Final",
-            finishedDate: new Date(),
+            finishedDate: dayjs().startOf("day"),
           },
           { new: true }
         );
