@@ -7,6 +7,7 @@ const csvParser = require("csv-parser");
 const fs = require("fs");
 const path = require("path");
 const freelancerEmails = require("../../utils/sendEmail/freelancer/emails");
+const clientEmails = require("../../utils/sendEmail/client/emails");
 
 // const { RDS } = require("aws-sdk");
 
@@ -224,6 +225,16 @@ exports.assignFreelancersByProject = async (req, res) => {
         }
       }
     }
+    if (!project.workStarted) {
+      const client = await Users.findOne({ _id: project.user });
+      if (client) {
+        clientEmails.workStarted(client.email, { projectName: project.projectName }).then(async res => {
+          await Projects.findOneAndUpdate({ _id: project._id }, {
+            workStarted: true
+          },{new: true})
+        })
+      }
+    }
     await session.commitTransaction();
     session.endSession();
     res.status(200).send({ message: "success" });
@@ -286,7 +297,11 @@ exports.assignFreelancerByTask = async (req, res) => {
       );
       freelancerEmails.reminder24Hours(
         freelancer.email,
-        { name: updatedTask.taskName, keyword: updatedTask.keywords, documentLink: updatedTask.fileLink },
+        {
+          name: updatedTask.taskName,
+          keyword: updatedTask.keywords,
+          documentLink: updatedTask.fileLink,
+        },
         "Texter"
       );
     }

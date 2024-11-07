@@ -777,6 +777,7 @@ exports.finishTask = async (req, res) => {
             task: req.body.taskId,
             project: task.project,
             date: task.dueDate,
+            finishedDate: dayjs().startOf("day"),
             role: "SEO Optimizer",
           });
         }
@@ -905,6 +906,7 @@ exports.finishTask = async (req, res) => {
             task: req.body.taskId,
             project: task.project,
             date: task.dueDate,
+            finishedDate: dayjs().startOf("day"),
             role: "Meta Lector",
           });
         }

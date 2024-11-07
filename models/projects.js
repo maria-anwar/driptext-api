@@ -7,6 +7,7 @@ module.exports = (mongoose) => {
       id: { type: Number, unique: true },
       projectId: { type: String, required: false, default: null },
       onBoarding: { type: Boolean, required: false, default: false },
+      workStarted: { type: Boolean, required: false, default: false },
       projectName: { type: String, required: true, unique: false },
       tasks: { type: Number, unique: false, required: false, default: 0 },
       speech: { type: String, required: false, unique: false, default: null },

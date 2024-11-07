@@ -8,6 +8,7 @@ const {getWordCount, createInvoiceInGoogleSheets} = require("../../utils/googleS
 const { getSubscriptionInvoice } = require("../../utils/chargebee/actions");
 const freelancerEmails = require("../../utils/sendEmail/freelancer/emails")
 const emails = require("../../utils/emails")
+const dayjs = require("dayjs")
 
 
 
@@ -15,6 +16,8 @@ const Freelancers = db.Freelancer;
 const Users = db.User;
 const Roles = db.Role;
 const Billings = db.Billing.Billings;
+const freelancerEarnings = db.FreelancerEarning;
+
 
 exports.customerInvoice = async (req, res) => {
   try {
@@ -25,6 +28,84 @@ exports.customerInvoice = async (req, res) => {
   } catch (error) {
     res.status(500).send({message: error.message || "Something went wrong"})
   }
+}
+
+const calculateInvoice = async () => {
+  // Get the start and end dates for the previous month, ensuring no time component
+  const startOfPreviousMonth = dayjs()
+    .subtract(1, "month")
+    .startOf("month")
+    .format("YYYY-MM-DD"); // Formats to '2024-10-01'
+
+  const endOfPreviousMonth = dayjs()
+    .subtract(1, "month")
+    .endOf("month")
+    .format("YYYY-MM-DD"); // Formats to '2024-10-31'
+
+  console.log("Previous month start date:", startOfPreviousMonth);
+  console.log("Previous month end date:", endOfPreviousMonth);
+
+  const startOfPreviousMonthDate = new Date(startOfPreviousMonth);
+  const endOfPreviousMonthDate = new Date(endOfPreviousMonth);
+  // Aggregation pipeline
+  const freelancersEarnings = await freelancerEarnings.aggregate([
+    {
+      $match: {
+        finishedDate: {
+          $gte: startOfPreviousMonthDate,
+          $lt: dayjs(endOfPreviousMonthDate).add(1, "day").toDate(), // Includes the last day entirely
+        },
+      },
+    },
+    {
+      $lookup: {
+        from: "projectTasks", // Name of the task collection
+        localField: "task",
+        foreignField: "_id",
+        as: "task",
+      },
+    },
+    {
+      $lookup: {
+        from: "projects", // Name of the project collection
+        localField: "project",
+        foreignField: "_id",
+        as: "project",
+      },
+    },
+    {
+      $lookup: {
+        from: "freelancers", // Name of the freelancer collection
+        localField: "freelancer",
+        foreignField: "_id",
+        as: "freelancer",
+      },
+    },
+    {
+      $unwind: "$task",
+    },
+    {
+      $unwind: "$project",
+    },
+    {
+      $unwind: "$freelancer",
+    },
+    {
+      $group: {
+        _id: "$freelancer", // Group by freelancer
+        earnings: { $push: "$$ROOT" }, // Push the entire document into the 'earnings' array
+      },
+    },
+    {
+      $project: {
+        freelancer: "$_id",
+        earnings: 1,
+        _id: 0, // Exclude _id from output
+      },
+    },
+  ]);
+
+  return freelancersEarnings;
 }
 
 exports.test = async (req, res) => {
@@ -62,13 +143,11 @@ exports.test = async (req, res) => {
       total: 2150, // Subtotal + VAT
     };
 
+    const earnings = await calculateInvoice()
+
+    // const data = await createInvoiceInGoogleSheets(invoiceData);
     
-
-
-
-    const data = await createInvoiceInGoogleSheets(invoiceData);
-    
-    res.status(200).send({message: "Success", data: data})
+    res.status(200).send({ message: "Success", data: earnings });
      
         
     } catch (error) {
