@@ -1196,6 +1196,41 @@ exports.importProjectTasks = async (req, res) => {
   }
 };
 
+const sortTasks = (tasks) => {
+  const currentDate = new Date();
+
+  return tasks.sort((a, b) => {
+    // Condition 1: Due date close, equal, or past to current date
+    const aDueDate = new Date(a.dueDate);
+    const bDueDate = new Date(b.dueDate);
+    const aIsDue = aDueDate <= currentDate;
+    const bIsDue = bDueDate <= currentDate;
+
+    if (aIsDue && !bIsDue) return -1;
+    if (!aIsDue && bIsDue) return 1;
+
+    // Convert status to lowercase for case-insensitive comparison
+    const aStatus = a.status.toLowerCase();
+    const bStatus = b.status.toLowerCase();
+
+    // Condition 2: Status contains "in progress"
+    if (aStatus.includes("in progress") && !bStatus.includes("in progress"))
+      return -1;
+    if (!aStatus.includes("in progress") && bStatus.includes("in progress"))
+      return 1;
+
+    // Condition 3: Status contains "ready"
+    if (aStatus.includes("ready") && !bStatus.includes("ready")) return -1;
+    if (!aStatus.includes("ready") && bStatus.includes("ready")) return 1;
+
+    // Condition 4: Status contains "final"
+    if (aStatus.includes("final") && !bStatus.includes("final")) return -1;
+    if (!aStatus.includes("final") && bStatus.includes("final")) return 1;
+
+    return 0; // If all conditions are equal, maintain original order
+  });
+};
+
 exports.getAllTasks = async (req, res) => {
   try {
     if (!req.role || req.role.toLowerCase() !== "projectmanger") {
@@ -1205,7 +1240,9 @@ exports.getAllTasks = async (req, res) => {
 
     const allTasks = await projectTasks.find({ isActive: "Y" });
 
-    res.status(200).send({ message: "success", data: allTasks });
+    const finalTasks = sortTasks(allTasks)
+
+    res.status(200).send({ message: "success", data: finalTasks });
   } catch (error) {
     res.status(500).send({ message: error.message || "Something went wrong" });
   }
