@@ -90,28 +90,36 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
     ["", "", "", "", "", "", ""],
     ["", "", "", "Credit No:", "", invoiceData.creditNo],
     ["", "", "", "Date:", "", invoiceData.date],
-    ["", "", "", "Performance Period:", "", "01.08.2023-31.08.2023"],
-    ["Julia Schmitt Ltd", "", "", "", "", "", ""],
-    ["Eptakomis 1", "", "", "", "", "", ""],
-    ["7100 Aradippou, Cyprus", "", "", "", "", "", ""],
-    ["VAT: CY10430062", "", "", "", "", "", ""],
+    ["", "", "", "Performance Period:", "", invoiceData.performancePeriod],
+    [invoiceData.company, "", "", "", "", "", ""],
+    [invoiceData.city, "", "", "", "", "", ""],
+    [invoiceData.street, "", "", "", "", "", ""],
+    [`VAT: ${invoiceData.vatId}`, "", "", "", "", "", ""],
 
     // Column Headers for Items
-    ["Pos.", "Description", "", "Amount", "Price", "Total"],
+    ["Pos.", "Description", "", "Tasks", "Price", "Total"],
 
     // Items (example hardcoded items)
-    [1, "Service A", "", 2, 100, 200],
+    ...invoiceData.items.map((item, index) => [
+      index + 1, // Position
+      item.description,
+      "",
+      item.amount,
+      "",
+      item.total,
+    ]),
+    // [1, "Service A", "", 2, 100, 200],
 
     // Totals
-    ["", "", "", "Subtotal", "", 850],
-    ["", "", "", "VAT", "", 0],
-    ["", "", "", "Total", "", 850],
+    ["", "", "", "Subtotal", "", invoiceData.subtotal],
+    ["", "", "", "VAT", "", invoiceData.vat],
+    ["", "", "", "Total", "", invoiceData.total],
     ["", "", "", "", "", "", ""],
 
     // Footer (bank account details)
     [
       "",
-      "No VAT as the service is not taxed in the domestic market.",
+      invoiceData.vatDescription,
       "",
       "",
       "",
@@ -120,27 +128,6 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
     ["", "", "", "", "", "", ""],
     // ["", "", "", "", "", "", ""],
 
-    // Footer (bank account details)
-    [
-      "",
-      "No VAT as the service is not taxed in the domestic market.",
-      "",
-      "",
-      "",
-      "",
-    ],
-    ["", "", "", "", "", "", ""],
-    // ["", "", "", "", "", "", ""],
-
-    // Footer (bank account details)
-    [
-      "",
-      "No VAT as the service is not taxed in the domestic market.",
-      "",
-      "",
-      "",
-      "",
-    ],
     ["", "", "", "", "", "", ""],
 
     ["DripText Ltd.:", "", "", "Contact", "", "Bank Account:"],
@@ -250,8 +237,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
                 },
               },
             },
-            fields:
-              "userEnteredFormat.textFormat.bold",
+            fields: "userEnteredFormat.textFormat.bold",
           },
         },
         // Add borders for item list and totals
@@ -319,11 +305,9 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
     },
   });
 
-  const sheetUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/view`;
+  const sheetUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=pdf&portrait=true&gid=0&gridlines=false`;
   return sheetUrl;
 };
-
-
 
 exports.getFileCount = async (folderId) => {
   console.log("inside file count- folder id: ", folderId);

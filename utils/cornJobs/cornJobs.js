@@ -4,7 +4,8 @@ const emails = require("../emails");
 const dayjs = require("dayjs");
 const freelancerEmails = require("../../utils/sendEmail/freelancer/emails");
 const adminEmails = require("../../utils/sendEmail/admin/emails");
-const clientEmails = require("../../utils/sendEmail/client/emails")
+const clientEmails = require("../../utils/sendEmail/client/emails");
+const { createInvoiceInGoogleSheets } = require("../googleService/actions");
 // const { projectName } = require("../../config/secrets");
 
 const Users = db.User;
@@ -13,6 +14,7 @@ const Company = db.Company;
 const UserPlans = db.UserPlan;
 const ProjectTask = db.ProjectTask;
 const Freelancers = db.Freelancer;
+const freelancerEarnings = db.FreelancerEarning;
 
 const onBoardingReminder = async () => {
   try {
@@ -30,7 +32,9 @@ const onBoardingReminder = async () => {
         if (!user) {
           console.log("not found: ", item.user);
 
-          await clientEmails.onBoardingReminder(item.user.email, {projectDomain: item.projectName})
+          await clientEmails.onBoardingReminder(item.user.email, {
+            projectDomain: item.projectName,
+          });
         }
       });
     }
@@ -90,12 +94,10 @@ const subscriptonCheck = async () => {
 
 const taskDeadlineCheck = async () => {
   try {
-    const allTasks = await ProjectTask.find({ isActive: "Y", status: {$ne: "Final"} }).populate([
-      "texter",
-      "lector",
-      "seo",
-      "metaLector",
-    ]);
+    const allTasks = await ProjectTask.find({
+      isActive: "Y",
+      status: { $ne: "Final" },
+    }).populate(["texter", "lector", "seo", "metaLector"]);
 
     for (const task of allTasks) {
       const now = dayjs();
@@ -117,38 +119,34 @@ const taskDeadlineCheck = async () => {
             },
             { new: true }
           );
-            const admins = await Users.aggregate([
-              {
-                $lookup: {
-                  from: "roles", // The collection name where roles are stored
-                  localField: "role", // Field in Users referencing the Role document
-                  foreignField: "_id", // The primary field in Role that Users reference
-                  as: "role",
-                },
+          const admins = await Users.aggregate([
+            {
+              $lookup: {
+                from: "roles", // The collection name where roles are stored
+                localField: "role", // Field in Users referencing the Role document
+                foreignField: "_id", // The primary field in Role that Users reference
+                as: "role",
               },
-              { $unwind: "$role" }, // Unwind to treat each role as a separate document
-              { $match: { "role.title": "ProjectManger" } }, // Filter for specific title
-            ]);
-          
+            },
+            { $unwind: "$role" }, // Unwind to treat each role as a separate document
+            { $match: { "role.title": "ProjectManger" } }, // Filter for specific title
+          ]);
+
           for (const admin of admins) {
-            
           }
-
-
         } else if (hoursDifference >= 24) {
           const freelancer = await Freelancers.findOne({ _id: task.texter });
           if (freelancer) {
-             freelancerEmails.reminder24Hours(
-               freelancer.email,
-               {
-                 name: task.taskName,
-                 keyword: task.keywords,
-                 documentLink: task.fileLink,
-               },
-               "Texter"
-             );
+            freelancerEmails.reminder24Hours(
+              freelancer.email,
+              {
+                name: task.taskName,
+                keyword: task.keywords,
+                documentLink: task.fileLink,
+              },
+              "Texter"
+            );
           }
-         
         }
       }
 
@@ -246,8 +244,237 @@ const taskDeadlineCheck = async () => {
   }
 };
 
+const calculateInvoice = async () => {
+  // Get the start and end dates for the previous month, ensuring no time component
+  const startOfPreviousMonth = dayjs()
+    .subtract(1, "month")
+    .startOf("month")
+    .format("YYYY-MM-DD"); // Formats to '2024-10-01'
+
+  const endOfPreviousMonth = dayjs()
+    .subtract(1, "month")
+    .endOf("month")
+    .format("YYYY-MM-DD"); // Formats to '2024-10-31'
+
+  console.log("Previous month start date:", startOfPreviousMonth);
+  console.log("Previous month end date:", endOfPreviousMonth);
+
+  const startOfPreviousMonthDate = new Date(startOfPreviousMonth);
+  const endOfPreviousMonthDate = new Date(endOfPreviousMonth);
+  // Aggregation pipeline
+  const earnings = await freelancerEarnings.aggregate([
+    {
+      $match: {
+        finishedDate: {
+          $gte: startOfPreviousMonthDate,
+          $lt: dayjs(endOfPreviousMonthDate).add(1, "day").toDate(), // Includes the last day entirely
+        },
+        task: { $ne: null },
+        project: { $ne: null },
+        freelancer: { $ne: null },
+      },
+    },
+    {
+      $lookup: {
+        from: "projectTasks", // Name of the task collection
+        localField: "task",
+        foreignField: "_id",
+        as: "task",
+      },
+    },
+    {
+      $lookup: {
+        from: "projects", // Name of the project collection
+        localField: "project",
+        foreignField: "_id",
+        as: "project",
+      },
+    },
+    {
+      $lookup: {
+        from: "freelancers", // Name of the freelancer collection
+        localField: "freelancer",
+        foreignField: "_id",
+        as: "freelancer",
+      },
+    },
+    {
+      $unwind: { path: "$task", preserveNullAndEmptyArrays: true },
+    },
+    {
+      $unwind: { path: "$project", preserveNullAndEmptyArrays: true },
+    },
+    {
+      $unwind: { path: "$freelancer", preserveNullAndEmptyArrays: true },
+    },
+    {
+      $group: {
+        _id: "$freelancer", // Group by freelancer
+        earnings: { $push: "$$ROOT" }, // Push the entire document into the 'earnings' array
+      },
+    },
+    {
+      $project: {
+        freelancer: "$_id",
+        earnings: { $ifNull: ["$earnings", []] }, // Ensure earnings is an array
+        _id: 0, // Exclude _id from output
+      },
+    },
+  ]);
+
+  // console.log("freelancer earnings: ", earnings)
+
+  return earnings;
+};
+
+const monthlyFreelancingInvoicing = async () => {
+  try {
+    const tempData = [];
+    const earnings = await calculateInvoice();
+    for (const earning of earnings) {
+      let temp = {
+        creditNo: "2024-10-001",
+        date: "2024-10-22",
+        performancePeriod: "2024-09-01 to 2024-09-30",
+        clientName: "John Doe Ltd.",
+        freelancerEmail: "",
+        vatDescription: "",
+        company: "",
+        city: "",
+        street: "",
+        vatId: "",
+        items: [
+          {
+            pos: 1,
+            description: "AI-generated content for September 2024",
+            amount: 10,
+            price: 100,
+            total: 1000,
+          },
+          {
+            pos: 2,
+            description: "Editing services for AI content",
+            amount: 5,
+            price: 150,
+            total: 750,
+          },
+          {
+            pos: 3,
+            description: "Consultation on AI-driven content strategy",
+            amount: 2,
+            price: 200,
+            total: 400,
+          },
+        ],
+        subtotal: 2150, // Sum of all the item totals
+        vat: 0, // VAT percentage
+        total: 2150, // Subtotal + VAT
+      };
+      let subTotal = 0;
+      let total = 0;
+      let totalTasks = 0;
+      let vat = 0;
+      let vatDescription =
+        "No VAT as the service is not taxed in the domestic market.";
+      temp.creditNo = dayjs().startOf("day").format("YYYY-MM-DD");
+      temp.date = dayjs().startOf("day").format("YYYY-MM-DD");
+      const startOfPreviousMonth = dayjs()
+        .subtract(1, "month")
+        .startOf("month")
+        .format("YYYY-MM-DD"); // Formats to '2024-10-01'
+
+      const endOfPreviousMonth = dayjs()
+        .subtract(1, "month")
+        .endOf("month")
+        .format("YYYY-MM-DD"); // Formats to '2024-10-31'
+
+      console.log("Previous month start date:", startOfPreviousMonth);
+      console.log("Previous month end date:", endOfPreviousMonth);
+
+      const startOfPreviousMonthDate = new Date(startOfPreviousMonth);
+      const endOfPreviousMonthDate = new Date(endOfPreviousMonth);
+
+      temp.performancePeriod = `${dayjs(startOfPreviousMonthDate).format(
+        "YYYY-MM-DD"
+      )} to ${dayjs(endOfPreviousMonthDate).format("YYYY-MM-DD")}`;
+      temp.clientName = `${earning.freelancer.firstName} ${earning.freelancer.lastName}`;
+
+      for (const taskEarning of earning.earnings) {
+        subTotal = subTotal + taskEarning.price;
+        totalTasks = totalTasks + 1;
+      }
+
+      const tempItem = [
+        {
+          pos: 1,
+          description: `Freelancer Invoice For ${dayjs(
+            startOfPreviousMonthDate
+          ).format("MMMM YYYY")}`,
+          amount: totalTasks,
+          price: subTotal,
+          total: subTotal,
+        },
+      ];
+
+      temp.items = tempItem;
+      if (
+        earning.freelancer.billingInfo.vatRegulation
+          .toLowerCase()
+          .includes("cy ltd")
+      ) {
+        const result = (19 / 100) * subTotal;
+        vat = result;
+        vatDescription = "VAT CY Ltd (19%)";
+      }
+      temp.company = earning.freelancer.company;
+      temp.city = earning.freelancer.city;
+      temp.street = earning.freelancer.street;
+      temp.vatId = earning.freelancer.vatIdNo;
+      temp.vatDescription = vatDescription;
+      total = subTotal + vat;
+      temp.subtotal = subTotal;
+      temp.vat = vat;
+      temp.total = total;
+      temp.freelancerEmail = earning.freelancer.email;
+
+      tempData.push(temp);
+    }
+
+    const finalData = [];
+
+    for (const temp of tempData) {
+      const link = await createInvoiceInGoogleSheets(temp);
+      finalData.push({ link, freelancerEmail: temp.freelancerEmail });
+    }
+
+    for (const data of finalData) {
+      freelancerEmails.monthlyInvoice(data.freelancerEmail, data.link);
+      const admins = await Users.aggregate([
+        {
+          $lookup: {
+            from: "roles", // The collection name where roles are stored
+            localField: "role", // Field in Users referencing the Role document
+            foreignField: "_id", // The primary field in Role that Users reference
+            as: "role",
+          },
+        },
+        { $unwind: "$role" }, // Unwind to treat each role as a separate document
+        { $match: { "role.title": "ProjectManger" } }, // Filter for specific title
+      ]);
+      for (const admin of admins) {
+        adminEmails.freelancerMonthlyInvoice(admin.email, data.link);
+      }
+    }
+
+    // const data = await createInvoiceInGoogleSheets(invoiceData);
+
+    //  res.status(200).send({ message: "Success", data: earnings });
+  } catch (err) {}
+};
+
 module.exports = {
   onBoardingReminder,
   subscriptonCheck,
   taskDeadlineCheck,
+  monthlyFreelancingInvoicing
 };

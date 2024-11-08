@@ -5,6 +5,7 @@ const nodeMailer = require("../../nodeMailer");
 const jwt = require("../../jwt");
 const crypto = require("../../../utils/crypto");
 const handlebars = require("handlebars");
+const dayjs = require("dayjs")
 
 const path = require("path");
 const baseURL = secrets.frontend_URL;
@@ -335,6 +336,72 @@ Email.finishTask = async (clientEmail, task) => {
       Message: {
         Subject: {
           Data: `Auftrag ${task.name} (${task.keyword}) ist abgeschlossen`,
+        },
+        Body: {
+          Html: {
+            Data: text,
+          },
+        },
+      },
+    };
+    await ses.sendEmail(params).promise();
+    //console.log("on boarding request sent");
+  } catch (error) {
+    // throw error;
+    console.log("error sending email: ", error);
+  }
+};
+
+Email.monthlyInvoice = async (email, invoiceLink) => {
+  try {
+    // const data = fs.readFileSync("./templates/awsPasswordUpdateEmail.html", "utf8");
+    // const filePath = path.join(__dirname, "templates", "awsPasswordUpdateEmail.html");
+    const filePath = path.join(
+      __dirname,
+      "..",
+      "..",
+      "..",
+      "templates",
+      "freelancers",
+      "monthlyInvoice.html"
+    );
+    //console.log(filePath);
+    const data = fs.readFileSync(filePath, "utf8");
+    let text = data;
+    // //console.log(text);
+    // const forgetPasswordToken = jwt.signToken({
+    //   userId: user.id,
+    //   roleId: user.role,
+    //   email: user.email,
+    // });
+
+    // const link = `https://driptext-app.vercel.app/auth/forgetkey/${forgetPasswordToken}`;
+    // text = text.replace("[USER_NAME]", `${user.firstName} ${user.lastName}`);
+
+  
+    text = text.replace("[MONTH]", dayjs().format("MMMM YYYY"));
+
+    // text = text.replace("[EDITOR_NAME]", task.editorName);
+    text = text.replace(
+      "[INVOICE_LINK]",
+      invoiceLink
+    );
+    // text = text.replace("[PROJECT_NAME]", task.projectName);
+    // text = text.replace("[ROLE]", task.role);
+    // text = text.replace("[FEEDBACK]", task.feedback);
+
+    //console.log("projectName: ", `${project.projectName}`);
+    // text = text.replace(/{{project\.domain}}/g, `${project.projectName}`);
+
+    const params = {
+      Source: `DripText <noreply@driptext.de>`,
+      Destination: {
+        ToAddresses: [email],
+        // CcAddresses: ["backoffice@driptext.de"],
+      },
+      Message: {
+        Subject: {
+          Data: `Freelancer Monthly Invoice For ${dayjs().format("MMMM YYYY")}`,
         },
         Body: {
           Html: {
