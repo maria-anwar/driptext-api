@@ -18,6 +18,7 @@ const Users = db.User;
 const Roles = db.Role;
 const Billings = db.Billing.Billings;
 const freelancerEarnings = db.FreelancerEarning;
+const counter = db.Counters;
 
 exports.customerInvoice = async (req, res) => {
   try {
@@ -114,6 +115,19 @@ const calculateInvoice = async () => {
 
   return earnings;
 };
+
+exports.testCounter = async (req, res) => {
+  try {
+
+    const counter = mongoose.connection.collection("counters")
+    const counterData = await counter.findOne({id:"id"})
+
+    res.status(200).send({ message: "Success", data: counterData });
+    
+  } catch (error) {
+    res.status(500).send({message: error?.message || "Something went wrong"})
+  }
+}
 
 exports.test = async (req, res) => {
   try {

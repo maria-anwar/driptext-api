@@ -18,6 +18,10 @@ router.get("/sendEmail", (req, res) => {
   testController.sendEmail(req, res);
 });
 
+router.get("/testCounter", (req, res) => {
+  testController.testCounter(req, res);
+});
+
 router.get("/createFolder", (req, res) => {
   testController.createFolder(req, res);
 });

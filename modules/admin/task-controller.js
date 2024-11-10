@@ -26,6 +26,7 @@ const {
   exportTasksToSheetInFolder,
   getWordCount,
 } = require("../../utils/googleService/actions");
+const { getTaskCounter } = require("../../utils/counter/counter");
 
 exports.addTask = async (req, res) => {
   //console.log("on boarding api called ... !!");
@@ -102,7 +103,7 @@ exports.addTask = async (req, res) => {
               populate: { path: "role", select: "title" },
             })
             .select(
-              "id projectName keywords folderId projectStatus metaLector"
+              "id projectName keywords folderId projectStatus metaLector projectId"
             );
 
           if (getuser && project) {
@@ -174,7 +175,7 @@ exports.addTask = async (req, res) => {
                   );
                 }
                 const totalFiles = await getFileCount(project.folderId);
-                const fileName = `${project.id}-${totalFiles + 1}-${
+                const fileName = `${project.projectId}-${totalFiles + 1}-${
                   createProjectTask.keywords || "No Keywords"
                 }`;
                 const fileObj = await createTaskFile(
@@ -222,7 +223,8 @@ exports.addTask = async (req, res) => {
                   .slice(0, 2)
                   .toUpperCase();
                 let idChar = createProjectTask._id.toString().slice(-4);
-                let taskId = nameChar + "-" + idChar;
+                const taskCounter = await getTaskCounter()
+                let taskId = `${project.projectId}-${taskCounter?.seq}`;
 
                 let updateTaskId = await ProjectTask.findByIdAndUpdate(
                   { _id: createProjectTask._id },
@@ -352,7 +354,7 @@ exports.addTask = async (req, res) => {
                 }
               }
               const totalFiles = await getFileCount(project.folderId);
-              const fileName = `${project.id}-${totalFiles + 1}-${
+              const fileName = `${project.projectId}-${totalFiles + 1}-${
                 createProjectTask.keywords || "No Keywords"
               }`;
               const fileObj = await createTaskFile(project.folderId, fileName);
@@ -412,7 +414,8 @@ exports.addTask = async (req, res) => {
                 .slice(0, 2)
                 .toUpperCase();
               let idChar = createProjectTask._id.toString().slice(-4);
-              let taskId = nameChar + "-" + idChar;
+              const taskCounter = await getTaskCounter();
+              let taskId = `${project.projectId}-${taskCounter?.seq}`;
 
               let updateTaskId = await ProjectTask.findByIdAndUpdate(
                 { _id: createProjectTask._id },
@@ -773,7 +776,8 @@ exports.importProjectTasks = async (req, res) => {
 
             let nameChar = upadteProject.projectName.slice(0, 2).toUpperCase();
             let idChar = createProjectTask._id.toString().slice(-4);
-            let taskId = nameChar + "-" + idChar;
+            const taskCounter = await getTaskCounter();
+            let taskId = `${project.projectId}-${taskCounter?.seq}`;
 
             let updatedTask = await ProjectTask.findByIdAndUpdate(
               { _id: createProjectTask._id },
@@ -972,7 +976,8 @@ exports.importProjectTasks = async (req, res) => {
 
           let nameChar = upadteProject.projectName.slice(0, 2).toUpperCase();
           let idChar = createProjectTask._id.toString().slice(-4);
-          let taskId = nameChar + "-" + idChar;
+         const taskCounter = await getTaskCounter();
+         let taskId = `${project.projectId}-${taskCounter?.seq}`;
 
           let updatedTask = await ProjectTask.findByIdAndUpdate(
             { _id: createProjectTask._id },
@@ -1239,6 +1244,7 @@ const sortTasks = (tasks) => {
     return 0; // If all conditions are equal, maintain original order
   });
 };
+
 exports.getAllTasks = async (req, res) => {
   try {
     if (!req.role || req.role.toLowerCase() !== "projectmanger") {

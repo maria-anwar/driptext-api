@@ -175,25 +175,25 @@ exports.editProject = async (req, res) => {
       { _id: req.body.projectId },
       {
         projectName: req.body.domain,
-        projectId: projId,
+        // projectId: projId,
         speech: req.body.speech,
         prespective: req.body.prespective,
       },
       { new: true }
     );
 
-    for (const task of project.projectTasks) {
-      let nameChar = req.body.domain.slice(0, 2).toUpperCase();
-      let idChar = task.toString().slice(-4);
-      let taskId = nameChar + "-" + idChar;
-      await projectTasks.findOneAndUpdate(
-        { _id: task },
-        {
-          taskName: taskId,
-        },
-        { new: true }
-      );
-    }
+    // for (const task of project.projectTasks) {
+    //   let nameChar = req.body.domain.slice(0, 2).toUpperCase();
+    //   let idChar = task.toString().slice(-4);
+    //   let taskId = nameChar + "-" + idChar;
+    //   await projectTasks.findOneAndUpdate(
+    //     { _id: task },
+    //     {
+    //       taskName: taskId,
+    //     },
+    //     { new: true }
+    //   );
+    // }
 
     res.status(200).json({ message: "success" });
   } catch (error) {

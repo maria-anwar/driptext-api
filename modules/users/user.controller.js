@@ -18,6 +18,7 @@ const {
   getFileCount,
 } = require("../../utils/googleService/actions");
 const { getSubscriptionInvoice } = require("../../utils/chargebee/actions");
+const { getProjectCounter } = require("../../utils/counter/counter");
 
 const Users = db.User;
 const Roles = db.Role;
@@ -195,7 +196,8 @@ exports.create = async (req, res) => {
             let createProject = await Projects.create(projectObj);
             let nameChar = createProject.projectName.slice(0, 2).toUpperCase();
             let idChar = createProject._id.toString().slice(-4);
-            let projectId = nameChar + "-" + idChar;
+            const projectCounter = await getProjectCounter()
+            let projectId = `${user.firstName[0].toUpperCase()}${user.lastName[0].toUpperCase()}-${projectCounter?.seq}`;
 
             await Users.findByIdAndUpdate(
               user._id,
@@ -952,7 +954,11 @@ exports.create = async (req, res) => {
 
             let nameChar = final_project.projectName.slice(0, 2).toUpperCase();
             let idChar = final_project._id.toString().slice(-4);
-            let projectId = nameChar + "-" + idChar;
+            // let projectId = nameChar + "-" + idChar;
+             const projectCounter = await getProjectCounter();
+             let projectId = `${user.firstName[0].toUpperCase()}${user.lastName[0].toUpperCase()}-${
+               projectCounter?.seq
+             }`;
             const folderObj = await createFolder(projectId);
 
             let updatedProject = await Projects.findByIdAndUpdate(
