@@ -1032,7 +1032,7 @@ exports.create = async (req, res) => {
               //     console.log("billing email error: ", err);
               //   });
 
-              await emails.AwsEmailPassword(user);
+              // await emails.AwsEmailPassword(user);
 
               await session.commitTransaction();
               session.endSession();
