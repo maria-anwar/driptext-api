@@ -38,7 +38,7 @@ exports.login = async (req, res) => {
         .select("firstName lastName email role password")
         .populate({ path: "role", select: "title" });
 
-      if (FreelancerExists && freelancer.password == req.body.password) {
+      if (freelancer && freelancer.password == req.body.password) {
         // encryptHelper(user);
         console.log("logdin");
         const token = jwt.signToken({
@@ -76,7 +76,7 @@ exports.login = async (req, res) => {
           .select("firstName lastName email role password emailSubscription")
           .populate({ path: "role", select: "title" });
 
-        if (userExist && user.password == req.body.password) {
+        if (user && user.password == req.body.password) {
           // encryptHelper(user);
           console.log("logdin");
           const token = jwt.signToken({
@@ -113,7 +113,7 @@ exports.login = async (req, res) => {
             .select("firstName lastName email role password emailSubscription")
             .populate({ path: "role", select: "title" });
 
-          if (userExist && user.password == req.body.password) {
+          if (user && user.password == req.body.password) {
             // encryptHelper(user);
             console.log("logdin");
             const token = jwt.signToken({
