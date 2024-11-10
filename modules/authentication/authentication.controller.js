@@ -73,7 +73,7 @@ exports.login = async (req, res) => {
           password: req.body.password,
           isActive: "Y",
         })
-          .select("firstName lastName email role password")
+          .select("firstName lastName email role password emailSubscription")
           .populate({ path: "role", select: "title" });
 
         if (userExist && user.password == req.body.password) {
@@ -110,7 +110,7 @@ exports.login = async (req, res) => {
             password: req.body.password,
             isActive: "Y",
           })
-            .select("firstName lastName email role password")
+            .select("firstName lastName email role password emailSubscription")
             .populate({ path: "role", select: "title" });
 
           if (userExist && user.password == req.body.password) {

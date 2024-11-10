@@ -227,7 +227,7 @@ exports.assignFreelancersByProject = async (req, res) => {
     }
     if (!project.workStarted) {
       const client = await Users.findOne({ _id: project.user });
-      if (client) {
+      if (client && client?.emailSubscription) {
         clientEmails.workStarted(client.email, { projectName: project.projectName }).then(async res => {
           await Projects.findOneAndUpdate({ _id: project._id }, {
             workStarted: true

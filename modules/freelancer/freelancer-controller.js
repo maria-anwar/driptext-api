@@ -796,12 +796,12 @@ exports.finishTask = async (req, res) => {
         );
 
         const client = await Users.findOne({ _id: updateTask.user });
-        if (client) {
-          freelancerEmails.finishTask(client.email, {
-            name: updateTask.taskName,
-            keyword: updateTask.keywords,
-            documentLink: updateTask.fileLink,
-          });
+        if (client && client?.emailSubscription) {
+          // freelancerEmails.finishTask(client.email, {
+          //   name: updateTask.taskName,
+          //   keyword: updateTask.keywords,
+          //   documentLink: updateTask.fileLink,
+          // });
           clientEmails.taskCompleted(client.email, {
             taskName: updateTask.taskName,
             keyword: updateTask.keywords,
@@ -926,12 +926,12 @@ exports.finishTask = async (req, res) => {
         );
         await finalizeTask(task);
         const client = await Users.findOne({ _id: updatedTask.user });
-        if (client) {
-          freelancerEmails.finishTask(client.email, {
-            name: updatedTask.taskName,
-            keyword: updatedTask.keywords,
-            documentLink: updatedTask.fileLink,
-          });
+        if (client && client?.emailSubscription) {
+          // freelancerEmails.finishTask(client.email, {
+          //   name: updatedTask.taskName,
+          //   keyword: updatedTask.keywords,
+          //   documentLink: updatedTask.fileLink,
+          // });
           clientEmails.taskCompleted(client.email, {
             taskName: updatedTask.taskName,
             keyword: updatedTask.keywords,
