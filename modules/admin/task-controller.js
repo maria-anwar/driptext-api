@@ -224,7 +224,7 @@ exports.addTask = async (req, res) => {
                   .toUpperCase();
                 let idChar = createProjectTask._id.toString().slice(-4);
                 const taskCounter = await getTaskCounter()
-                let taskId = `${project.projectId}-${taskCounter?.seq}`;
+                let taskId = `${project.projectId}-${totalFiles + 1}`;
 
                 let updateTaskId = await ProjectTask.findByIdAndUpdate(
                   { _id: createProjectTask._id },
@@ -415,7 +415,7 @@ exports.addTask = async (req, res) => {
                 .toUpperCase();
               let idChar = createProjectTask._id.toString().slice(-4);
               const taskCounter = await getTaskCounter();
-              let taskId = `${project.projectId}-${taskCounter?.seq}`;
+              let taskId = `${project.projectId}-${totalFiles + 1}`;
 
               let updateTaskId = await ProjectTask.findByIdAndUpdate(
                 { _id: createProjectTask._id },
@@ -777,7 +777,7 @@ exports.importProjectTasks = async (req, res) => {
             let nameChar = upadteProject.projectName.slice(0, 2).toUpperCase();
             let idChar = createProjectTask._id.toString().slice(-4);
             const taskCounter = await getTaskCounter();
-            let taskId = `${project.projectId}-${taskCounter?.seq}`;
+            let taskId = `${project.projectId}-${totalFiles + 1}`;
 
             let updatedTask = await ProjectTask.findByIdAndUpdate(
               { _id: createProjectTask._id },
@@ -977,7 +977,7 @@ exports.importProjectTasks = async (req, res) => {
           let nameChar = upadteProject.projectName.slice(0, 2).toUpperCase();
           let idChar = createProjectTask._id.toString().slice(-4);
          const taskCounter = await getTaskCounter();
-         let taskId = `${project.projectId}-${taskCounter?.seq}`;
+         let taskId = `${project.projectId}-${totalFiles + 1}`;
 
           let updatedTask = await ProjectTask.findByIdAndUpdate(
             { _id: createProjectTask._id },
