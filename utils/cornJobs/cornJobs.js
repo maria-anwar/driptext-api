@@ -29,7 +29,7 @@ const onBoardingReminder = async () => {
         // if (user) {
         //   console.log("found: ", item.user)
         // }
-        if (!user) {
+        if (!user && item.user?.emailSubscription) {
           console.log("not found: ", item.user);
 
           await clientEmails.onBoardingReminder(item.user.email, {
