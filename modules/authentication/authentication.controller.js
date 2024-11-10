@@ -91,8 +91,8 @@ exports.login = async (req, res) => {
           });
         } else {
           res.status(403).send({
-            title: "Incorrect Logins",
-            message: "Incorrect Logins",
+            title: "email or password is incorrect",
+            message: "email or password is incorrect",
           });
         }
       } else {
@@ -128,8 +128,8 @@ exports.login = async (req, res) => {
             });
           } else {
             res.status(403).send({
-              title: "Incorrect Logins",
-              message: "Incorrect Logins",
+              title: "email or password is incorrect",
+              message: "email or password is incorrect",
             });
           }
         } else {

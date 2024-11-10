@@ -488,7 +488,7 @@ Email.sendInvoiceToCustomer = async (user, link) => {
       Source: `DripText <noreply@driptext.de>`,
       Destination: {
         ToAddresses: [user.email],
-        // CcAddresses: ["backoffice@driptext.de"],
+        CcAddresses: ["backoffice@driptext.de"],
         // CcAddresses: ["backoffice@driptext.de"],
       },
       Message: {
