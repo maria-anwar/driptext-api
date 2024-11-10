@@ -15,6 +15,10 @@ router.post("/update", jwt.protect, (req, res) => {
 	usersController.update(req, res);
 });
 
+router.post("/emailSubscription", jwt.protect, (req, res) => {
+  usersController.emailSubscription(req, res);
+});
+
 router.post("/contactSupport", jwt.protect, (req, res) => {
   usersController.contactSupport(req, res);
 });

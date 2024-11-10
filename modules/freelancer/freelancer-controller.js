@@ -393,7 +393,7 @@ const finalizeTask = async (task) => {
           difference: difference,
           price: price,
           finalize: true,
-          finishedDate: dayjs().startOf("day")
+          finishedDate: dayjs().startOf("day"),
         },
         { new: true }
       );
@@ -790,7 +790,7 @@ exports.finishTask = async (req, res) => {
           {
             status: "Final",
             finishedDate: dayjs().startOf("day"),
-            dueDate: null
+            dueDate: null,
           },
           { new: true }
         );
@@ -920,7 +920,7 @@ exports.finishTask = async (req, res) => {
           {
             status: "Final",
             finishedDate: dayjs().startOf("day"),
-            dueDate: null
+            dueDate: null,
           },
           { new: true }
         );
@@ -1039,6 +1039,7 @@ exports.getTasks = async (req, res) => {
 
     const tasks = await ProjectTask.find({
       isActive: "Y",
+      status: { $ne: "Final" },
       $or: [
         { texter: req.body.freelancerId },
         { lector: req.body.freelancerId },

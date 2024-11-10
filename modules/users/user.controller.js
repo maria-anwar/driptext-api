@@ -250,14 +250,16 @@ exports.create = async (req, res) => {
               { new: true }
             );
 
-            emails
-              .onBoardingRequest(user, createProject)
-              .then((res) => {
-                console.log("request on boarding sent");
-              })
-              .catch((err) => {
-                console.log("could not sent on boarding email");
-              });
+            if (alredyExist?.emailSubscription) {
+              emails
+                .onBoardingRequest(user, createProject)
+                .then((res) => {
+                  console.log("request on boarding sent");
+                })
+                .catch((err) => {
+                  console.log("could not sent on boarding email");
+                });
+            }
 
             if (createUserPlan && createProject) {
               if (subscription !== "") {
@@ -285,6 +287,7 @@ exports.create = async (req, res) => {
                     .catch((err) => {
                       console.log("billing email error: ", err);
                     });
+
                   const admins = await Users.aggregate([
                     {
                       $lookup: {
@@ -627,6 +630,18 @@ exports.create = async (req, res) => {
                 //   amount: `${billResponse.subscription.subscription_items[0].unit_price}`,
                 // };
                 // Send email
+
+                if (alredyExist?.emailSubscription) {
+                  emails
+                    .onBoardingRequest(user, createProject)
+                    .then((res) => {
+                      console.log("request on boarding sent");
+                    })
+                    .catch((err) => {
+                      console.log("could not sent on boarding email");
+                    });
+                }
+
                 const subscriptionInvoice = await getSubscriptionInvoice(
                   subscription.subscriptionData.invoice.id
                 );
@@ -642,23 +657,23 @@ exports.create = async (req, res) => {
                     .catch((err) => {
                       console.log("billing email error: ", err);
                     });
-                     const admins = await Users.aggregate([
-                       {
-                         $lookup: {
-                           from: "roles", // The collection name where roles are stored
-                           localField: "role", // Field in Users referencing the Role document
-                           foreignField: "_id", // The primary field in Role that Users reference
-                           as: "role",
-                         },
-                       },
-                       { $unwind: "$role" }, // Unwind to treat each role as a separate document
-                       { $match: { "role.title": "ProjectManger" } }, // Filter for specific title
-                     ]);
-                     for (const admin of admins) {
-                       adminEmails.newBooking(admin.email, {
-                         projectName: updatedProject.projectName,
-                       });
-                     }
+                  const admins = await Users.aggregate([
+                    {
+                      $lookup: {
+                        from: "roles", // The collection name where roles are stored
+                        localField: "role", // Field in Users referencing the Role document
+                        foreignField: "_id", // The primary field in Role that Users reference
+                        as: "role",
+                      },
+                    },
+                    { $unwind: "$role" }, // Unwind to treat each role as a separate document
+                    { $match: { "role.title": "ProjectManger" } }, // Filter for specific title
+                  ]);
+                  for (const admin of admins) {
+                    adminEmails.newBooking(admin.email, {
+                      projectName: updatedProject.projectName,
+                    });
+                  }
                 }
                 // emails
                 //   .sendBillingInfo(
@@ -985,23 +1000,23 @@ exports.create = async (req, res) => {
                   .catch((err) => {
                     console.log("billing email error: ", err);
                   });
-                   const admins = await Users.aggregate([
-                     {
-                       $lookup: {
-                         from: "roles", // The collection name where roles are stored
-                         localField: "role", // Field in Users referencing the Role document
-                         foreignField: "_id", // The primary field in Role that Users reference
-                         as: "role",
-                       },
-                     },
-                     { $unwind: "$role" }, // Unwind to treat each role as a separate document
-                     { $match: { "role.title": "ProjectManger" } }, // Filter for specific title
-                   ]);
-                   for (const admin of admins) {
-                     adminEmails.newBooking(admin.email, {
-                       projectName: updatedProject.projectName,
-                     });
-                   }
+                const admins = await Users.aggregate([
+                  {
+                    $lookup: {
+                      from: "roles", // The collection name where roles are stored
+                      localField: "role", // Field in Users referencing the Role document
+                      foreignField: "_id", // The primary field in Role that Users reference
+                      as: "role",
+                    },
+                  },
+                  { $unwind: "$role" }, // Unwind to treat each role as a separate document
+                  { $match: { "role.title": "ProjectManger" } }, // Filter for specific title
+                ]);
+                for (const admin of admins) {
+                  adminEmails.newBooking(admin.email, {
+                    projectName: updatedProject.projectName,
+                  });
+                }
               }
               // Send email
               // emails
@@ -1222,28 +1237,31 @@ exports.onboarding = async (req, res) => {
         },
         { new: true }
       );
-      emails.onBoadingSuccess(user.email, {
-        projectName: updatedProject.projectName,
-      });
-       const admins = await Users.aggregate([
-         {
-           $lookup: {
-             from: "roles", // The collection name where roles are stored
-             localField: "role", // Field in Users referencing the Role document
-             foreignField: "_id", // The primary field in Role that Users reference
-             as: "role",
-           },
-         },
-         { $unwind: "$role" }, // Unwind to treat each role as a separate document
-         { $match: { "role.title": "ProjectManger" } }, // Filter for specific title
-       ]);
+      if (user?.emailSubscription) {
+         emails.onBoadingSuccess(user.email, {
+           projectName: updatedProject.projectName,
+         });
+      }
+     
+      const admins = await Users.aggregate([
+        {
+          $lookup: {
+            from: "roles", // The collection name where roles are stored
+            localField: "role", // Field in Users referencing the Role document
+            foreignField: "_id", // The primary field in Role that Users reference
+            as: "role",
+          },
+        },
+        { $unwind: "$role" }, // Unwind to treat each role as a separate document
+        { $match: { "role.title": "ProjectManger" } }, // Filter for specific title
+      ]);
       for (const admin of admins) {
         adminEmails.onBoardingCompleted(admin.email, {
           firstName: user.firstName,
           lastName: user.lastName,
           email: user.email,
-          projectName: updatedProject.projectName
-        })
+          projectName: updatedProject.projectName,
+        });
       }
       await session.commitTransaction();
       session.endSession();
@@ -1300,5 +1318,37 @@ exports.checkEmail = async (req, res) => {
     res.status(200).json({ message: "success" });
   } catch (error) {
     res.status(500).send({ message: error.message || "Something went wrong" });
+  }
+};
+
+exports.emailSubscription = async (req, res) => {
+  try {
+    const joiSchema = Joi.object({
+      userId: Joi.string().required(),
+      emailSubscription: Joi.boolean().required(),
+    });
+    const { error, value } = joiSchema.validate(req.body);
+
+    if (error) {
+      emails.errorEmail(req, error);
+
+      const message = error.details[0].message.replace(/"/g, "");
+      res.status(401).send({
+        message: message,
+      });
+      return;
+    }
+
+    const updatedUser = await Users.findOneAndUpdate(
+      { _id: req.body.userId },
+      {
+        emailSubscription: req.body.emailSubscription,
+      },
+      { new: true }
+    );
+
+    res.status(200).send({ message: "Success", emailSubscription: updatedUser?.emailSubscription });
+  } catch (error) {
+    res.status(500).send({ message: error?.message || "Something went wrong" });
   }
 };

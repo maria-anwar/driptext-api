@@ -4,6 +4,7 @@ module.exports = (mongoose) => {
 	const UserSchema = new Schema(
 		{
 			email: { type: String, required: true, unique: true },
+			emailSubscription: {type: Boolean, required: false, default: true},
 			password: { type: String, required: false },
 			companyName: { type: String, required: false },
 			firstName: { type: String },
