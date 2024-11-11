@@ -101,7 +101,7 @@ exports.detail = async (req, res) => {
           populate: {
             path: "plan",
           },
-        })
+        }).populate("onBoardingInfo")
         .select("email firstName isSubScribed lastName")
         .then(async (response) => {
           res.send({ message: "List of the client projects", data: response });
