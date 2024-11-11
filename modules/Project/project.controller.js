@@ -75,7 +75,9 @@ exports.create = async (req, res) => {
 exports.updateOnBoarding = async (req, res) => {
   try {
      const joiSchema = Joi.object({
-       onBoardingId: Joi.string().required(),
+       projectId: Joi.string().required(),
+       speech: Joi.string().required(),
+       prespective: Joi.string().required(),
        companyBackgorund: Joi.string().optional().allow("").allow(null),
        companyAttributes: Joi.string().optional().allow("").allow(null),
        comapnyServices: Joi.string().optional().allow("").allow(null),
@@ -96,8 +98,18 @@ exports.updateOnBoarding = async (req, res) => {
        return;
      }
     
+     const updatedProject = await Projects.findOneAndUpdate(
+       { _id: req.body.projectId },
+       {
+         // projectId: projId,
+         speech: req.body.speech,
+         prespective: req.body.prespective,
+       },
+       { new: true }
+     );
+    
      const updatedonBoardingInfo = await Company.findOneAndUpdate(
-       { _id: req.body.onBoardingId },
+       { _id: updatedProject.onBoardingInfo },
        {
          companyBackgorund: req.body.companyBackgorund,
          companyAttributes: req.body.companyAttributes,
