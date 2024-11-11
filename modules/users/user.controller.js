@@ -1280,6 +1280,7 @@ exports.onboarding = async (req, res) => {
              //   onBoarding: createCompany._id,
              published: true,
              metaLector: updatedProject.metaLector,
+             sampleText: true
              //   tasks: taskCount,
            };
 
