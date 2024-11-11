@@ -201,7 +201,7 @@ exports.onBoardingDetail = async (req, res) => {
       return
     }
 
-    const project = await Project.findOne({ _id: req.body.projectId })
+    const project = await Project.findOne({ _id: req.body.projectId }).populate("onBoardingInfo")
     if (!project) {
       res.status(500).send({ message: "Project not found" })
       return
