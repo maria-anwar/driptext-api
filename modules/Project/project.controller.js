@@ -184,6 +184,34 @@ exports.detail = async (req, res) => {
   }
 };
 
+exports.onBoardingDetail = async (req, res) => {
+  try {
+    const joiSchema = Joi.object({
+      projectId: Joi.string().required(),
+    });
+    const { error, value } = joiSchema.validate(req.body);
+
+    if (error) {
+      // emails.errorEmail(req, error);
+
+      const message = error.details[0].message.replace(/"/g, "");
+      res.status(401).send({
+        message: message,
+      });
+      return
+    }
+
+    const project = await Project.findOne({ _id: req.body.projectId })
+    if (!project) {
+      res.status(500).send({ message: "Project not found" })
+      return
+    }
+    res.status(200).send({message: "Success", data: project})
+  } catch (error) {
+    res.status(500).send({message: error?.message || "Something went wrong"})
+  }
+}
+
 exports.checkBeforeCreate = async (req, res) => {
   try {
     const joiSchema = Joi.object({

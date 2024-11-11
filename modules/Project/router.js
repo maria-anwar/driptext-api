@@ -16,6 +16,10 @@ router.post("/updateOnBoarding", (req, res) => {
   projectController.updateOnBoarding(req, res);
 });
 
+router.post("/getOnBoardingDetail", (req, res) => {
+  projectController.onBoardingDetail(req, res);
+});
+
 router.post("/checkInsert", (req, res) => {
   projectController.checkBeforeCreate(req, res);
 });
