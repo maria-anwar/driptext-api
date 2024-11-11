@@ -1243,6 +1243,10 @@ exports.onboarding = async (req, res) => {
         },
         { new: true }
       );
+
+      
+
+
       if (user?.emailSubscription) {
          emails.onBoadingSuccess(user.email, {
            projectName: updatedProject.projectName,

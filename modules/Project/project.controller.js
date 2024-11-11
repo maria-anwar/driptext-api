@@ -98,7 +98,7 @@ exports.updateOnBoarding = async (req, res) => {
        return;
      }
     
-     const updatedProject = await Projects.findOneAndUpdate(
+     const updatedProject = await Project.findOneAndUpdate(
        { _id: req.body.projectId },
        {
          // projectId: projId,
