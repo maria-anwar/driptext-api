@@ -1247,7 +1247,7 @@ exports.onboarding = async (req, res) => {
         { new: true }
       );
 
-      if (updatedProject && !updatedProject.plan) {
+      if (updatedProject && !updatedProject.plan?.subscription) {
          let taskCount = await ProjectTask.countDocuments({
            project: projectId,
          });
