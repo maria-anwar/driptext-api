@@ -98,10 +98,15 @@ exports.detail = async (req, res) => {
       Users.find({ _id: userId })
         .populate({
           path: "projects",
-          populate: {
-            path: "plan",
-          },
-        }).populate("onBoardingInfo")
+          populate: [
+            {
+              path: "plan",
+            },
+            {
+              path: "onBoardingInfo",
+            },
+          ],
+        })
         .select("email firstName isSubScribed lastName")
         .then(async (response) => {
           res.send({ message: "List of the client projects", data: response });
