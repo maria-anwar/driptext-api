@@ -12,6 +12,10 @@ router.post("/detail", (req, res) => {
 	projectController.detail(req, res);
 });
 
+router.post("/updateOnBoarding", (req, res) => {
+  projectController.updateOnBoarding(req, res);
+});
+
 router.post("/checkInsert", (req, res) => {
   projectController.checkBeforeCreate(req, res);
 });

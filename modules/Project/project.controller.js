@@ -12,6 +12,8 @@ const Roles = db.Role;
 const Project = db.Project;
 const ProjectTask = db.ProjectTask;
 const Freelancers = db.Freelancer;
+const Company = db.Company;
+
 
 exports.create = async (req, res) => {
   try {
@@ -69,6 +71,51 @@ exports.create = async (req, res) => {
     });
   }
 };
+
+exports.updateOnBoarding = async (req, res) => {
+  try {
+     const joiSchema = Joi.object({
+       onBoardingId: Joi.string().required(),
+       companyBackgorund: Joi.string().optional().allow("").allow(null),
+       companyAttributes: Joi.string().optional().allow("").allow(null),
+       comapnyServices: Joi.string().optional().allow("").allow(null),
+       customerContent: Joi.string().optional().allow("").allow(null),
+       customerIntrest: Joi.string().optional().allow("").allow(null),
+       contentPurpose: Joi.string().optional().allow("").allow(null),
+       contentInfo: Joi.string().optional().allow("").allow(null),
+     });
+     const { error, value } = joiSchema.validate(req.body);
+
+     if (error) {
+       // emails.errorEmail(req, error);
+
+       const message = error.details[0].message.replace(/"/g, "");
+       res.status(401).send({
+         message: message,
+       });
+       return;
+     }
+    
+     const updatedonBoardingInfo = await Company.findOneAndUpdate(
+       { _id: req.body.onBoardingId },
+       {
+         companyBackgorund: req.body.companyBackgorund,
+         companyAttributes: req.body.companyAttributes,
+         comapnyServices: req.body.comapnyServices,
+         customerContent: req.body.customerContent,
+         customerIntrest: req.body.customerIntrest,
+         contentPurpose: req.body.contentPurpose,
+         contentInfo: req.body.contentInfo,
+       },
+       { new: true }
+     );
+    
+    res.status(200).send({message: "Success"})
+    
+  } catch (error) {
+    res.status(500).send({message: error?.message || "Something went wrong"})
+  }
+}
 
 exports.detail = async (req, res) => {
   try {
