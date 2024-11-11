@@ -6,6 +6,7 @@ const encryptHelper = require("../../utils/encryptHelper");
 const emails = require("../../utils/emails");
 const clientEmails = require("../../utils/sendEmail/client/emails");
 const adminEmails = require("../../utils/sendEmail/admin/emails");
+const freelancerEmails = require("../../utils/sendEmail/freelancer/emails")
 // const adminEmails = require("../../utils/sendEmail/admin/emails");
 const crypto = require("../../utils/crypto");
 const fs = require("fs");
@@ -18,7 +19,7 @@ const {
   getFileCount,
 } = require("../../utils/googleService/actions");
 const { getSubscriptionInvoice } = require("../../utils/chargebee/actions");
-const { getProjectCounter } = require("../../utils/counter/counter");
+const { getProjectCounter, getTaskCounter } = require("../../utils/counter/counter");
 
 const Users = db.User;
 const Roles = db.Role;
@@ -1182,6 +1183,8 @@ exports.onboarding = async (req, res) => {
       projectName: Joi.string().required(),
       projectId: Joi.string().required(),
       userId: Joi.string().required(),
+      keyword: Joi.string().optional(),
+      keywordType: Joi.string().optional(),
       companyBackgorund: Joi.string().optional().allow("").allow(null),
       companyAttributes: Joi.string().optional().allow("").allow(null),
       comapnyServices: Joi.string().optional().allow("").allow(null),
@@ -1244,7 +1247,153 @@ exports.onboarding = async (req, res) => {
         { new: true }
       );
 
-      
+      if (!updatedProject.plan) {
+         let taskCount = await ProjectTask.countDocuments({
+           project: projectId,
+         });
+         if (taskCount === 0) {
+           let projectStatus;
+           let taskStatus = "Uninitialized";
+           // if (speech !== "" && prespective !== "") {
+           // projectStatus = "Free Trial";
+           // taskStatus = "Ready to Start";
+           // }
+
+           // let createCompany = await Company.create({
+           //   ...companyInfoObj,
+           //   user: project.user._id,
+           // });
+
+           let proectTaskObj = {
+             keywords: req.body.keyword,
+             type: req.body.keywordType,
+             dueDate: dayjs().add(2, "day"),
+             topic: req.body.keyword,
+             comments: "",
+             project: updatedProject._id,
+             desiredNumberOfWords: "1500",
+             //   status: taskStatus,
+             user: userId,
+             //   onBoarding: createCompany._id,
+             published: true,
+             metaLector: updatedProject.metaLector,
+             //   tasks: taskCount,
+           };
+
+           let upadteProject = await Projects.findOneAndUpdate(
+             { _id: updatedProject._id },
+             {
+               // speech: speech,
+               // prespective: prespective,
+               // projectStatus: projectStatus,
+               // onBoarding: true,
+               // boardingInfo: newOnBoarding._id,
+               // duration: "1",
+               // numberOfTasks: "1",
+               openTasks: 1,
+               tasks: 1,
+             },
+             { new: true }
+           );
+
+           let createProjectTask = await ProjectTask.create(proectTaskObj);
+           const freelancer = await Freelancers.findOne({
+             _id: updatedProject.metaLector,
+           });
+           if (freelancer) {
+             freelancerEmails.taskAssign(
+               freelancer.email,
+               {
+                 name: createProjectTask.taskName,
+                 keyword: createProjectTask.keywords,
+               },
+               "Meta Lector"
+             );
+           }
+           const totalFiles = await getFileCount(updatedProject.folderId);
+           const fileName = `${updatedProject.projectId}-${totalFiles + 1}-${
+             createProjectTask.keywords || "No Keywords"
+           }`;
+           const fileObj = await createTaskFile(
+             updatedProject.folderId,
+             fileName
+           );
+           //console.log("after creating file");
+           if (
+             createProjectTask.keywords &&
+             createProjectTask.type &&
+             createProjectTask.topic &&
+             createProjectTask.dueDate
+           ) {
+             taskStatus = "Ready To Work";
+           }
+           const updateProjectTask = await ProjectTask.findOneAndUpdate(
+             { _id: createProjectTask._id },
+             {
+               status: taskStatus,
+               fileLink: fileObj.fileLink,
+               fileId: fileObj.fileId,
+               taskName: fileName,
+             },
+             { new: true }
+           );
+           await Projects.findByIdAndUpdate(
+             projectId,
+             { $push: { projectTasks: createProjectTask._id } },
+             { new: true }
+           );
+
+           const updatedUserPlan = await UserPlan.findOneAndUpdate(
+             { user: updatedProject.user, project: updatedProject._id },
+             {
+               $inc: {
+                 textsCount: 1,
+                 textsRemaining: -1,
+                 tasksPerMonthCount: 1,
+               },
+             },
+             { new: true }
+           );
+
+           let nameChar = upadteProject.projectName.slice(0, 2).toUpperCase();
+           let idChar = createProjectTask._id.toString().slice(-4);
+           const taskCounter = await getTaskCounter();
+           let taskId = `${updatedProject.projectId}-${totalFiles + 1}`;
+
+           let updateTaskId = await ProjectTask.findByIdAndUpdate(
+             { _id: createProjectTask._id },
+             { taskName: taskId },
+             { new: true }
+           );
+
+           if (upadteProject && createProjectTask) {
+             // await emails.onBoadingSuccess(getuser);
+             if (updateProjectTask.texter) {
+               const taskTexter = await Freelancers.findOne({
+                 _id: updateProjectTask.texter,
+               });
+               if (taskTexter) {
+                 freelancerEmails.reminder24Hours(
+                   taskTexter.email,
+                   {
+                     name: updateProjectTask.taskName,
+                     keyword: updateProjectTask.keywords,
+                     documentLink: updateProjectTask.fileLink,
+                   },
+                   "Texter"
+                 );
+               }
+             }
+
+             res.send({
+               message: "OnBoarding successful",
+               data: createProjectTask,
+             });
+           }
+         } 
+      }
+
+
 
 
       if (user?.emailSubscription) {
