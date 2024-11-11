@@ -1245,9 +1245,12 @@ exports.onboarding = async (req, res) => {
           onBoardingInfo: newOnBoarding._id,
         },
         { new: true }
-      );
+      ).populate({
+        path: "plan",
+        select: "subscription"
+      });
 
-      if (updatedProject && !updatedProject.plan?.subscription) {
+      if (updatedProject && !updatedProject.plan.subscription) {
          let taskCount = await ProjectTask.countDocuments({
            project: projectId,
          });
