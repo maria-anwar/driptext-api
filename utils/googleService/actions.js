@@ -404,7 +404,7 @@ exports.exportTasksToSheetInFolder = async (tasks, folderId) => {
 
   // Step 2: Write tasks to the sheet
   const taskData = tasks.map((task, index) => [
-    task.dueDate ? dayjs(task.dueDate).format("YYYY-MM-DD") : "",
+    task.dueDate ? dayjs(task.dueDate).format("DD.MM.YYYY") : "",
     task.status,
     task.topic || "",
     task.keywords || "",
@@ -434,7 +434,7 @@ exports.exportTasksToSheetInFolder = async (tasks, folderId) => {
   await sheets.spreadsheets.values.update(updateRequest);
 
   // Step 3: Export the Google Sheet as an Excel file (optional)
-  const exportUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=csv`;
+  const exportUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`;
 
   return { spreadsheetId, exportUrl };
 };
