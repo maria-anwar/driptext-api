@@ -1048,9 +1048,15 @@ const sortTasks = (tasks) => {
     const bStatus = b.status.toLowerCase();
 
     // Condition 2: Status contains "in progress"
-    if (aStatus.includes("in progress") && !bStatus.includes("in progress"))
+    if (
+      (aStatus.includes("in progress") && !bStatus.includes("in progress")) ||
+      (aStatus.includes("in rivision") && !bStatus.includes("in rivision"))
+    )
       return -1;
-    if (!aStatus.includes("in progress") && bStatus.includes("in progress"))
+    if (
+      (!aStatus.includes("in progress") && bStatus.includes("in progress")) ||
+      (aStatus.includes("in rivision") && !bStatus.includes("in rivision"))
+    )
       return 1;
 
     // Condition 3: Status contains "ready"
