@@ -403,7 +403,7 @@ const finalizeTask = async (task) => {
         calculatedWords = actualWords;
       }
 
-      const difference = task.desiredNumberOfWords - calculatedWords;
+      const difference = (1 - (actualWords / calculatedWords)) * 100;
       const price = calculatedWords * texterPrice;
 
       await freelancerEarnings.findOneAndUpdate(
