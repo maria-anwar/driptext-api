@@ -403,7 +403,7 @@ const finalizeTask = async (task) => {
         calculatedWords = actualWords;
       }
 
-      const difference = (1 - (actualWords / calculatedWords)) * 100;
+      const difference = ((1 - actualWords) / calculatedWords) * 100;
       const price = calculatedWords * texterPrice;
 
       await freelancerEarnings.findOneAndUpdate(
@@ -441,7 +441,8 @@ const finalizeTask = async (task) => {
         calculatedWords = actualWords;
       }
 
-      const difference = task.desiredNumberOfWords - calculatedWords;
+      const difference = ((1 - actualWords) / calculatedWords) * 100;
+
       const price = calculatedWords * lectorPrice;
 
       await freelancerEarnings.findOneAndUpdate(
@@ -479,7 +480,8 @@ const finalizeTask = async (task) => {
         calculatedWords = actualWords;
       }
 
-      const difference = task.desiredNumberOfWords - calculatedWords;
+      const difference = ((1 - actualWords) / calculatedWords) * 100;
+
       const price = calculatedWords * seoOptimizerPrice;
 
       await freelancerEarnings.findOneAndUpdate(
@@ -518,7 +520,8 @@ const finalizeTask = async (task) => {
         calculatedWords = actualWords;
       }
 
-      const difference = task.desiredNumberOfWords - calculatedWords;
+      const difference = ((1 - actualWords) / calculatedWords) * 100;
+
       const price = calculatedWords * metaLectorPrice;
 
       await freelancerEarnings.findOneAndUpdate(
@@ -538,6 +541,7 @@ const finalizeTask = async (task) => {
         { new: true }
       );
     }
+    
   } catch (error) {
     res.status(500).send({ message: "Could not finalize task" });
   }
