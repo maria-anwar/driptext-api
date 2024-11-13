@@ -302,14 +302,39 @@ exports.taskStart = async (req, res) => {
     if (!task) {
       res.status(404).send({ message: "Task not found" });
     }
-    if (task.status.toLowerCase() === "ready to work") {
-      await ProjectTask.findOneAndUpdate(
-        { _id: req.body.taskId },
-        {
-          status: "In Progress",
-        },
-        { new: true }
-      );
+    if (
+      task.status.toLowerCase() === "ready to work" ||
+      task.status.toLowerCase() === "ready for rivision (lector)" ||
+      task.status.toLowerCase() === "ready for rivision (meta lector)"
+    ) {
+      if (task.status.toLowerCase() === "ready to work") {
+        await ProjectTask.findOneAndUpdate(
+          { _id: req.body.taskId },
+          {
+            status: "In Progress",
+          },
+          { new: true }
+        );
+      }
+      if (task.status.toLowerCase() === "ready for rivision (lector)") {
+        await ProjectTask.findOneAndUpdate(
+          { _id: req.body.taskId },
+          {
+            status: "In Rivision (Lector)",
+          },
+          { new: true }
+        );
+      }
+
+      if (task.status.toLowerCase() === "ready for rivision (meta lector)") {
+        await ProjectTask.findOneAndUpdate(
+          { _id: req.body.taskId },
+          {
+            status: "In Rivision (Meta Lector)",
+          },
+          { new: true }
+        );
+      }
     }
     if (task.status.toLowerCase() === "ready for proofreading") {
       await ProjectTask.findOneAndUpdate(
@@ -546,7 +571,8 @@ exports.finishTask = async (req, res) => {
     }
     if (
       task.status.toLowerCase() === "in progress" ||
-      task.status.toLowerCase() === "in rivision"
+      task.status.toLowerCase() === "in rivision (lector)" ||
+      task.status.toLowerCase() === "in rivision (meta lector)"
     ) {
       const earning = await freelancerEarnings.findOne({
         freelancer: task.texter,
@@ -575,26 +601,56 @@ exports.finishTask = async (req, res) => {
           role: "Texter",
         });
       }
-      await ProjectTask.findOneAndUpdate(
-        { _id: req.body.taskId },
-        {
-          dueDate: dayjs().add(24, "hour").toDate(),
-          status: "Ready For Proofreading",
-        },
-        { new: true }
-      );
-      if (task.lector) {
-        const taskLector = await Freelancers.findOne({ _id: task.lector });
-        if (taskLector) {
-          freelancerEmails.reminder24Hours(
-            taskLector.email,
-            {
-              name: task.taskName,
-              keyword: task.keywords,
-              documentLink: task.fileLink,
-            },
-            "Lector"
-          );
+      if (
+        task.status.toLowerCase() === "in rivision (meta lector)" &&
+        task.metaLector
+      ) {
+        await ProjectTask.findOneAndUpdate(
+          { _id: req.body.taskId },
+          {
+            dueDate: dayjs().add(24, "hour").toDate(),
+            status: "Ready For 2nd Proofreading",
+          },
+          { new: true }
+        );
+        if (task.metaLector) {
+          const taskMetaLector = await Freelancers.findOne({
+            _id: task.metaLector,
+          });
+          if (taskMetaLector) {
+            freelancerEmails.reminder24Hours(
+              taskMetaLector.email,
+              {
+                name: task.taskName,
+                keyword: task.keywords,
+                documentLink: task.fileLink,
+              },
+              "Meta Lector"
+            );
+          }
+        }
+      } else {
+        await ProjectTask.findOneAndUpdate(
+          { _id: req.body.taskId },
+          {
+            dueDate: dayjs().add(24, "hour").toDate(),
+            status: "Ready For Proofreading",
+          },
+          { new: true }
+        );
+        if (task.lector) {
+          const taskLector = await Freelancers.findOne({ _id: task.lector });
+          if (taskLector) {
+            freelancerEmails.reminder24Hours(
+              taskLector.email,
+              {
+                name: task.taskName,
+                keyword: task.keywords,
+                documentLink: task.fileLink,
+              },
+              "Lector"
+            );
+          }
         }
       }
     }
@@ -661,7 +717,7 @@ exports.finishTask = async (req, res) => {
           { _id: req.body.taskId },
           {
             dueDate: dayjs().add(24, "hour").toDate(),
-            status: "In Rivision",
+            status: "Ready For Rivision (Lector)",
             feedback: req.body.feedback,
           },
           { new: true }
@@ -845,7 +901,7 @@ exports.finishTask = async (req, res) => {
           { _id: req.body.taskId },
           {
             dueDate: dayjs().add(24, "hour").toDate(),
-            status: "In Rivision",
+            status: "Ready For Rivision (Meta Lector)",
             feedback: req.body.feedback,
           },
           { new: true }
@@ -859,7 +915,7 @@ exports.finishTask = async (req, res) => {
           const taskBody = {
             name: task.taskName,
             keyword: task.keywords,
-            editorName: "Lector",
+            editorName: "Meta Lector",
             projectName: project?.projectName,
             role: "Texter",
             feedback: req.body.feedback,
