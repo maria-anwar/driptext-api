@@ -284,22 +284,22 @@ exports.addTask = async (req, res) => {
                 return;
               }
 
-              if (
-                dayjs(new Date()).isAfter(
-                  dayjs(userPlan.endMonthDate, "day")
-                ) ||
-                userPlan.tasksPerMonthCount >= userPlan.tasksPerMonth
-              ) {
-                res
-                  .status(500)
-                  .send({ message: "This user have reached monthly limit" });
+              // if (
+              //   dayjs(new Date()).isAfter(
+              //     dayjs(userPlan.endMonthDate, "day")
+              //   ) ||
+              //   userPlan.tasksPerMonthCount >= userPlan.tasksPerMonth
+              // ) {
+              //   res
+              //     .status(500)
+              //     .send({ message: "This user have reached monthly limit" });
 
-                return;
-              }
+              //   return;
+              // }
               if (userPlan.textsRemaining === 0) {
                 res
                   .status(500)
-                  .send({ message: "This user's subscription is expired" });
+                  .send({ message: "This user's have used all his texts" });
                 return;
               }
               if (dayjs(new Date()).isAfter(dayjs(userPlan.endDate, "day"))) {
@@ -404,7 +404,7 @@ exports.addTask = async (req, res) => {
                   $inc: {
                     textsCount: 1,
                     textsRemaining: -1,
-                    tasksPerMonthCount: 1,
+                    // tasksPerMonthCount: 1,
                   },
                 },
                 { new: true }
@@ -846,27 +846,27 @@ exports.importProjectTasks = async (req, res) => {
             return;
           }
 
-          if (
-            dayjs(new Date()).isAfter(dayjs(userPlan.endMonthDate, "day")) ||
-            userPlan.tasksPerMonthCount === userPlan.tasksPerMonth ||
-            userPlan.tasksPerMonthCount > userPlan.tasksPerMonth
-          ) {
-            // error = "Client have reached monthly limit";
-            await session.abortTransaction();
-            session.endSession();
-            res
-              .status(500)
-              .send({ message: "Client have reached monthly limit" });
-            responseSent = true;
-            return;
-          }
+          // if (
+          //   dayjs(new Date()).isAfter(dayjs(userPlan.endMonthDate, "day")) ||
+          //   userPlan.tasksPerMonthCount === userPlan.tasksPerMonth ||
+          //   userPlan.tasksPerMonthCount > userPlan.tasksPerMonth
+          // ) {
+          //   // error = "Client have reached monthly limit";
+          //   await session.abortTransaction();
+          //   session.endSession();
+          //   res
+          //     .status(500)
+          //     .send({ message: "Client have reached monthly limit" });
+          //   responseSent = true;
+          //   return;
+          // }
           if (userPlan.textsRemaining === 0) {
             // error = "Client's subscription is expired";
             await session.abortTransaction();
             session.endSession();
             res
               .status(500)
-              .send({ message: "Client's subscription is expired" });
+              .send({ message: "This client has used all its tasks" });
             responseSent = true;
             return;
           }
@@ -876,7 +876,7 @@ exports.importProjectTasks = async (req, res) => {
             session.endSession();
             res
               .status(500)
-              .send({ message: "Client's subscription is expired" });
+              .send({ message: "This client's subscription has expired" });
             responseSent = true;
             return;
           }
@@ -936,7 +936,7 @@ exports.importProjectTasks = async (req, res) => {
               $inc: {
                 textsCount: 1,
                 textsRemaining: -1,
-                tasksPerMonthCount: 1,
+                // tasksPerMonthCount: 1,
               },
             },
             { new: true }

@@ -1353,7 +1353,7 @@ exports.onboarding = async (req, res) => {
                $inc: {
                  textsCount: 1,
                  textsRemaining: -1,
-                 tasksPerMonthCount: 1,
+                //  tasksPerMonthCount: 1,
                },
              },
              { new: true }
