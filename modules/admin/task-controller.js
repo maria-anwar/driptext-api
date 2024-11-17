@@ -1097,13 +1097,13 @@ exports.importProjectTasks = async (req, res) => {
           return;
         }
 
-        if (!row["Due Date"] || !dayjs(row["Due Date"]).isValid()) {
+        if (!row["Due Date"] || (row['Due Date'] && !dayjs(row["Due Date"].replace(/./g,"-")).isValid())) {
           checkCSVError = `Make sure due date is given and is valid date YYYY-MM-DD`;
           return;
         }
         const task = {
           keywords: row["Keywords"],
-          dueDate: dayjs(row["Due Date"]).toDate(),
+          dueDate: dayjs(row["Due Date"]?.replace(/./g,"-")).toDate(),
           topic: row["Topic"],
           type: row["Type"],
           wordCount: row["Word Count Expectation"],
