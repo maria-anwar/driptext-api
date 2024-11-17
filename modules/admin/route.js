@@ -107,7 +107,7 @@ router.get("/getPrices", jwt.protect, (req, res) => {
 
 router.post(
   "/importTasks",
-  jwt.protect,
+  // jwt.protect,
   csvUpload.single("file"),
   (req, res) => {
     taskController.importProjectTasks(req, res);

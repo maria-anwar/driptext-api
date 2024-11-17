@@ -7,6 +7,8 @@ const csvParser = require("csv-parser");
 const fs = require("fs");
 const path = require("path");
 const freelancerEmails = require("../../utils/sendEmail/freelancer/emails");
+const customParseFormat = require("dayjs/plugin/customParseFormat");
+dayjs.extend(customParseFormat);
 
 // const { RDS } = require("aws-sdk");
 
@@ -635,10 +637,10 @@ exports.projectTasksExport = async (req, res) => {
 exports.importProjectTasks = async (req, res) => {
   try {
     console.log("inside project import tasks api ....");
-    if (!req.role || req.role.toLowerCase() !== "projectmanger") {
-      res.status(401).send({ message: "You are not authorized" });
-      return;
-    }
+    // if (!req.role || req.role.toLowerCase() !== "projectmanger") {
+    //   res.status(401).send({ message: "You are not authorized" });
+    //   return;
+    // }
 
     const editTask = async (user, project, task, orgTask, res) => {
       //   //console.log("task onBoarding: ", task);
@@ -1097,13 +1099,15 @@ exports.importProjectTasks = async (req, res) => {
           return;
         }
 
-        if (!row["Due Date"] || (row['Due Date'] && !dayjs(row["Due Date"].replace(/./g,"-")).isValid())) {
+        if (!row["Due Date"] || (row['Due Date'] && !dayjs(row["Due Date"].trim(), "DD.MM.YYYY").isValid())) {
+          // console.log("due date: ", dayjs(row["Due Date"].toString().trim(), "DD.MM.YYYY", true))
+          // console.log("Due Date result: ", dayjs(new Date(row["Due Date"].toString().trim())).toDate())
           checkCSVError = `Make sure due date is given and is valid date YYYY-MM-DD`;
           return;
         }
         const task = {
           keywords: row["Keywords"],
-          dueDate: dayjs(row["Due Date"]?.replace(/./g,"-")).toDate(),
+          dueDate: dayjs(row["Due Date"].trim(), "DD.MM.YYYY").toDate(),
           topic: row["Topic"],
           type: row["Type"],
           wordCount: row["Word Count Expectation"],
