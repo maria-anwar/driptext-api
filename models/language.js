@@ -3,8 +3,19 @@ module.exports = (mongoose) => {
 
   const LanguageSchema = new Schema(
     {
-      user: { type: Schema.Types.ObjectId, ref: "User", required: true },
-      language: { type: String, required: false, unique: false, default: "German" },
+      userId: {
+        type: String,
+        required: true,
+        unique: false,
+        // default: "German",
+      },
+
+      language: {
+        type: String,
+        required: true,
+        unique: false,
+        // default: "German",
+      },
     },
     {
       toJSON: {
