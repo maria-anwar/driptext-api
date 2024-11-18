@@ -19,6 +19,7 @@ const ProjectTask = db.ProjectTask;
 const Company = db.Company;
 const freelancerEarnings = db.FreelancerEarning;
 const freelancerPrices = db.FreelancerPrice;
+const Language = db.Language;
 
 const {
   createFolder,
@@ -75,6 +76,11 @@ exports.createProjectManager = async (req, res) => {
     };
 
     const admin = await Users.create(body);
+
+    const language = await Language.create({
+      userId: admin._id,
+      language: "de"
+    })
 
     await session.commitTransaction();
     session.endSession();
