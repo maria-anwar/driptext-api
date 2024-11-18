@@ -13,6 +13,7 @@ const chargebeeRoutHandler = require("../modules/chargebee/router")
 const freelancerRouteHandler = require("../modules/freelancer/route");
 const adminRouteHandler = require("../modules/admin/route");
 const testRouteHandler = require("../modules/test/route")
+const languageRouteHandler = require('../modules/language/route')
 
 class Routes {
 	constructor(app) {
@@ -30,6 +31,7 @@ class Routes {
 		this.app.use("/api/chargebee", chargebeeRoutHandler);
 		this.app.use("/api/freelancer", freelancerRouteHandler);
 		this.app.use("/api/admin", adminRouteHandler);
+		this.app.use("/api/language", languageRouteHandler);
 		this.app.use("/api/test", testRouteHandler)
 
 		// this.app.use("/api/classes", jwt.protect, classesRouteHandler);

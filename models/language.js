@@ -4,7 +4,7 @@ module.exports = (mongoose) => {
   const LanguageSchema = new Schema(
     {
       user: { type: Schema.Types.ObjectId, ref: "User", required: true },
-      speech: { type: String, required: false, unique: false, default: "German" },
+      language: { type: String, required: false, unique: false, default: "German" },
     },
     {
       toJSON: {
