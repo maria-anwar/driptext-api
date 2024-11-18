@@ -67,10 +67,10 @@ exports.getLanguage = async (req, res) => {
     const language = await Language.findOne({
       userId: req.body.userId,
     });
-    if (!language) {
-      res.status(500).send({ message: "Language Not found" });
-      return;
-    }
+    // if (!language) {
+    //   res.status(500).send({ message: "Language Not found" });
+    //   return;
+    // }
 
     res.status(200).send({ message: "Success", language: language });
   } catch (error) {
