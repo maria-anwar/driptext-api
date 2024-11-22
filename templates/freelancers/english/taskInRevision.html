@@ -6,7 +6,7 @@
 <head>
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>Task Completed</title>
+    <title>Welcome</title>
     <style type="text/css">
         body {
             margin: 0;
@@ -125,25 +125,30 @@
                     <div class="header">
                         <img src="https://driptext.de/wp-content/uploads/2023/03/driptext.png"
                             style="max-width: 100px !important; margin-bottom: 10px !important;" alt="Logo">
-                        <h1>Text [TASK_NAME] ([KEYWORD]) wurde soeben fertiggestellt!
-                        </h1>
+                        <h1>Task [TASK_NAME] ([KEYWORD]) Has Been Returned by [EDITOR_NAME]</h1>
                     </div>
                     <div class="content">
-                        <p>Hallo [CLIENT_FIRST_NAME],
-                        </p>
+                        <p>Hello [FREELANCER_FIRST_NAME],</p>
                         <p style="margin-top: 8px; margin-bottom: 8px;"></p>
-                        <p>Dein Text ist fertig:</p>
-                        <p><strong>Text</strong>: [TASK_NAME] ([KEYWORD])</p>
-                        <p><strong>Status</strong>: Auftrag abgeschlossen</p>
-                        <p><strong>Link zum Text</strong>: <span><a href="[GOOGLE_DOC_LINK]">[TASK_NAME]</a></span></p>
+                        <p><strong>Important</strong>: The task <span><a href="[GOOGLE_DOC_LINK]">[TASK_NAME]
+                                    ([KEYWORD])</a></span> has been rejected because the criteria were not met. Please
+                            revise the text within the next 24 hours.</p>
                         <p style="margin-top: 8px; margin-bottom: 8px;"></p>
-                        <p><strong>Hinweis</strong>: Alle Informationen zu deinem Projekt findest du in deinem Dashboard: <span><a href="[DASHBOARD_LINK]">Dashboard</a></span></p>
 
+                        <p><strong>Project</strong>: [PROJECT_DOMAIN]</p>
+                        <p><strong>Task</strong>: [TASK_NAME] ([KEYWORD])</p>
+                        <p><strong>Your Role</strong>: [ROLE]</p>
+                        <p style="margin-top: 8px; margin-bottom: 8px;"></p>
+
+                        <p><strong>Feedback on the text</strong>:</p>
+                        [FEEDBACK]
 
                         <p style="margin-top: 8px; margin-bottom: 8px;"></p>
-                        <p><strong>Beste Grüße,</strong></p>
-                        <p>Das DripText-Team</p>
+                        <p><strong>Link to Dashboard</strong>: <span><a href="[DASHBOARD_LINK]">Dashboard</a></span></p>
+                        <p style="margin-top: 8px; margin-bottom: 8px;"></p>
 
+                        <p>Best regards,</p>
+                        <p>The DripText Team</p>
                     </div>
                     <div class="footer">
                         <!-- <p>Driptext | [Address Line 1] | [Address Line 2]</p> -->
@@ -153,5 +158,6 @@
         </tr>
     </table>
 </body>
+
 
 </html>

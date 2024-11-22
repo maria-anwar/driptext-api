@@ -6,7 +6,7 @@
 <head>
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>Task Completed</title>
+    <title>Welcome</title>
     <style type="text/css">
         body {
             margin: 0;
@@ -109,6 +109,7 @@
 
         }
 
+
         @media (max-width: 600px) {
             .container {
                 width: 100%;
@@ -125,24 +126,33 @@
                     <div class="header">
                         <img src="https://driptext.de/wp-content/uploads/2023/03/driptext.png"
                             style="max-width: 100px !important; margin-bottom: 10px !important;" alt="Logo">
-                        <h1>Text [TASK_NAME] ([KEYWORD]) wurde soeben fertiggestellt!
-                        </h1>
+                        <h1>New DripText Subscription Created for [PROJECT_DOMAIN]</h1>
                     </div>
                     <div class="content">
-                        <p>Hallo [CLIENT_FIRST_NAME],
+                        <p>Hello [CLIENT_FIRST_NAME],</p>
+                        <p style="margin-top: 8px; margin-bottom: 8px;"></p>
+                        <p>Your DripText subscription has been successfully set up! Here are the details:</p>
+                        <p style="margin-top: 8px; margin-bottom: 8px;"></p>
+                        <p>Customer: [CLIENT_FIRST_NAME] [CLIENT_LAST_NAME]</p>
+                        <p>Email Address: [EMAIL]</p>
+                        <p style="margin-top: 8px; margin-bottom: 8px;"></p>
+                        <p>You can download your invoice here:</p>
+                        <div class="button-container">
+                            <a href="[BUTTON_LINK_1]" target="_blank" style="color: white;" class="button">View
+                                Invoice</a>
+                        </div>
+                        <p style="margin-top: 8px; margin-bottom: 8px;"></p>
+                        <p>If you would like to make changes to your billing information, click here: <span><a
+                                    href="[DASHBOARD_LINK]">Customer Portal</a></span></p>
+                        <p style="margin-top: 8px; margin-bottom: 8px;"></p>
+                        <p>To access your dashboard, click here: <span><a href="[DASHBOARD_LINK]">Dashboard</a></span>
                         </p>
                         <p style="margin-top: 8px; margin-bottom: 8px;"></p>
-                        <p>Dein Text ist fertig:</p>
-                        <p><strong>Text</strong>: [TASK_NAME] ([KEYWORD])</p>
-                        <p><strong>Status</strong>: Auftrag abgeschlossen</p>
-                        <p><strong>Link zum Text</strong>: <span><a href="[GOOGLE_DOC_LINK]">[TASK_NAME]</a></span></p>
+                        <p>Thank you for choosing DripText. We look forward to working with you!</p>
                         <p style="margin-top: 8px; margin-bottom: 8px;"></p>
-                        <p><strong>Hinweis</strong>: Alle Informationen zu deinem Projekt findest du in deinem Dashboard: <span><a href="[DASHBOARD_LINK]">Dashboard</a></span></p>
 
-
-                        <p style="margin-top: 8px; margin-bottom: 8px;"></p>
-                        <p><strong>Beste Grüße,</strong></p>
-                        <p>Das DripText-Team</p>
+                        <p>Best regards,</p>
+                        <p>The DripText Team</p>
 
                     </div>
                     <div class="footer">
@@ -153,5 +163,6 @@
         </tr>
     </table>
 </body>
+
 
 </html>

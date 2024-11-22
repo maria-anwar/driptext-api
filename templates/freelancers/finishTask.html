@@ -102,7 +102,8 @@
             text-align: center;
             font-size: 12px;
         }
-         #driptext-logo{
+
+        #driptext-logo {
             max-width: 100px !important;
             margin-bottom: 10px !important;
 
@@ -122,20 +123,34 @@
             <td align="center">
                 <div class="container">
                     <div class="header">
-                        <img src="https://driptext.de/wp-content/uploads/2023/03/driptext.png" style="max-width: 100px !important; margin-bottom: 10px !important;" alt="Logo">
-                        <h1>Auftrag [TASK_NAME] ([KEYWORD]) wurde soeben fertiggestellt</h1>
+                        <img src="https://driptext.de/wp-content/uploads/2023/03/driptext.png"
+                            style="max-width: 100px !important; margin-bottom: 10px !important;" alt="Logo">
+                        <h1>Auftrag [TASK_NAME] ([KEYWORD]) wurde soeben fertiggestellt!</h1>
                     </div>
                     <div class="content">
-                        <p><strong>Status:</strong> Auftrag abgeschlossen</p>
+                        <p>Hallo [FREELANCER_FIRST_NAME],
+                        </p>
                         <p style="margin-top: 8px; margin-bottom: 8px;"></p>
-                        <p><strong>Link zum Text:</strong> [TASK_LINK]</p>
-                        <p style="margin-top: 8px; margin-bottom: 8px;"></p>
-                        <p><strong>Hinweis:</strong> Alle Informationen zu deinem Projekt findest du in deinem
-                            Dashboard: <a href="[DASHBOARD_LINK]" target="_blank">Dashboard</a></p>
+                        <p>Der Auftrag ist fertig:
+                        </p>
+                        <p><strong>Auftrag</strong>: [TASK_NAME] ([KEYWORD])
+                        </p>
+                        <p><strong>Role</strong>: [ROLE]
+                        </p>
+                        <p><strong>Status</strong>: Auftrag abgeschlossen
+                        </p>
+                        <p><strong>Link zum Text</strong>: <span><a href="[GOOGLE_DOC_LINK]">[TASK_NAME]</a></span>
+                        </p>
                         <p style="margin-top: 8px; margin-bottom: 8px;"></p>
 
-                        <p><strong>Best regards,</strong></p>
-                        <p>Driptext Team</p>
+                        <p><strong>Link zum Dashboard</strong>: <span><a href="[DASHBOARD_LINK]">Dashboard</a></span>
+                        </p>
+                        <p style="margin-top: 8px; margin-bottom: 8px;"></p>
+
+
+
+                        <p>Beste Grüße,</p>
+                        <p>Das DripText-Team</p>
 
                     </div>
                     <div class="footer">
