@@ -113,11 +113,11 @@ exports.tracking = async (req, res) => {
 
     const projects = await Projects.find({
       user: req.body.clientId,
-      plan: { $ne: null },
+      // plan: { $ne: null },
     })
       .populate({
         path: "projectTasks",
-        match: { status: "Final" },
+        // match: { status: "Final" },
       })
       .exec();
     // const filteredProjects = projects.filter(
@@ -192,11 +192,11 @@ exports.forecasting = async (req, res) => {
 
     const projects = await Projects.find({
       user: req.body.clientId,
-      plan: { $ne: null },
+      // plan: { $ne: null },
     })
       .populate({
         path: "projectTasks",
-        match: { status: {$ne: "Final"} },
+        // match: { status: {$ne: "Final"} },
       })
       .exec();
     // const filteredProjects = projects.filter(
@@ -256,7 +256,7 @@ exports.getAllClients = async (req, res) => {
     const users = await Users.find({})
       .populate({
         path: "role",
-        match: { title: "Client" },
+        match: { title: { $regex: /^client$|^leads$/i } },
       })
       .exec();
     const clients = users.filter((user) => user.role !== null);
