@@ -117,7 +117,7 @@ exports.tracking = async (req, res) => {
     })
       .populate({
         path: "projectTasks",
-        // match: { status: "Final" },
+        match: { status: "Final" },
       })
       .exec();
     // const filteredProjects = projects.filter(
@@ -196,7 +196,7 @@ exports.forecasting = async (req, res) => {
     })
       .populate({
         path: "projectTasks",
-        // match: { status: {$ne: "Final"} },
+        match: { status: {$ne: "Final"} },
       })
       .exec();
     // const filteredProjects = projects.filter(
