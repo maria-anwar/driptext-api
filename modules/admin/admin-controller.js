@@ -276,6 +276,7 @@ exports.allTasksCost = async (req, res) => {
     let totalRevenue = 0;
     let totalCost = 0;
     let totalMargin = 0;
+    let totalStartedTasks = 0;
 
     const allTasks = await ProjectTask.find({}).exec();
     let texterPrice = 0.017;
