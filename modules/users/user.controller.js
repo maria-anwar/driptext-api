@@ -32,6 +32,8 @@ const SubPlans = db.SubPlan;
 // const Billing = db.Billing;
 const Subscription = db.Subscription;
 const Freelancers = db.Freelancer;
+const Language = db.Language;
+
 
 exports.create = async (req, res) => {
   try {
@@ -253,9 +255,11 @@ exports.create = async (req, res) => {
               { new: true }
             );
 
+            const userLanguage = await Language.findOne({userId: user._id})
+
             if (alredyExist?.emailSubscription) {
               emails
-                .onBoardingRequest(user, createProject)
+                .onBoardingRequest(user, createProject, userLanguage?.language || "de")
                 .then((res) => {
                   console.log("request on boarding sent");
                 })
@@ -282,7 +286,8 @@ exports.create = async (req, res) => {
                   emails
                     .sendInvoiceToCustomer(
                       user,
-                      subscriptionInvoice.download.download_url
+                      subscriptionInvoice.download.download_url,
+                      userLanguage?.language || "de"
                     )
                     .then((res) => {
                       console.log("billing email success: ", res);
@@ -304,9 +309,10 @@ exports.create = async (req, res) => {
                     { $match: { "role.title": "ProjectManger" } }, // Filter for specific title
                   ]);
                   for (const admin of admins) {
+                    const userLanguage = await Language.findOne({userId: admin._id})
                     adminEmails.newBooking(admin.email, {
                       projectName: updatedProject.projectName,
-                    });
+                    }, userLanguage?.language || "de");
                   }
                 }
                 // Send email
@@ -323,7 +329,7 @@ exports.create = async (req, res) => {
                 //     console.log("billing email error: ", err);
                 //   });
               }
-              await emails.AwsEmailPassword(user);
+              await emails.AwsEmailPassword(user, userLanguage?.language || "de");
               let getuser = await Users.findOne({ _id: user._id })
                 .select("firstName lastName email role password")
                 .populate({ path: "role", select: "title" });
@@ -622,6 +628,7 @@ exports.create = async (req, res) => {
               //   { $push: { projects: final_project._id } },
               //   { new: true }
               // );
+              const userLanguage = await Language.findOne({userId: user._id})
               if (subscription !== "") {
                 // const clientData = {
                 //   clientName: `${req.body.firstName} ${req.body.lastName}`,
@@ -636,7 +643,7 @@ exports.create = async (req, res) => {
 
                 if (alredyExist?.emailSubscription) {
                   emails
-                    .onBoardingRequest(user, createProject)
+                    .onBoardingRequest(user, createProject, userLanguage?.language || "de")
                     .then((res) => {
                       console.log("request on boarding sent");
                     })
@@ -652,7 +659,8 @@ exports.create = async (req, res) => {
                   emails
                     .sendInvoiceToCustomer(
                       user,
-                      subscriptionInvoice.download.download_url
+                      subscriptionInvoice.download.download_url,
+                      userLanguage?.language || "de"
                     )
                     .then((res) => {
                       console.log("billing email success: ", res);
@@ -673,9 +681,10 @@ exports.create = async (req, res) => {
                     { $match: { "role.title": "ProjectManger" } }, // Filter for specific title
                   ]);
                   for (const admin of admins) {
+                    const userLanguage = await Language.findOne({userId: admin._id})
                     adminEmails.newBooking(admin.email, {
                       projectName: updatedProject.projectName,
-                    });
+                    }, userLanguage?.language || "de");
                   }
                 }
                 // emails
@@ -692,7 +701,7 @@ exports.create = async (req, res) => {
                 //   });
               }
               if (final_project) {
-                emails.AwsEmailPassword(user);
+                emails.AwsEmailPassword(user, userLanguage?.language || "de");
 
                 let getuser = await Users.findOne({ _id: user._id })
                   .select("firstName lastName email role password")
@@ -982,6 +991,8 @@ exports.create = async (req, res) => {
             // let createUserPlan = await UserPlan.create(userPlanObj);
             // let createBilling = await Billing.create(billingResponse);
 
+            const userLanguage = await Language.findOne({userId: user._id})
+
             if (final_project && subscription) {
               // const clientData = {
               //   clientName: `${req.body.firstName} ${req.body.lastName}`,
@@ -999,7 +1010,8 @@ exports.create = async (req, res) => {
                 emails
                   .sendInvoiceToCustomer(
                     user,
-                    subscriptionInvoice.download.download_url
+                    subscriptionInvoice.download.download_url,
+                    userLanguage?.language || "de"
                   )
                   .then((res) => {
                     console.log("billing email success: ", res);
@@ -1020,9 +1032,10 @@ exports.create = async (req, res) => {
                   { $match: { "role.title": "ProjectManger" } }, // Filter for specific title
                 ]);
                 for (const admin of admins) {
+                  const userLanguage = await Language.findOne({userId: admin._id})
                   adminEmails.newBooking(admin.email, {
                     projectName: updatedProject.projectName,
-                  });
+                  }, userLanguage?.language || "de");
                 }
               }
               // Send email
@@ -1114,7 +1127,8 @@ exports.contactSupport = async (req, res) => {
     ]);
     if (admins && admins.length > 0) {
       for (const admin of admins) {
-        clientEmails.contactSupport(admin.email, emailBody);
+        const userLanguage = await Language.findOne({userId: admin._id})
+        clientEmails.contactSupport(admin.email, emailBody, userLanguage?.language || "de");
       }
     }
 
@@ -1305,13 +1319,15 @@ exports.onboarding = async (req, res) => {
              _id: updatedProject.metaLector,
            });
            if (freelancer) {
+             const userLanguage = await userLanguage.findOne({userId: freelancer._id})
              freelancerEmails.taskAssign(
                freelancer.email,
                {
                  name: createProjectTask.taskName,
                  keyword: createProjectTask.keywords,
                },
-               "Meta Lector"
+               "Meta Lector",
+               userLanguage?.language || "de"
              );
            }
            const totalFiles = await getFileCount(updatedProject.folderId);
@@ -1377,6 +1393,7 @@ exports.onboarding = async (req, res) => {
                  _id: updateProjectTask.texter,
                });
                if (taskTexter) {
+                 const userLanguage = await Language.findOne({userId: taskTexter._id})
                  freelancerEmails.reminder24Hours(
                    taskTexter.email,
                    {
@@ -1384,7 +1401,8 @@ exports.onboarding = async (req, res) => {
                      keyword: updateProjectTask.keywords,
                      documentLink: updateProjectTask.fileLink,
                    },
-                   "Texter"
+                   "Texter",
+                   userLanguage?.language || "de"
                  );
                }
              }
@@ -1401,9 +1419,10 @@ exports.onboarding = async (req, res) => {
 
 
       if (user?.emailSubscription) {
+        const userLanguage = await Language.findOne({userId: user._id})
          emails.onBoadingSuccess(user.email, {
            projectName: updatedProject.projectName,
-         });
+         }, userLanguage?.language || "de");
       }
      
       const admins = await Users.aggregate([
@@ -1419,12 +1438,13 @@ exports.onboarding = async (req, res) => {
         { $match: { "role.title": "ProjectManger" } }, // Filter for specific title
       ]);
       for (const admin of admins) {
+        const userLanguage = await Language.findOne({userId: admin._id})
         adminEmails.onBoardingCompleted(admin.email, {
           firstName: user.firstName,
           lastName: user.lastName,
           email: user.email,
           projectName: updatedProject.projectName,
-        });
+        },userLanguage?.language || "de");
       }
       await session.commitTransaction();
       session.endSession();

@@ -9,6 +9,8 @@ const Users = db.User;
 // const UserProfile = db.userProfile;
 const Roles = db.Role;
 const Freelancers = db.Freelancer;
+const Language = db.Language;
+
 
 exports.login = async (req, res) => {
   try {
@@ -218,7 +220,8 @@ exports.forgotPassword = async (req, res) => {
         email: req.body.email.trim(),
       });
       if (freelancer) {
-        emails.forgotPassword(freelancer);
+        const userLanguage = await Language.findOne({userId: freelancer._id})
+        emails.forgotPassword(freelancer, userLanguage?.language || "de");
         res.status(200).send({ message: "Email send to user." });
       } else {
         res.status(401).send({
@@ -230,11 +233,12 @@ exports.forgotPassword = async (req, res) => {
     }
     console.log("user: ", user);
     if (user) {
+      const userLanguage = await Language.findOne({userId: user._id})
       if (user.role.title.toLowerCase() === "projectmanger") {
-        emails.forgotPasswordAdmin(user);
+        emails.forgotPasswordAdmin(user, userLanguage?.language || "de");
         res.status(200).send({ message: "Email send to user." });
       } else {
-        emails.forgotPassword(user);
+        emails.forgotPassword(user, userLanguage?.language || "de");
         res.status(200).send({ message: "Email send to user." });
       }
     } else {

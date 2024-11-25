@@ -79,8 +79,8 @@ exports.createProjectManager = async (req, res) => {
 
     const language = await Language.create({
       userId: admin._id,
-      language: "de"
-    })
+      language: "de",
+    });
 
     await session.commitTransaction();
     session.endSession();
@@ -117,7 +117,7 @@ exports.tracking = async (req, res) => {
     })
       .populate({
         path: "projectTasks",
-        match: { status: "Final" },
+        match: { status: { $nin: ["Final", "Ready To Work"] } },
       })
       .exec();
     // const filteredProjects = projects.filter(
@@ -196,7 +196,7 @@ exports.forecasting = async (req, res) => {
     })
       .populate({
         path: "projectTasks",
-        match: { status: {$ne: "Final"} },
+        match: { status: "Ready To Work" },
       })
       .exec();
     // const filteredProjects = projects.filter(
@@ -225,10 +225,7 @@ exports.forecasting = async (req, res) => {
 
         revenue = (item?.projectTasks ? item.projectTasks.length : 0) * 0.764;
         if (item?.projectTasks && item.projectTasks.length > 0) {
-          cost =
-            texterPrice +
-            lectorPrice +
-            seoOptimizerPrice
+          cost = texterPrice + lectorPrice + seoOptimizerPrice;
         }
 
         margin = revenue - cost;
@@ -263,6 +260,116 @@ exports.getAllClients = async (req, res) => {
     res.status(200).send({ message: "Success", data: clients });
   } catch (error) {
     res.status(500).send({ message: error.message || "Something went wrong" });
+  }
+};
+
+exports.allTasksCost = async (req, res) => {
+  try {
+    if (!req.role || req.role.toLowerCase() !== "projectmanger") {
+      res.status(401).send({ message: "Your are not admin" });
+      return;
+    }
+    let texterCost = 0;
+    let lectorCost = 0;
+    let seoCost = 0;
+    let metaLectorCost = 0;
+    let totalRevenue = 0;
+    let totalCost = 0;
+    let totalMargin = 0;
+
+    const allTasks = await ProjectTask.find({}).exec();
+    let texterPrice = 0.017;
+    let lectorPrice = 0.352;
+    let seoOptimizerPrice = 0.32;
+    let metaLectorPrice = 0.352;
+    const prices = await freelancerPrices.find({});
+    texterPrice = prices && prices[0]?.texter ? prices[0]?.texter : texterPrice;
+    lectorPrice = prices && prices[0]?.lector ? prices[0]?.lector : lectorPrice;
+    seoOptimizerPrice =
+      prices && prices[0]?.seoOptimizer
+        ? prices[0]?.seoOptimizer
+        : seoOptimizerPrice;
+    metaLectorPrice =
+      prices && prices[0]?.metaLector ? prices[0]?.metaLector : metaLectorPrice;
+
+    allTasks.forEach((task) => {
+      const desiredWords = task.desiredNumberOfWords;
+      const actualWords = task.actualNumberOfWords;
+
+      // Calculate 10% of the desired words
+      const tenPercentOfDesiredWords = desiredWords * 0.1;
+
+      let calculatedWords = 0;
+
+      // Check if actualWords are more than 10% greater than desiredWords
+      if (actualWords > desiredWords + tenPercentOfDesiredWords) {
+        calculatedWords = desiredWords * 1.1;
+      } else {
+        calculatedWords = actualWords;
+      }
+      // texter
+      if (task.texter) {
+        const price = calculatedWords * texterPrice;
+        texterCost = texterCost + price;
+      }
+
+      // lector
+      if (task.lector) {
+        const price = calculatedWords * lectorPrice;
+        lectorCost = lectorCost + price;
+      }
+
+      // seo optimizer
+      if (task.seo) {
+        const price = calculatedWords * seoOptimizerPrice;
+        seoCost = seoCost + price;
+      }
+
+      // meta lector
+      if (task.metaLector) {
+        const price = calculatedWords * metaLectorPrice;
+        metaLectorCost = metaLectorCost + price;
+      }
+
+      // final task
+      if (task.status.toLowerCase() === "final") {
+        totalFinalTasks = totalFinalTasks + 1;
+      }
+
+      // open task
+      if (
+        task.status.toLowerCase() !== "final" &&
+        task.status.toLowerCase() !== "ready to work"
+      ) {
+        totalStartedTasks = totalStartedTasks + 1;
+        const temp =
+          texterPrice +
+          lectorPrice +
+          seoOptimizerPrice +
+          (item.metaLector ? metaLectorPrice : 0);
+        totalCost = totalCost + temp;
+       
+      }
+    });
+
+    totalRevenue = totalStartedTasks * 0.764;
+    totalMargin = revenue - totalCost;
+
+    const finalData = {
+      texterCost,
+      lectorCost,
+      seoCost,
+      metaLectorCost,
+      totalRevenue,
+      totalCost,
+      totalMargin
+
+    }
+
+    res.status(200).send({message: "Success", data: finalData})
+
+  } catch (error) {
+    res.status(500).send({ message: error?.message || "Something went wrong" });
   }
 };
 

@@ -20,6 +20,8 @@ const Projects = db.Project;
 const UserPlan = db.UserPlan;
 const ProjectTask = db.ProjectTask;
 const Company = db.Company;
+const Language = db.Language;
+
 const {
   createFolder,
   createTaskFile,
@@ -167,13 +169,15 @@ exports.addTask = async (req, res) => {
                   _id: project.metaLector,
                 });
                 if (freelancer) {
+                  const userLanguage = await Language.findOne({userId: freelancer._id})
                   freelancerEmails.taskAssign(
                     freelancer.email,
                     {
                       name: createProjectTask.taskName,
                       keyword: createProjectTask.keywords,
                     },
-                    "Meta Lector"
+                    "Meta Lector",
+                    userLanguage?.language || "de"
                   );
                 }
                 const totalFiles = await getFileCount(project.folderId);
@@ -243,6 +247,7 @@ exports.addTask = async (req, res) => {
                       _id: updateProjectTask.texter,
                     });
                     if (taskTexter) {
+                      const userLanguage = await Language.findOne({userId: taskTexter._id})
                       freelancerEmails.reminder24Hours(
                         taskTexter.email,
                         {
@@ -250,7 +255,8 @@ exports.addTask = async (req, res) => {
                           keyword: updateProjectTask.keywords,
                           documentLink: updateProjectTask.fileLink,
                         },
-                        "Texter"
+                        "Texter",
+                        userLanguage?.language || "de"
                       );
                     }
                   }
@@ -345,13 +351,15 @@ exports.addTask = async (req, res) => {
                   _id: project.metaLector,
                 });
                 if (freelancer) {
+                  const userLanguage = await Language.findOne({userId: freelancer._id})
                   freelancerEmails.taskAssign(
                     freelancer.email,
                     {
                       name: createProjectTask.taskName,
                       keyword: createProjectTask.keywords,
                     },
-                    "Meta Lector"
+                    "Meta Lector",
+                    userLanguage?.language || "de"
                   );
                 }
               }
@@ -434,6 +442,7 @@ exports.addTask = async (req, res) => {
                     _id: updateProjectTask.texter,
                   });
                   if (taskTexter) {
+                    const userLanguage = await Language.findOne({userId: taskTexter._id})
                     freelancerEmails.reminder24Hours(
                       taskTexter.email,
                       {
@@ -441,7 +450,8 @@ exports.addTask = async (req, res) => {
                         keyword: updateProjectTask.keywords,
                         documentLink: updateProjectTask.fileLink,
                       },
-                      "Texter"
+                      "Texter",
+                      userLanguage?.language || "de"
                     );
                   }
                 }
@@ -731,13 +741,15 @@ exports.importProjectTasks = async (req, res) => {
               _id: project.metaLector,
             });
             if (freelancer) {
+              const userLanguage = await Language.findOne({userId: freelancer._id})
               freelancerEmails.taskAssign(
                 freelancer.email,
                 {
                   name: createProjectTask.taskName,
                   keyword: createProjectTask.keywords,
                 },
-                "Meta Lector"
+                "Meta Lector",
+                userLanguage?.language || "de"
               );
             }
             //console.log("before creating file");
@@ -800,6 +812,7 @@ exports.importProjectTasks = async (req, res) => {
                   _id: updatedTask.texter,
                 });
                 if (taskTexter) {
+                  const userLanguage = await Language.findOne({userId: taskTexter._id})
                   freelancerEmails.reminder24Hours(
                     taskTexter.email,
                     {
@@ -807,7 +820,8 @@ exports.importProjectTasks = async (req, res) => {
                       keyword: updatedTask.keywords,
                       documentLink: updatedTask.fileLink,
                     },
-                    "Texter"
+                    "Texter",
+                    userLanguage?.language || "de"
                   );
                 }
               }
@@ -915,13 +929,15 @@ exports.importProjectTasks = async (req, res) => {
               _id: project.metaLector,
             });
             if (freelancer) {
+              const userLanguage = await Language.findOne({userId: freelancer._id})
               freelancerEmails.taskAssign(
                 freelancer.email,
                 {
                   name: createProjectTask.taskName,
                   keyword: createProjectTask.keywords,
                 },
-                "Meta Lector"
+                "Meta Lector",
+                userLanguage?.language || "de"
               );
             }
           }
@@ -1000,6 +1016,7 @@ exports.importProjectTasks = async (req, res) => {
                   _id: updatedTask.texter,
                 });
                 if (taskTexter) {
+                  const userLanguage = await Language.findOne({userId: taskTexter._id})
                   freelancerEmails.reminder24Hours(
                     taskTexter.email,
                     {
@@ -1007,7 +1024,8 @@ exports.importProjectTasks = async (req, res) => {
                       keyword: updatedTask.keywords,
                       documentLink: updatedTask.fileLink,
                     },
-                    "Texter"
+                    "Texter",
+                    userLanguage?.language || "de"
                   );
                 }
               }
