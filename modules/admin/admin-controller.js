@@ -347,7 +347,7 @@ exports.allTasksCost = async (req, res) => {
           texterPrice +
           lectorPrice +
           seoOptimizerPrice +
-          (item.metaLector ? metaLectorPrice : 0);
+          (task.metaLector ? metaLectorPrice : 0);
         totalCost = totalCost + temp;
        
       }
