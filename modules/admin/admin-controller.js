@@ -333,7 +333,7 @@ exports.allTasksCost = async (req, res) => {
 
       // final task
       if (task.status.toLowerCase() === "final") {
-        totalFinalTasks = totalFinalTasks + 1;
+        // totalFinalTasks = totalFinalTasks + 1;
       }
 
       // open task
