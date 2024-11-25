@@ -104,6 +104,7 @@ exports.create = async (req, res) => {
         Users.create(userObj)
           .then(async (user) => {
             console.log("user created....");
+            const newLanguage = await Language.create({userId: user._id, language: "de"})
             var userPlanObj = {};
             var projectObj = {
               projectName: req.body.projectName,
@@ -200,7 +201,7 @@ exports.create = async (req, res) => {
             let nameChar = createProject.projectName.slice(0, 2).toUpperCase();
             let idChar = createProject._id.toString().slice(-4);
             const projectCounter = await getProjectCounter()
-            let projectId = `${user.firstName[0].toUpperCase()}${user.lastName[0].toUpperCase()}-${projectCounter?.seq}`;
+            let projectId = `${user.firstName[0].toUpperCase()}${user.lastName[0].toUpperCase()}-${1}`;
 
             await Users.findByIdAndUpdate(
               user._id,
@@ -606,11 +607,14 @@ exports.create = async (req, res) => {
               //       new: true,
               //     }
               //   );
-              let nameChar = final_project.projectName
-                .slice(0, 2)
-                .toUpperCase();
-              let idChar = final_project._id.toString().slice(-4);
-              let projectId = nameChar + "-" + idChar;
+                let nameChar = final_project.projectName
+                  .slice(0, 2)
+                  .toUpperCase();
+                let idChar = final_project._id.toString().slice(-4);
+                const projectCounter = await getProjectCounter();
+                let projectId = `${user.firstName[0].toUpperCase()}${user.lastName[0].toUpperCase()}-${
+                  projectCounter?.seq
+                }`;
               const folderObj = await createFolder(projectId);
 
               const updatedProject = await Projects.findByIdAndUpdate(
