@@ -167,7 +167,7 @@ exports.tracking = async (req, res) => {
       })
     );
 
-    res.status(200).send({ message: "Success", data: finalData });
+    res.status(200).send({ message: "Success", data: finalData, });
   } catch (error) {
     res.status(500).send({ message: error.message || "Something went wrong" });
   }
@@ -229,7 +229,16 @@ exports.forecasting = async (req, res) => {
 
         revenue = (item?.projectTasks ? item.projectTasks.length : 0) * 0.764;
         if (item?.projectTasks && item.projectTasks.length > 0) {
-          cost = texterPrice + lectorPrice + seoOptimizerPrice;
+          item.projectTasks.forEach(task => {
+             const temp =
+               texterPrice +
+               lectorPrice +
+               seoOptimizerPrice +
+               (task.metaLector ? metaLectorPrice : 0);
+            cost = cost + temp
+
+          })
+          // cost = texterPrice + lectorPrice + seoOptimizerPrice;
         }
 
         margin = revenue - cost;
@@ -237,6 +246,7 @@ exports.forecasting = async (req, res) => {
           revenue,
           cost,
           margin,
+          openTasks: item.projectTasks ? item.projectTasks.length : 0,
           project: item,
         };
       })
