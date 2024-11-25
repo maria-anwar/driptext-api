@@ -354,7 +354,7 @@ exports.allTasksCost = async (req, res) => {
     });
 
     totalRevenue = totalStartedTasks * 0.764;
-    totalMargin = revenue - totalCost;
+    totalMargin = totalRevenue - totalCost;
 
     const finalData = {
       texterCost,
