@@ -201,7 +201,7 @@ exports.create = async (req, res) => {
             let nameChar = createProject.projectName.slice(0, 2).toUpperCase();
             let idChar = createProject._id.toString().slice(-4);
             const projectCounter = await getProjectCounter()
-            let projectId = `${user.firstName[0].toUpperCase()}${user.lastName[0].toUpperCase()}-${1}`;
+            let projectId = `${user.firstName[0].toUpperCase()}${user.lastName[0].toUpperCase()}-${projectCounter?.seq}`;
 
             await Users.findByIdAndUpdate(
               user._id,
