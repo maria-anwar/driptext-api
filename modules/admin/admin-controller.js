@@ -117,7 +117,7 @@ exports.tracking = async (req, res) => {
     })
       .populate({
         path: "projectTasks",
-        match: { status: { $nin: ["Final", "Ready To Work"] } },
+        match: { status: { $nin: ["Ready To Work"] } },
       })
       .exec();
     // const filteredProjects = projects.filter(
@@ -152,7 +152,7 @@ exports.tracking = async (req, res) => {
               lectorPrice +
               seoOptimizerPrice +
               (task.metaLector ? metaLectorPrice : 0);
-            cost = cost + temp
+            cost = cost + temp;
           });
         }
 
@@ -167,7 +167,7 @@ exports.tracking = async (req, res) => {
       })
     );
 
-    res.status(200).send({ message: "Success", data: finalData, });
+    res.status(200).send({ message: "Success", data: finalData });
   } catch (error) {
     res.status(500).send({ message: error.message || "Something went wrong" });
   }
@@ -229,15 +229,14 @@ exports.forecasting = async (req, res) => {
 
         revenue = (item?.projectTasks ? item.projectTasks.length : 0) * 0.764;
         if (item?.projectTasks && item.projectTasks.length > 0) {
-          item.projectTasks.forEach(task => {
-             const temp =
-               texterPrice +
-               lectorPrice +
-               seoOptimizerPrice +
-               (task.metaLector ? metaLectorPrice : 0);
-            cost = cost + temp
-
-          })
+          item.projectTasks.forEach((task) => {
+            const temp =
+              texterPrice +
+              lectorPrice +
+              seoOptimizerPrice +
+              (task.metaLector ? metaLectorPrice : 0);
+            cost = cost + temp;
+          });
           // cost = texterPrice + lectorPrice + seoOptimizerPrice;
         }
 
@@ -291,8 +290,9 @@ exports.allTasksCost = async (req, res) => {
     let totalCost = 0;
     let totalMargin = 0;
     let totalStartedTasks = 0;
+    let userPlanIds = [];
 
-    const allTasks = await ProjectTask.find({}).exec();
+    const allTasks = await ProjectTask.find({}).populate("project").exec();
     let texterPrice = 0.017;
     let lectorPrice = 0.352;
     let seoOptimizerPrice = 0.32;
@@ -354,16 +354,19 @@ exports.allTasksCost = async (req, res) => {
         metaLectorCost = metaLectorCost + price;
       }
 
+      if (task.project.plan) {
+        if (!userPlanIds.includes(task.project.plan)) {
+          userPlanIds.push(task.project.plan);
+        }
+      }
+
       // final task
       if (task.status.toLowerCase() === "final") {
         // totalFinalTasks = totalFinalTasks + 1;
       }
 
       // open task
-      if (
-        task.status.toLowerCase() !== "final" &&
-        task.status.toLowerCase() !== "ready to work"
-      ) {
+      if (task.status.toLowerCase() !== "ready to work") {
         totalStartedTasks = totalStartedTasks + 1;
 
         const temp =
@@ -375,7 +378,16 @@ exports.allTasksCost = async (req, res) => {
       }
     });
 
-    totalRevenue = totalStartedTasks * 0.764;
+    userPlanIds.forEach(async (obj) => {
+      const userPlan = await UserPlan.findOne({ _id: obj })
+        .populate("subPlan")
+        .exec();
+      if (userPlan) {
+        totalRevenue = totalRevenue + Number(userPlan.price);
+      }
+    });
+
+    // totalRevenue = totalStartedTasks * 0.764;
     totalMargin = totalRevenue - totalCost;
 
     const finalData = {
