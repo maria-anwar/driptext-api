@@ -43,8 +43,12 @@ router.get("/getAllClients", jwt.protect, (req, res) => {
   adminController.getAllClients(req, res);
 });
 
-router.get("/getAllTasksCost",  (req, res) => {
+router.get("/getAllTasksCost", jwt.protect, (req, res) => {
   adminController.allTasksCost(req, res);
+});
+
+router.post("/getProjectTaskCost", jwt.protect, (req, res) => {
+  adminController.projectTasksCost(req, res);
 });
 
 router.post("/updateUserStatus", jwt.protect, (req, res) => {
