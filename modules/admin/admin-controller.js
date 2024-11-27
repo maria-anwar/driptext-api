@@ -378,12 +378,15 @@ exports.allTasksCost = async (req, res) => {
       }
     });
 
-    userPlanIds.forEach(async (obj) => {
-      const userPlan = await UserPlan.findOne({ _id: obj })
-        .populate("subPlan")
-        .exec();
+    const userPlanPromises = userPlanIds.map((obj) =>
+      UserPlan.findOne({ _id: obj }).populate("subPlan").exec()
+    );
+
+    const userPlans = await Promise.all(userPlanPromises);
+
+    userPlans.forEach((userPlan) => {
       if (userPlan) {
-        totalRevenue = totalRevenue + Number(userPlan.price);
+        totalRevenue += Number(userPlan.price);
       }
     });
 
