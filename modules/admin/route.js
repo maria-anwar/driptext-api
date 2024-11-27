@@ -43,7 +43,7 @@ router.get("/getAllClients", jwt.protect, (req, res) => {
   adminController.getAllClients(req, res);
 });
 
-router.get("/getAllTasksCost", jwt.protect, (req, res) => {
+router.get("/getAllTasksCost",  (req, res) => {
   adminController.allTasksCost(req, res);
 });
 

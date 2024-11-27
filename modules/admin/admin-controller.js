@@ -278,10 +278,10 @@ exports.getAllClients = async (req, res) => {
 
 exports.allTasksCost = async (req, res) => {
   try {
-    if (!req.role || req.role.toLowerCase() !== "projectmanger") {
-      res.status(401).send({ message: "Your are not admin" });
-      return;
-    }
+    // if (!req.role || req.role.toLowerCase() !== "projectmanger") {
+    //   res.status(401).send({ message: "Your are not admin" });
+    //   return;
+    // }
     let texterCost = 0;
     let lectorCost = 0;
     let seoCost = 0;
@@ -323,42 +323,7 @@ exports.allTasksCost = async (req, res) => {
       } else {
         calculatedWords = actualWords;
       }
-      // texter
-      if (task.texter) {
-        const price = calculatedWords * texterPrice;
-        // tempPrice = tempPrice + price
-        texterCost = texterCost + price;
-      }
-
-      // lector
-      if (task.lector) {
-        const price = calculatedWords * lectorPrice;
-        // tempPrice = tempPrice + price;
-
-        lectorCost = lectorCost + price;
-      }
-
-      // seo optimizer
-      if (task.seo) {
-        const price = calculatedWords * seoOptimizerPrice;
-        // tempPrice = tempPrice + price;
-
-        seoCost = seoCost + price;
-      }
-
-      // meta lector
-      if (task.metaLector) {
-        const price = calculatedWords * metaLectorPrice;
-        // tempPrice = tempPrice + price;
-
-        metaLectorCost = metaLectorCost + price;
-      }
-
-      if (task.project.plan) {
-        if (!userPlanIds.includes(task.project.plan)) {
-          userPlanIds.push(task.project.plan);
-        }
-      }
+      
 
       // final task
       if (task.status.toLowerCase() === "final") {
@@ -367,21 +332,68 @@ exports.allTasksCost = async (req, res) => {
 
       // open task
       if (task.status.toLowerCase() !== "ready to work") {
-        totalStartedTasks = totalStartedTasks + 1;
+        let tempTexterCost = 0;
+        let tempLectorCost = 0;
+        let tempseoCost = 0;
+        let tempMetaLectorCost = 0;
+        // texter
+        if (task.texter) {
+          const price = calculatedWords * texterPrice;
+          tempTexterCost = calculatedWords * texterPrice;
+          // tempPrice = tempPrice + price
+          texterCost = texterCost + price;
+        }
 
-        const temp = texterPrice + lectorPrice + seoOptimizerPrice + (task.metaLector ? metaLectorPrice : 0);
+        // lector
+        if (task.lector) {
+          const price = calculatedWords * lectorPrice;
+          tempLectorCost = calculatedWords * lectorPrice;
+          // tempPrice = tempPrice + price;
+
+          lectorCost = lectorCost + price;
+        }
+
+        // seo optimizer
+        if (task.seo) {
+          const price = calculatedWords * seoOptimizerPrice;
+          tempseoCost = calculatedWords * seoOptimizerPrice;
+          // tempPrice = tempPrice + price;
+
+          seoCost = seoCost + price;
+        }
+
+        // meta lector
+        if (task.metaLector) {
+          const price = calculatedWords * metaLectorPrice;
+          tempMetaLectorCost = calculatedWords * metaLectorPrice;
+          // tempPrice = tempPrice + price;
+
+          metaLectorCost = metaLectorCost + price;
+        }
+
+        if (task.project.plan) {
+          if (!userPlanIds.includes(task.project.plan)) {
+            userPlanIds.push(task.project.plan);
+          }
+        }
+        totalStartedTasks = totalStartedTasks + 1;
+      
+
+        const temp = tempTexterCost + tempLectorCost + tempseoCost + tempMetaLectorCost
         totalCost = totalCost + temp;
       }
     });
 
+    console.log("userPlanIds: ", userPlanIds)
     const userPlanPromises = userPlanIds.map(async (obj) =>
      await UserPlan.findOne({ _id: obj }).populate("subPlan").exec()
     );
 
     const userPlans = await Promise.all(userPlanPromises);
+    console.log('user Plans: ', userPlans)
 
     userPlans.forEach((userPlan) => {
-      if (userPlan) {
+      if (userPlan && userPlan.subPlan) {
         totalRevenue += Number(userPlan.subPlan.price);
       }
     });
