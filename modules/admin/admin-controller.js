@@ -390,7 +390,7 @@ exports.allTasksCost = async (req, res) => {
     totalMargin = totalRevenue - totalCost;
 
     const finalData = {
-      texterCost: totalCost.toFixed(2),
+      texterCost: texterCost.toFixed(2),
       lectorCost: lectorCost.toFixed(2),
       seoCost: seoCost.toFixed(2),
       metaLectorCost: metaLectorCost.toFixed(2),
