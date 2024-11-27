@@ -382,7 +382,7 @@ exports.allTasksCost = async (req, res) => {
 
     userPlans.forEach((userPlan) => {
       if (userPlan) {
-        totalRevenue += Number(userPlan.price);
+        totalRevenue += Number(userPlan.subPlan.price);
       }
     });
 
