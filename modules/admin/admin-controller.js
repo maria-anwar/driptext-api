@@ -390,13 +390,13 @@ exports.allTasksCost = async (req, res) => {
     totalMargin = totalRevenue - totalCost;
 
     const finalData = {
-      texterCost,
-      lectorCost,
-      seoCost,
-      metaLectorCost,
-      totalRevenue,
-      totalCost,
-      totalMargin,
+      texterCost: totalCost.toFixed(2),
+      lectorCost: lectorCost.toFixed(2),
+      seoCost: seoCost.toFixed(2),
+      metaLectorCost: metaLectorCost.toFixed(2),
+      totalRevenue: totalRevenue.toFixed(2),
+      totalCost: totalCost.toFixed(2),
+      totalMargin: totalMargin.toFixed(2),
     };
 
     res.status(200).send({ message: "Success", data: finalData });
