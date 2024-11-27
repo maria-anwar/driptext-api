@@ -369,17 +369,13 @@ exports.allTasksCost = async (req, res) => {
       if (task.status.toLowerCase() !== "ready to work") {
         totalStartedTasks = totalStartedTasks + 1;
 
-        const temp =
-          texterPrice +
-          lectorPrice +
-          seoOptimizerPrice +
-          (task.metaLector ? metaLectorPrice : 0);
+        const temp = texterPrice + lectorPrice + seoOptimizerPrice + (task.metaLector ? metaLectorPrice : 0);
         totalCost = totalCost + temp;
       }
     });
 
-    const userPlanPromises = userPlanIds.map((obj) =>
-      UserPlan.findOne({ _id: obj }).populate("subPlan").exec()
+    const userPlanPromises = userPlanIds.map(async (obj) =>
+     await UserPlan.findOne({ _id: obj }).populate("subPlan").exec()
     );
 
     const userPlans = await Promise.all(userPlanPromises);
