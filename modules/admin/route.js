@@ -32,6 +32,10 @@ router.post("/wordCountProject", jwt.protect, (req, res) => {
   projectController.wordCountAllTasksInProject(req, res);
 });
 
+router.post("/getTasksCostDateFilter", jwt.protect, (req, res) => {
+  adminController.tasksCostDateFilter(req, res);
+});
+
 router.get("/getFreelancers", jwt.protect, (req, res) => {
   freelancerController.getFreelancers(req, res);
 });

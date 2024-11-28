@@ -574,6 +574,187 @@ exports.projectTasksCost = async (req, res) => {
   }
 };
 
+exports.tasksCostDateFilter = async (req, res) => {
+  try {
+    if (!req.role || req.role.toLowerCase() !== "projectmanger") {
+      res.status(401).send({ message: "Your are not admin" });
+      return;
+    }
+
+    const joiSchema = Joi.object({
+      startDate: Joi.date().required(),
+      endDate: Joi.date().required(),
+    });
+    const { error, value } = joiSchema.validate(req.body);
+
+    if (error) {
+      // emails.errorEmail(req, error);
+
+      const message = error.details[0].message.replace(/"/g, "");
+      res.status(401).send({
+        message: message,
+      });
+      return;
+    }
+    const { startDate, endDate } = value;
+
+    // Find tasks based on the date range and excluding status "ready to work"
+    const tasks = await projectTasks
+      .find({
+        status: { $ne: "ready to work" }, // Exclude tasks with status "ready to work"
+        $or: [
+          {
+            // Tasks in progress: dueDate within the range
+            finalizedDate: null,
+            dueDate: { $gte: new Date(startDate), $lte: new Date(endDate) },
+          },
+          {
+            // Tasks finalized: finalizedDate within the range
+            dueDate: null,
+            finalizedDate: {
+              $gte: new Date(startDate),
+              $lte: new Date(endDate),
+            },
+          },
+        ],
+      })
+      .exec();
+    
+    let texterCost = 0;
+    let lectorCost = 0;
+    let seoCost = 0;
+    let metaLectorCost = 0;
+    let totalRevenue = 0;
+    let totalCost = 0;
+    let totalMargin = 0;
+    let totalStartedTasks = 0;
+    let userPlanIds = [];
+    let texterPrice = 0.017;
+    let lectorPrice = 0.352;
+    let seoOptimizerPrice = 0.32;
+    let metaLectorPrice = 0.352;
+    const prices = await freelancerPrices.find({});
+    texterPrice = prices && prices[0]?.texter ? prices[0]?.texter : texterPrice;
+    lectorPrice = prices && prices[0]?.lector ? prices[0]?.lector : lectorPrice;
+    seoOptimizerPrice =
+      prices && prices[0]?.seoOptimizer
+        ? prices[0]?.seoOptimizer
+        : seoOptimizerPrice;
+    metaLectorPrice =
+      prices && prices[0]?.metaLector ? prices[0]?.metaLector : metaLectorPrice;
+
+    tasks.forEach((task) => {
+      const desiredWords = task.desiredNumberOfWords;
+      const actualWords = task.actualNumberOfWords;
+
+      // Calculate 10% of the desired words
+      const tenPercentOfDesiredWords = desiredWords * 0.1;
+
+      let calculatedWords = 0;
+      let tempPrice = 0;
+
+      // Check if actualWords are more than 10% greater than desiredWords
+      if (actualWords > desiredWords + tenPercentOfDesiredWords) {
+        calculatedWords = desiredWords * 1.1;
+      } else {
+        calculatedWords = actualWords;
+      }
+
+      // final task
+      if (task.status.toLowerCase() === "final") {
+        // totalFinalTasks = totalFinalTasks + 1;
+      }
+
+      // open task
+      if (task.status.toLowerCase() !== "ready to work") {
+        let tempTexterCost = 0;
+        let tempLectorCost = 0;
+        let tempseoCost = 0;
+        let tempMetaLectorCost = 0;
+        // texter
+        if (task.texter) {
+          const price = calculatedWords * texterPrice;
+          tempTexterCost = calculatedWords * texterPrice;
+          // tempPrice = tempPrice + price
+          texterCost = texterCost + price;
+        }
+
+        // lector
+        if (task.lector) {
+          const price = calculatedWords * lectorPrice;
+          tempLectorCost = calculatedWords * lectorPrice;
+          // tempPrice = tempPrice + price;
+
+          lectorCost = lectorCost + price;
+        }
+
+        // seo optimizer
+        if (task.seo) {
+          const price = calculatedWords * seoOptimizerPrice;
+          tempseoCost = calculatedWords * seoOptimizerPrice;
+          // tempPrice = tempPrice + price;
+
+          seoCost = seoCost + price;
+        }
+
+        // meta lector
+        if (task.metaLector) {
+          const price = calculatedWords * metaLectorPrice;
+          tempMetaLectorCost = calculatedWords * metaLectorPrice;
+          // tempPrice = tempPrice + price;
+
+          metaLectorCost = metaLectorCost + price;
+        }
+
+        if (task.project.plan) {
+          if (!userPlanIds.includes(task.project.plan)) {
+            userPlanIds.push(task.project.plan);
+          }
+        }
+        totalStartedTasks = totalStartedTasks + 1;
+
+        const temp =
+          tempTexterCost + tempLectorCost + tempseoCost + tempMetaLectorCost;
+        totalCost = totalCost + temp;
+      }
+    });
+
+    console.log("userPlanIds: ", userPlanIds);
+    const userPlanPromises = userPlanIds.map(
+      async (obj) =>
+        await UserPlan.findOne({ _id: obj }).populate("subPlan").exec()
+    );
+
+    const userPlans = await Promise.all(userPlanPromises);
+    console.log("user Plans: ", userPlans);
+
+    userPlans.forEach((userPlan) => {
+      if (userPlan && userPlan.subPlan) {
+        totalRevenue += Number(userPlan.subPlan.price);
+      }
+    });
+
+    // totalRevenue = totalStartedTasks * 0.764;
+    totalMargin = totalRevenue - totalCost;
+
+    const finalData = {
+      texterCost: texterCost.toFixed(2),
+      lectorCost: lectorCost.toFixed(2),
+      seoCost: seoCost.toFixed(2),
+      metaLectorCost: metaLectorCost.toFixed(2),
+      totalRevenue: totalRevenue.toFixed(2),
+      totalCost: totalCost.toFixed(2),
+      totalMargin: totalMargin.toFixed(2),
+    };
+
+    res.status(200).send({ message: "Success", data: finalData });
+    
+    
+  } catch (error) {
+    res.status(500).send({message: error?.message || "Something went wrong"})
+  }
+}
+
 exports.freelanerKPI = async (req, res) => {
   try {
      if (!req.role || req.role.toLowerCase() !== "projectmanger") {
