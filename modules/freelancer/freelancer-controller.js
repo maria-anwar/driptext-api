@@ -17,6 +17,7 @@ const ProjectTask = db.ProjectTask;
 const Projects = db.Project;
 const freelancerPrices = db.FreelancerPrice;
 const freelancerEarnings = db.FreelancerEarning;
+const TrafficLight = db.TrafficLight;
 
 exports.create = async (req, res) => {
   try {
@@ -726,11 +727,37 @@ exports.finishTask = async (req, res) => {
           { new: true }
         );
 
+
         const texterFreelancer = await Freelancers.findOne({
           _id: task.texter,
         });
+
         const project = await Projects.findOne({ _id: task.project });
         if (texterFreelancer) {
+
+          // traffic Light System
+          const trafficLight = await TrafficLight.findOne({ freelancer: texterFreelancer._id, role: "Texter" })
+          if (trafficLight) {
+             const body = {
+               task: task._id,
+             };
+            const updatedTrafficLight = await TrafficLight.findOneAndUpdate({ freelancer: texterFreelancer._id }, {
+              $push: { returnTasks: body}
+            },{new: true})
+            
+          } else {
+            const body = {
+              task: task._id
+            }
+            const newTrafficLight = await TrafficLight.create({
+              freelancer: texterFreelancer._id,
+              role: "Texter",
+              returnTasks: [body]
+
+            })
+          }
+
+
           const taskBody = {
             name: task.taskName,
             keyword: task.keywords,
@@ -915,6 +942,32 @@ exports.finishTask = async (req, res) => {
         });
         const project = await Projects.findOne({ _id: task.project });
         if (texterFreelancer) {
+          // traffic Light System
+          const trafficLight = await TrafficLight.findOne({
+            freelancer: texterFreelancer._id,
+            role: "Texter",
+          });
+          if (trafficLight) {
+            const body = {
+              task: task._id,
+            };
+            const updatedTrafficLight = await TrafficLight.findOneAndUpdate(
+              { freelancer: texterFreelancer._id },
+              {
+                $push: { returnTasks: body },
+              },
+              { new: true }
+            );
+          } else {
+            const body = {
+              task: task._id,
+            };
+            const newTrafficLight = await TrafficLight.create({
+              freelancer: texterFreelancer._id,
+              role: "Texter",
+              returnTasks: [body],
+            });
+          }
           const taskBody = {
             name: task.taskName,
             keyword: task.keywords,

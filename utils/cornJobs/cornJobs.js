@@ -15,6 +15,7 @@ const UserPlans = db.UserPlan;
 const ProjectTask = db.ProjectTask;
 const Freelancers = db.Freelancer;
 const freelancerEarnings = db.FreelancerEarning;
+const TrafficLight = db.TrafficLight;
 
 const onBoardingReminder = async () => {
   try {
@@ -243,6 +244,140 @@ const taskDeadlineCheck = async () => {
     console.log("task deadline check error: ", error);
   }
 };
+
+const trafficLightDealineCheck = async () => {
+  try {
+    const allTasks = await ProjectTask.find({
+      isActive:"Y"
+    }).exec()
+
+    const today = dayjs().startOf("day")
+
+    allTasks.forEach(async task => {
+      if (task.dueDate && today.isAfter(dayjs(task.dueDate))) {
+
+        // Texter
+        if (task.texter) {
+          const trafficLight = await TrafficLight.findOne({ freelancer: task.texter, role: "Texter" }).exec()
+          if (trafficLight) {
+            const body = {
+              task: task._id,
+            };
+
+            const updatedTrafficLight = await TrafficLight.findOneAndUpdate({ freelancer: task.texter }, {
+              $push:{deadlineTasks: body}
+            },{new: true})
+            
+          } else {
+            const body = {
+              task: task._id
+            }
+            const newTrafficLight = await TrafficLight.create({
+              freelancer: task.texter,
+              role: "Texter",
+              deadlineTasks: [body]
+            })
+          }
+        }
+
+        // Lector
+         if (task.lector) {
+           const trafficLight = await TrafficLight.findOne({
+             freelancer: task.lector,
+             role: "Lector",
+           }).exec();
+           if (trafficLight) {
+             const body = {
+               task: task._id,
+             };
+
+             const updatedTrafficLight = await TrafficLight.findOneAndUpdate(
+               { freelancer: task.lector },
+               {
+                 $push: { deadlineTasks: body },
+               },
+               { new: true }
+             );
+           } else {
+             const body = {
+               task: task._id,
+             };
+             const newTrafficLight = await TrafficLight.create({
+               freelancer: task.lector,
+               role: "Lector",
+               deadlineTasks: [body],
+             });
+           }
+         }
+        
+        // seo optmizier
+         if (task.seo) {
+           const trafficLight = await TrafficLight.findOne({
+             freelancer: task.seo,
+             role: "SEO-Optimizer",
+           }).exec();
+           if (trafficLight) {
+             const body = {
+               task: task._id,
+             };
+
+             const updatedTrafficLight = await TrafficLight.findOneAndUpdate(
+               { freelancer: task.seo },
+               {
+                 $push: { deadlineTasks: body },
+               },
+               { new: true }
+             );
+           } else {
+             const body = {
+               task: task._id,
+             };
+             const newTrafficLight = await TrafficLight.create({
+               freelancer: task.seo,
+               role: "SEO-Optimizer",
+               deadlineTasks: [body],
+             });
+           }
+         }
+        
+        // Meta Lector
+         if (task.metaLector) {
+           const trafficLight = await TrafficLight.findOne({
+             freelancer: task.metaLector,
+             role: "Meta Lector",
+           }).exec();
+           if (trafficLight) {
+             const body = {
+               task: task._id,
+             };
+
+             const updatedTrafficLight = await TrafficLight.findOneAndUpdate(
+               { freelancer: task.metaLector },
+               {
+                 $push: { deadlineTasks: body },
+               },
+               { new: true }
+             );
+           } else {
+             const body = {
+               task: task._id,
+             };
+             const newTrafficLight = await TrafficLight.create({
+               freelancer: task.metaLector,
+               role: "Meta Lector",
+               deadlineTasks: [body],
+             });
+           }
+         }
+        
+      }
+
+    })
+    
+  } catch (error) {
+    console.log("traffic light deadline check: ", error)
+  }
+}
 
 const calculateInvoice = async () => {
   // Get the start and end dates for the previous month, ensuring no time component
