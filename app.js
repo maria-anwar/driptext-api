@@ -51,19 +51,21 @@ class Server {
   }
 
   startCornJob() {
+    cron.schedule("0 * * * *", () => {
+      cornJobs.trafficLightDealineCheck();
+    });
     cron.schedule("0 0 * * *", () => {
       cornJobs.onBoardingReminder();
     });
     cron.schedule("0 0 * * *", () => {
       cornJobs.subscriptonCheck();
     });
-     cron.schedule("0 0 * * *", () => {
-       cornJobs.taskDeadlineCheck();
-     });
-     cron.schedule("0 0 1 * *", () => {
-       cornJobs.monthlyFreelancingInvoicing();
-     });
-    
+    cron.schedule("0 0 * * *", () => {
+      cornJobs.taskDeadlineCheck();
+    });
+    cron.schedule("0 0 1 * *", () => {
+      cornJobs.monthlyFreelancingInvoicing();
+    });
   }
 
   async appExecute() {

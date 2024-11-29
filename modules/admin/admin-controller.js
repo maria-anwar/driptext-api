@@ -20,6 +20,7 @@ const Company = db.Company;
 const freelancerEarnings = db.FreelancerEarning;
 const freelancerPrices = db.FreelancerPrice;
 const Language = db.Language;
+const TrafficLight = db.TrafficLight;
 
 const {
   createFolder,
@@ -866,6 +867,21 @@ exports.freelanerKPI = async (req, res) => {
     res.status(500).send({ message: error?.message || "Something went wrong" });
   }
 };
+
+exports.trafficLightsTask = async (req, res) => {
+  try {
+     if (!req.role || req.role.toLowerCase() !== "projectmanger") {
+       res.status(401).send({ message: "Your are not admin" });
+       return;
+     }
+    
+    
+    
+    
+  } catch (error) {
+    res.status(500).send({message: error?.message || "Something went wrong"})
+  }
+}
 
 
 exports.editProjectManager = async (req, res) => {

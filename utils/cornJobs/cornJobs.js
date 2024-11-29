@@ -611,5 +611,6 @@ module.exports = {
   onBoardingReminder,
   subscriptonCheck,
   taskDeadlineCheck,
-  monthlyFreelancingInvoicing
+  monthlyFreelancingInvoicing,
+  trafficLightDealineCheck,
 };
