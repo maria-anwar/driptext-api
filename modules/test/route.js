@@ -10,6 +10,10 @@ const jwt = require("../../utils/jwt");
 router.get("/test", (req, res) => {
   testController.test(req, res);
 });
+
+router.get("/earningTest", (req, res) => {
+  testController.earningTwo(req, res);
+});
 router.get("/subscriptionInvoice", (req, res) => {
   testController.customerInvoice(req, res);
 });

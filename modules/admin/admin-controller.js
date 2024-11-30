@@ -870,14 +870,48 @@ exports.freelanerKPI = async (req, res) => {
 
 exports.trafficLightsTask = async (req, res) => {
   try {
-     if (!req.role || req.role.toLowerCase() !== "projectmanger") {
-       res.status(401).send({ message: "Your are not admin" });
-       return;
-     }
-    
-    
-    
-    
+    if (!req.role || req.role.toLowerCase() !== "projectmanger") {
+      res.status(401).send({ message: "Your are not admin" });
+      return;
+    }
+
+    const ninetyDaysAgo = dayjs().subtract(90, "day").startOf("day").toDate();
+    const trafficLights = await TrafficLight.find({
+      $or: [
+        {
+          "deadlineTasks.date": { $gte: ninetyDaysAgo },
+        },
+        {
+          "returnTasks.date": { $gte: ninetyDaysAgo },
+        },
+      ],
+    })
+      .populate("freelancer")
+      .exec();
+
+    // Filter tasks within the 90-day range and clean data
+    const filteredTasks = trafficLights.map((doc) => {
+      const plainDoc = doc.toObject(); // Convert Mongoose Document to plain object
+      return {
+        ...plainDoc,
+        deadlineTasks: plainDoc.deadlineTasks.filter((task) =>
+          dayjs(task.date).isAfter(ninetyDaysAgo)
+        ),
+        returnTasks: plainDoc.returnTasks.filter((task) =>
+          dayjs(task.date).isAfter(ninetyDaysAgo)
+        ),
+      };
+    });
+
+    const finalData = filteredTasks.map((item) => {
+      return {
+        ...item,
+        deadlineTasks: item.deadlineTasks.length,
+        returnTasks: item.returnTasks.length,
+      };
+    });
+
+    res.status(200).send({ message: "Success", data: finalData });
   } catch (error) {
     res.status(500).send({message: error?.message || "Something went wrong"})
   }

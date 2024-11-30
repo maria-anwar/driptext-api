@@ -7,6 +7,7 @@ const { drive, docs } = require("../../utils/googleService/googleService");
 const {
   getWordCount,
   createInvoiceInGoogleSheets,
+  exportFinishedTasks,
 } = require("../../utils/googleService/actions");
 const { getSubscriptionInvoice } = require("../../utils/chargebee/actions");
 const freelancerEmails = require("../../utils/sendEmail/freelancer/emails");
@@ -58,6 +59,7 @@ const calculateInvoice = async () => {
           $gte: startOfPreviousMonthDate,
           $lt: dayjs(endOfPreviousMonthDate).add(1, "day").toDate(), // Includes the last day entirely
         },
+        finalize: true,
         task: { $ne: null },
         project: { $ne: null },
         freelancer: { $ne: null },
@@ -65,20 +67,20 @@ const calculateInvoice = async () => {
     },
     {
       $lookup: {
-        from: "projectTasks", // Name of the task collection
+        from: "projecttasks", // Name of the task collection
         localField: "task",
         foreignField: "_id",
         as: "task",
       },
     },
-    {
-      $lookup: {
-        from: "projects", // Name of the project collection
-        localField: "project",
-        foreignField: "_id",
-        as: "project",
-      },
-    },
+    // {
+    //   $lookup: {
+    //     from: "projects", // Name of the project collection
+    //     localField: "project",
+    //     foreignField: "_id",
+    //     as: "project",
+    //   },
+    // },
     {
       $lookup: {
         from: "freelancers", // Name of the freelancer collection
@@ -90,9 +92,9 @@ const calculateInvoice = async () => {
     {
       $unwind: { path: "$task", preserveNullAndEmptyArrays: true },
     },
-    {
-      $unwind: { path: "$project", preserveNullAndEmptyArrays: true },
-    },
+    // {
+    //   $unwind: { path: "$project", preserveNullAndEmptyArrays: true },
+    // },
     {
       $unwind: { path: "$freelancer", preserveNullAndEmptyArrays: true },
     },
@@ -118,16 +120,14 @@ const calculateInvoice = async () => {
 
 exports.testCounter = async (req, res) => {
   try {
-
-    const counter = mongoose.connection.collection("counters")
-    const counterData = await counter.findOne({id:"id"})
+    const counter = mongoose.connection.collection("counters");
+    const counterData = await counter.findOne({ id: "id" });
 
     res.status(200).send({ message: "Success", data: counterData });
-    
   } catch (error) {
-    res.status(500).send({message: error?.message || "Something went wrong"})
+    res.status(500).send({ message: error?.message || "Something went wrong" });
   }
-}
+};
 
 exports.test = async (req, res) => {
   try {
@@ -135,11 +135,12 @@ exports.test = async (req, res) => {
     const earnings = await calculateInvoice();
     for (const earning of earnings) {
       let temp = {
+        tasks: earning.earnings.map(item => ({...item.task, role: item.role})),
         creditNo: "2024-10-001",
         date: "2024-10-22",
         performancePeriod: "2024-09-01 to 2024-09-30",
         clientName: "John Doe Ltd.",
-        vatDescription:"",
+        vatDescription: "",
         company: "",
         city: "",
         street: "",
@@ -177,8 +178,8 @@ exports.test = async (req, res) => {
       let vat = 0;
       let vatDescription =
         "No VAT as the service is not taxed in the domestic market.";
-      temp.creditNo = dayjs().startOf("day").format("YYYY-MM-DD");
-      temp.date = dayjs().startOf("day").format("YYYY-MM-DD");
+      temp.creditNo = dayjs().startOf("day").format("DD.MM.YYYY");
+      temp.date = dayjs().startOf("day").format("DD.MM.YYYY");
       const startOfPreviousMonth = dayjs("2024-12-1")
         .subtract(1, "month")
         .startOf("month")
@@ -196,8 +197,8 @@ exports.test = async (req, res) => {
       const endOfPreviousMonthDate = new Date(endOfPreviousMonth);
 
       temp.performancePeriod = `${dayjs(startOfPreviousMonthDate).format(
-        "YYYY-MM-DD"
-      )} to ${dayjs(endOfPreviousMonthDate).format("YYYY-MM-DD")}`;
+        "DD.MM.YYYY"
+      )} to ${dayjs(endOfPreviousMonthDate).format("DD.MM.YYYY")}`;
       temp.clientName = `${earning.freelancer.firstName} ${earning.freelancer.lastName}`;
 
       for (const taskEarning of earning.earnings) {
@@ -225,14 +226,14 @@ exports.test = async (req, res) => {
       ) {
         const result = (19 / 100) * subTotal;
         vat = result;
-        vatDescription = "VAT CY Ltd (19%)"
+        vatDescription = "VAT CY Ltd (19%)";
       }
-      temp.company = earning.freelancer.company
-        temp.city = earning.freelancer.city
-        temp.street = earning.freelancer.street
-        temp.vatId = earning.freelancer.vatIdNo
-        temp.vatDescription = vatDescription
-        total = subTotal + vat;
+      temp.company = earning.freelancer.company;
+      temp.city = earning.freelancer.city;
+      temp.street = earning.freelancer.street;
+      temp.vatId = earning.freelancer.vatIdNo;
+      temp.vatDescription = vatDescription;
+      total = subTotal + vat;
       temp.subtotal = subTotal;
       temp.vat = vat;
       temp.total = total;
@@ -240,18 +241,32 @@ exports.test = async (req, res) => {
       tempData.push(temp);
     }
 
-    const finalData = []
+    const finalData = [];
 
-    // for (const temp of tempData) {
-    //   const link = await createInvoiceInGoogleSheets(temp)
-    //   finalData.push(link)
-    // }
+    for (const temp of tempData) {
+      const obj = await createInvoiceInGoogleSheets(temp);
+      finalData.push({
+        invoice: obj.invoice,
+        tasks: obj.tasks
+      });
+    }
 
     // const data = await createInvoiceInGoogleSheets(invoiceData);
 
-    res.status(200).send({ message: "Success", data: earnings });
+    res.status(200).send({ message: "Success", data: finalData });
   } catch (error) {
     res.status(500).json({ error: error.message || "Something went wrong" });
+  }
+};
+
+exports.earningTwo = async (req, res) => {
+  try {
+    const data = await calculateInvoice();
+    // const data = await freelancerEarnings.find({finalize: true}).populate("task").exec()
+
+    res.status(200).send({ message: "Success", data: data });
+  } catch (error) {
+    res.status(500).send({ message: error?.message || "Something went wrong" });
   }
 };
 

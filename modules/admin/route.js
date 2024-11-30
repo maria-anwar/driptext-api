@@ -36,6 +36,10 @@ router.post("/getTasksCostDateFilter", jwt.protect, (req, res) => {
   adminController.tasksCostDateFilter(req, res);
 });
 
+router.get("/getFreelancerTrafficLights", jwt.protect, (req, res) => {
+  adminController.trafficLightsTask(req, res);
+});
+
 router.get("/getFreelancers", jwt.protect, (req, res) => {
   freelancerController.getFreelancers(req, res);
 });

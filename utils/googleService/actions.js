@@ -88,66 +88,104 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
     ],
     ["", "", "", "", "", "", ""],
     ["", "", "", "", "", "", ""],
-    ["", "", "", "Credit No:", "", invoiceData.creditNo],
-    ["", "", "", "Date:", "", invoiceData.date],
-    ["", "", "", "Performance Period:", "", invoiceData.performancePeriod],
+    ["", "", "", "", "Credit No: ", `${invoiceData.creditNo}`],
+    ["", "", "", "", "Date: ", `${invoiceData.date}`],
+    [
+      "",
+      "",
+      "",
+      "",
+      "Performance Period: ",
+      `${invoiceData.performancePeriod}`,
+    ],
     [invoiceData.company, "", "", "", "", "", ""],
     [invoiceData.city, "", "", "", "", "", ""],
     [invoiceData.street, "", "", "", "", "", ""],
-    [`VAT: ${invoiceData.vatId}`, "", "", "", "", "", ""],
+    [
+      `VAT: ${
+        (invoiceData?.vatId || invoiceData.vatId.toString() === "null")
+          ? "No VAT-Id Given"
+          : invoiceData?.vatId
+      }`,
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+    ],
 
     // Column Headers for Items
-    ["Pos.", "Description", "", "Tasks", "Price", "Total"],
+    ["", "Pos. Description Tasks Price Total", "", "", "", ""],
 
     // Items (example hardcoded items)
     ...invoiceData.items.map((item, index) => [
-      index + 1, // Position
-      item.description,
+      "", // Position
+      `${index + 1} ${item.description} ${item.amount} ${Number(
+        item.total
+      ).toFixed(2)}`,
       "",
-      item.amount,
       "",
-      item.total,
+      "",
+      "",
     ]),
     // [1, "Service A", "", 2, 100, 200],
 
     // Totals
-    ["", "", "", "Subtotal", "", invoiceData.subtotal],
-    ["", "", "", "VAT", "", invoiceData.vat],
-    ["", "", "", "Total", "", invoiceData.total],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      `Subtotal: ${Number(invoiceData.subtotal).toFixed(2)}`,
+    ],
+    ["", "", "", "", "", `VAT: ${Number(invoiceData.vat).toFixed(2)}`],
+    ["", "", "", "", "", `Total: ${Number(invoiceData.total).toFixed(2)}`],
     ["", "", "", "", "", "", ""],
 
     // Footer (bank account details)
-    [
-      "",
-      invoiceData.vatDescription,
-      "",
-      "",
-      "",
-      "",
-    ],
+    ["", invoiceData.vatDescription, "", "", "", ""],
     ["", "", "", "", "", "", ""],
-    // ["", "", "", "", "", "", ""],
-
     ["", "", "", "", "", "", ""],
 
-    ["DripText Ltd.:", "", "", "Contact", "", "Bank Account:"],
     [
-      "Makariou Avenue 59,3rd Floor, Office 301",
+      "DripText Ltd.: Contact Bank Account: Makariou Avenue 59,3rd Floor, Office 301 hallo@driptext.de DripText Ltd.",
       "",
       "",
-      "hallo@driptext.de",
       "",
-      "DripText Ltd.",
+      "",
+      "",
+      "",
     ],
     [
-      "6017 Laranaca,Cyprus",
+      "6017 Laranaca,Cyprus Accounting: IBAN: LT53 3250 0668 1851 9925 VAT:CY10424462P backoffice@driptext.de BIC: REVOLT21",
       "",
       "",
-      "Accounting:",
       "",
-      "IBAN: LT53 3250 0668 1851 9925",
+      "",
+      "",
+      "",
     ],
-    ["VAT:CY10424462P", "", "", "backoffice@driptext.de", "", "BIC: REVOLT21"],
+
+    // ["DripText Ltd.:", "", "", "Contact", "", "Bank Account:"],
+    // [
+    //   "Makariou Avenue 59,3rd Floor, Office 301",
+    //   "",
+    //   "",
+    //   "hallo@driptext.de",
+    //   "",
+    //   "DripText Ltd.",
+    // ],
+    // [
+    //   "6017 Laranaca,Cyprus",
+    //   "",
+    //   "",
+    //   "Accounting:",
+    //   "",
+    //   "IBAN: LT53 3250 0668 1851 9925",
+    // ],
+    // ["VAT:CY10424462P", "", "", "backoffice@driptext.de", "", "BIC: REVOLT21"],
   ];
 
   const updateValuesRequest = {
@@ -201,18 +239,19 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
             },
             cell: {
               userEnteredFormat: {
-                backgroundColor: {
-                  red: 0.8,
-                  green: 0.8,
-                  blue: 0.8,
-                },
+                // backgroundColor: {
+                //   red: 0.8,
+                //   green: 0.8,
+                //   blue: 0.8,
+                // },
+                // horizontalAlignment: "LEFT",
+
                 textFormat: {
                   bold: true,
                 },
               },
             },
-            fields:
-              "userEnteredFormat.backgroundColor,userEnteredFormat.textFormat.bold",
+            fields: "userEnteredFormat(textFormat.bold)",
           },
         },
         // Set background for "Pos." header
@@ -232,48 +271,76 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
                 //   green: 0.8,
                 //   blue: 0.8,
                 // },
+                horizontalAlignment: "RIGHT",
+
                 textFormat: {
                   bold: true,
                 },
               },
             },
-            fields: "userEnteredFormat.textFormat.bold",
+            fields: "userEnteredFormat(horizontalAlignment,textFormat.bold)",
           },
         },
-        // Add borders for item list and totals
-        {
-          updateBorders: {
-            range: {
-              sheetId: 0,
-              startRowIndex: 12,
-              endRowIndex: 13, // Adjust based on number of items
-              startColumnIndex: 0,
-              endColumnIndex: 6,
-            },
-            top: { style: "SOLID" },
-            bottom: { style: "SOLID" },
-            // left: { style: "SOLID" },
-            // right: { style: "SOLID" },
-          },
-        },
-        // Footer Formatting (Bank details)
         {
           repeatCell: {
             range: {
               sheetId: 0,
-              startRowIndex: 11,
-              endRowIndex: 12,
-              startColumnIndex: 0,
-              endColumnIndex: 6,
+              startRowIndex: 4,
+              endRowIndex: 7,
+              startColumnIndex: 4,
+              endColumnIndex: 5,
             },
             cell: {
               userEnteredFormat: {
+                // backgroundColor: {
+                //   red: 0.8,
+                //   green: 0.8,
+                //   blue: 0.8,
+                // },
                 horizontalAlignment: "RIGHT",
+
+                // textFormat: {
+                //   bold: true,
+                // },
               },
             },
-            fields: "userEnteredFormat.horizontalAlignment",
+            fields: "userEnteredFormat(horizontalAlignment)",
           },
         },
+        // Add borders for item list and totals
+        // {
+        //   updateBorders: {
+        //     range: {
+        //       sheetId: 0,
+        //       startRowIndex: 12,
+        //       endRowIndex: 13, // Adjust based on number of items
+        //       startColumnIndex: 0,
+        //       endColumnIndex: 6,
+        //     },
+        //     top: { style: "SOLID" },
+        //     bottom: { style: "SOLID" },
+        //     // left: { style: "SOLID" },
+        //     // right: { style: "SOLID" },
+        //   },
+        // },
+        // Footer Formatting (Bank details)
+        // {
+        //   repeatCell: {
+        //     range: {
+        //       sheetId: 0,
+        //       startRowIndex: 11,
+        //       endRowIndex: 12,
+        //       startColumnIndex: 0,
+        //       endColumnIndex: 6,
+        //     },
+        //     cell: {
+        //       userEnteredFormat: {
+        //         horizontalAlignment: "RIGHT",
+        //       },
+        //     },
+        //     fields: "userEnteredFormat.horizontalAlignment",
+        //   },
+        // },
         // Resize columns for the layout
         {
           updateDimensionProperties: {
@@ -306,7 +373,12 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
   });
 
   const sheetUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=pdf&portrait=true&gid=0&gridlines=false`;
-  return sheetUrl;
+  const tasksLink = await exportFinishedTasks(invoiceData.tasks)
+  // const sheetUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit#gid=0`;
+  return {
+    invoice: sheetUrl,
+    tasks: tasksLink
+  };
 };
 
 exports.getFileCount = async (folderId) => {
@@ -355,6 +427,100 @@ exports.findOrCreateFolderInParent = async (parentFolderId, folderName) => {
   } catch (error) {
     console.error("Error finding or creating folder:", error);
   }
+};
+
+const exportFinishedTasks = async (tasks) => {
+  console.log("inside export tasks function");
+  // console.log(
+  //   "sample",
+  //   tasks[0].keywords || "",
+  //   tasks[0].dueDate ? dayjs(tasks[0].dueDate).format("YYYY-MM-DD") : "",
+  //   tasks[0].topic || "",
+  //   tasks[0].type || "",
+  //   tasks[0].onBoarding.companyBackgorund || "",
+  //   tasks[0].onBoarding.companyAttributes || "",
+  //   tasks[0].onBoarding.companyServices || "",
+  //   tasks[0].onBoarding.customerContent || "",
+  //   tasks[0].onBoarding.customerIntrest || "",
+  //   tasks[0].onBoarding.contentPurpose || "",
+  //   tasks[0].onBoarding.contentInfo || ""
+  // );
+  // Step 1: Create a new Google Sheet in the specific folder
+  const request = {
+    resource: {
+      properties: {
+        title: "Project Tasks Export",
+      },
+      // parents: [folderId], // Specify the folder ID here to save the file in that folder
+    },
+    fields: "spreadsheetId",
+  };
+
+  const createResponse = await sheets.spreadsheets.create(request);
+  const spreadsheetId = createResponse.data.spreadsheetId;
+
+  // // Step 2: Retrieve the current parent (root folder) of the spreadsheet
+  // const fileResponse = await drive.files.get({
+  //   fileId: spreadsheetId,
+  //   fields: "parents",
+  // });
+  // const previousParent = fileResponse.data.parents[0]; // Assuming it's in root
+
+  // // Step 3: Move the spreadsheet to the desired folder and remove from root folder
+  // await drive.files.update({
+  //   fileId: spreadsheetId,
+  //   addParents: folderId, // Add to desired folder
+  //   removeParents: previousParent, // Remove from root folder
+  //   fields: "id, parents",
+  // });
+
+  // Step 2: Write tasks to the sheet
+  const taskData = tasks.map((task, index) => [
+    task.finishedDate ? dayjs(task.finishedDate).format("DD.MM.YYYY") : "",
+    task.role,
+    task.keywords || "",
+    task.status || "",
+    task.type || "",
+    task.desiredNumberOfWords || "",
+    task.actualNumberOfWords || "",
+  ]);
+
+  const updateRequest = {
+    spreadsheetId,
+    range: "Sheet1!A1",
+    valueInputOption: "RAW",
+    resource: {
+      values: [
+        [
+          "Finished Date",
+          "Role",
+          "Keywords",
+          "Status",
+          "Type",
+          "Word Count Expectation",
+          "Actual Words",
+          // "Word Count Expectation",
+        ], // Headers
+        ...taskData,
+      ],
+    },
+  };
+
+  await sheets.spreadsheets.values.update(updateRequest);
+  // 3. Set view-only permissions
+  const driveClient = google.drive({ version: "v3", auth });
+  await driveClient.permissions.create({
+    fileId: spreadsheetId,
+    resource: {
+      role: "reader",
+      type: "anyone",
+    },
+  });
+
+  // Step 3: Export the Google Sheet as an Excel file (optional)
+  const exportUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`;
+
+  return exportUrl;
 };
 
 exports.exportTasksToSheetInFolder = async (tasks, folderId) => {
