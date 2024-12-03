@@ -274,6 +274,7 @@ const trafficLightDealineCheck = async () => {
           }).exec();
           if (trafficLight) {
             const body = {
+              date: dayjs().startOf("day"),
               task: task._id,
             };
             const updatedTrafficLight = await TrafficLight.findOneAndUpdate(
@@ -285,6 +286,7 @@ const trafficLightDealineCheck = async () => {
             );
           } else {
             const body = {
+              date: dayjs().startOf("day"),
               task: task._id,
             };
             const newTrafficLight = await TrafficLight.create({
@@ -303,6 +305,7 @@ const trafficLightDealineCheck = async () => {
           }).exec();
           if (trafficLight) {
             const body = {
+              date: dayjs().startOf("day"),
               task: task._id,
             };
 
@@ -315,6 +318,7 @@ const trafficLightDealineCheck = async () => {
             );
           } else {
             const body = {
+              date: dayjs().startOf("day"),
               task: task._id,
             };
             const newTrafficLight = await TrafficLight.create({
@@ -333,6 +337,7 @@ const trafficLightDealineCheck = async () => {
           }).exec();
           if (trafficLight) {
             const body = {
+              date: dayjs().startOf("day"),
               task: task._id,
             };
 
@@ -345,6 +350,7 @@ const trafficLightDealineCheck = async () => {
             );
           } else {
             const body = {
+              date: dayjs().startOf("day"),
               task: task._id,
             };
             const newTrafficLight = await TrafficLight.create({
@@ -363,6 +369,7 @@ const trafficLightDealineCheck = async () => {
           }).exec();
           if (trafficLight) {
             const body = {
+              date: dayjs().startOf("day"),
               task: task._id,
             };
 
@@ -375,6 +382,7 @@ const trafficLightDealineCheck = async () => {
             );
           } else {
             const body = {
+              date: dayjs().startOf("day"),
               task: task._id,
             };
             const newTrafficLight = await TrafficLight.create({
@@ -627,7 +635,10 @@ const monthlyFreelancingInvoicing = async () => {
     for (const data of finalData) {
       const userLanguage = await Language.findOne({userId: data.freelancerId})
       freelancerEmails.monthlyInvoice(
-        data.freelancerEmail,
+        {
+          name: data.freelancerName,
+          email: data.freelancerEmail,
+        },
         data.invoice,
         data.tasks,
         userLanguage?.language || "de"

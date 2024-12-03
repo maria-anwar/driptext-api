@@ -460,12 +460,9 @@ Email.freelancerMonthlyInvoice = async (
     let text = data;
 
     const lastMonth = dayjs().subtract(1, "month").format("MMMM YYYY");
-    console.log("last month: ", lastMonth);
-    console.log("obj: ", obj);
-    console.log("invoice link: ", invoiceLink);
-    console.log("tasks link: ", tasksLink);
+    
     text = text.replace(/\[MONTH\]/g, lastMonth);
-    console.log("after replacing month");
+ 
     text = text.replace("[INVOICE_LINK]", invoiceLink);
     text = text.replace("[TASKS_LINK]", tasksLink);
     text = text.replace("[FIRST_NAME]", obj.name);

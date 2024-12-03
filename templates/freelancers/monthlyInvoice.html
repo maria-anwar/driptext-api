@@ -6,7 +6,7 @@
 <head>
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>Freelancer Finished Tasks Monthly Invoice</title>
+    <title>Freelancer Monthly Invoice</title>
     <style type="text/css">
         body {
             margin: 0;
@@ -89,6 +89,7 @@
             font-weight: bold;
             display: inline-block;
             transition: background-color 300ms;
+            cursor: pointer;
         }
 
         .button:hover {
@@ -119,26 +120,39 @@
                     <div class="header">
                         <img src="https://driptext.de/wp-content/uploads/2023/03/driptext.png"
                             style="max-width: 100px !important; margin-bottom: 10px !important;" alt="Logo">
-                        <h1>Monatsabrechnung für [LAST_MONTH] [CURRENT_YEAR] für deine Arbeit bei DripText</h1>
+                        <h1>Monatsabrechnung für [MONTH] für deine Arbeit bei DripText</h1>
                     </div>
                     <div class="content">
-                        <p>Hallo [FREELANCER_FIRST_NAME],</p>
+                        <p>Hallo [FIRST_NAME],</p>
                         <p style="margin-top: 8px; margin-bottom: 8px;"></p>
                         <p>wir bedanken uns für deine Arbeit und deinen Einsatz in diesem Monat! Deine Abrechnung ist
                             jetzt verfügbar und kann über
                             den untenstehenden Button eingesehen werden.
                         </p>
                         <p style="margin-top: 8px; margin-bottom: 8px;"></p>
-                        <p>Um deine Monatsabrechnung für [LAST_MONTH] [CURRENT_YEAR] anzuzeigen, klicke einfach auf den
+                        <p>Um deine Monatsabrechnung für [MONTH] anzuzeigen, klicke einfach auf den
                             folgenden Button:
                         </p>
                         <p style="margin-top: 8px; margin-bottom: 8px;"></p>
 
-
-                        <div class="button-container">
-                            <a href="[INVOICE_LINK]" target="_blank" style="color: white;" class="button">Abrechnung
-                                anzeigen</a>
-                        </div>
+                        <!-- Horizontal Button Alignment -->
+                        <table role="presentation" cellpadding="0" cellspacing="0" align="center"
+                            style="margin: 20px auto;">
+                            <tr>
+                                <td align="center" style="padding: 5px;">
+                                    <div class="button-container">
+                                        <a href="[INVOICE_LINK]" target="_blank" style="color: white;"
+                                            class="button">Rechnung herunterladen</a>
+                                    </div>
+                                </td>
+                                <td align="center" style="padding: 5px;">
+                                    <div class="button-container">
+                                        <a href="[TASKS_LINK]" target="_blank" style="color: white;"
+                                            class="button">Anhang herunterladen</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
 
                         <p style="margin-top: 8px; margin-bottom: 8px;"></p>
                         <p>Falls du Fragen hast oder Unterstützung benötigst, erreichst du uns jederzeit unter
@@ -149,12 +163,9 @@
                             Zusammenarbeit!
                         </p>
 
-
-
                         <p style="margin-top: 8px; margin-bottom: 8px;"></p>
                         <p>Beste Grüße,</p>
                         <p>Das DripText-Team</p>
-
                     </div>
                     <div class="footer">
                         <!-- <p>Driptext | [Address Line 1] | [Address Line 2]</p> -->

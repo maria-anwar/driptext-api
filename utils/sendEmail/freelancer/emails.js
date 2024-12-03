@@ -431,10 +431,11 @@ Email.finishTask = async (freelancer, task, role, language) => {
   }
 };
 
-Email.monthlyInvoice = async (email, invoiceLink, language) => {
+Email.monthlyInvoice = async (obj, invoiceLink, tasksLink, language) => {
   try {
     let filePath = "";
     let emailSubject = ""
+    const lastMonth = dayjs().subtract(1, "month").format("MMMM YYYY");
     if (language === "en") {
       filePath = path.join(
         __dirname,
@@ -446,7 +447,7 @@ Email.monthlyInvoice = async (email, invoiceLink, language) => {
         "english",
         "monthlyInvoice.html"
       );
-      emailSubject = `DripText billing for [LAST_MONTH] [CURRENT_YEAR]`;
+      emailSubject = `DripText billing for ${lastMonth}`;
     } else {
       filePath = path.join(
         __dirname,
@@ -457,7 +458,7 @@ Email.monthlyInvoice = async (email, invoiceLink, language) => {
         "freelancers",
         "monthlyInvoice.html"
       );
-      emailSubject = `DripText Abrechnung [LAST_MONTH] [CURRENT_YEAR] `;
+      emailSubject = `DripText Abrechnung ${lastMonth}`;
     }
     // const filePath = path.join(
     //   __dirname,
@@ -473,16 +474,17 @@ Email.monthlyInvoice = async (email, invoiceLink, language) => {
     let text = data;
    
 
-    text = text.replace("[MONTH]", dayjs().format("MMMM YYYY"));
+     text = text.replace(/\[MONTH\]/g, lastMonth);
 
-    // text = text.replace("[EDITOR_NAME]", task.editorName);
-    text = text.replace("[INVOICE_LINK]", invoiceLink);
+     text = text.replace("[INVOICE_LINK]", invoiceLink);
+     text = text.replace("[TASKS_LINK]", tasksLink);
+     text = text.replace("[FIRST_NAME]", obj.name);
    
 
     const params = {
       Source: `DripText <noreply@driptext.de>`,
       Destination: {
-        ToAddresses: [email],
+        ToAddresses: [obj.email],
         CcAddresses: ["backoffice@driptext.de"],
       },
       Message: {
