@@ -13,27 +13,24 @@ module.exports = (mongoose) => {
         default: null,
       },
       role: { type: String, require: true },
-      deadlineTasks: [
-        {
-          date: { type: Date, default: dayjs().startOf("day").toDate() },
-          task: {
-            type: Schema.Types.ObjectId,
-            ref: "ProjectTask",
-            default: [],
+      deadlineTasks: {
+        type: [
+          {
+            date: { type: Date, default: dayjs().startOf("day").toDate() },
+            task: { type: Schema.Types.ObjectId, ref: "ProjectTask" },
           },
-        },
-      ],
-
-      returnTasks: [
-        {
-          date: { type: Date, default: dayjs().startOf("day").toDate() },
-          task: {
-            type: Schema.Types.ObjectId,
-            ref: "ProjectTask",
-            default: [],
+        ],
+        default: [], // Set default as an empty array
+      },
+      returnTasks: {
+        type: [
+          {
+            date: { type: Date, default: dayjs().startOf("day").toDate() },
+            task: { type: Schema.Types.ObjectId, ref: "ProjectTask" },
           },
-        },
-      ],
+        ],
+        default: [], // Set default as an empty array
+      },
     },
     {
       toJSON: {

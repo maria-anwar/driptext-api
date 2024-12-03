@@ -741,6 +741,7 @@ exports.finishTask = async (req, res) => {
           });
           if (trafficLight) {
             const body = {
+              date: dayjs().startOf("day"),
               task: task._id,
             };
             const updatedTrafficLight = await TrafficLight.findOneAndUpdate(
@@ -752,6 +753,7 @@ exports.finishTask = async (req, res) => {
             );
           } else {
             const body = {
+              date: dayjs().startOf("day"),
               task: task._id,
             };
             const newTrafficLight = await TrafficLight.create({
@@ -1041,6 +1043,7 @@ exports.finishTask = async (req, res) => {
           });
           if (trafficLight) {
             const body = {
+              date: dayjs().startOf("day"),
               task: task._id,
             };
             const updatedTrafficLight = await TrafficLight.findOneAndUpdate(
@@ -1052,6 +1055,7 @@ exports.finishTask = async (req, res) => {
             );
           } else {
             const body = {
+              date: dayjs().startOf("day"),
               task: task._id,
             };
             const newTrafficLight = await TrafficLight.create({
