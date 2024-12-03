@@ -60,9 +60,10 @@ class Server {
     cron.schedule("0 0 * * *", () => {
       cornJobs.subscriptonCheck();
     });
-    cron.schedule("0 0 * * *", () => {
+    cron.schedule("0 */2 * * *", () => {
       cornJobs.taskDeadlineCheck();
     });
+    // 0 0 1 * *
     cron.schedule("0 0 1 * *", () => {
       cornJobs.monthlyFreelancingInvoicing();
     });

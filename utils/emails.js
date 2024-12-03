@@ -66,7 +66,6 @@ Email.errorEmail = async (req, error) => {
     //console.log(error);
     // throw error;
     console.log("error sending email: ", error);
-
   }
 };
 
@@ -105,7 +104,6 @@ Email.emailPassword = async (user) => {
     //console.log(error);
     // throw error;
     console.log("error sending email: ", error);
-
   }
 };
 
@@ -152,7 +150,6 @@ Email.cornJob = async (dateOne, dateTwo) => {
     //console.log(error);
     // throw error;
     console.log("error sending email: ", error);
-
   }
 };
 
@@ -177,11 +174,10 @@ Email.addUser = async (user) => {
     //console.log(error);
     // throw error;
     console.log("error sending email: ", error);
-
   }
 };
 
-Email.forgotPassword = async (user) => {
+Email.forgotPassword = async (user, language) => {
   try {
     const forgetPasswordToken = jwt.signToken({
       userId: user.id,
@@ -193,11 +189,21 @@ Email.forgotPassword = async (user) => {
       "https://driptext-app.vercel.app/" +
       "auth/forgetkey/" +
       forgetPasswordToken;
+    
+    let data = ''
+    let emailSubject = ''
+    if (language === "en") {
+      data = fs.readFileSync("./templates/english/emailForgotPassword.html", "utf8");
+      emailSubject = `Oops, forgot your password? No problem!`;
+    } else {
+      data = fs.readFileSync("./templates/emailForgotPassword.html", "utf8");
+      emailSubject = `Ups, Passwort vergessen? Kein Problem!`;
+    }
 
-    const data = fs.readFileSync(
-      "./templates/emailForgotPassword.html",
-      "utf8"
-    );
+    //  data = fs.readFileSync(
+    //   "./templates/emailForgotPassword.html",
+    //   "utf8"
+    // );
     var text = data;
     text = text.replace("[USER_NAME]", user.firstName + " " + user.lastName);
     text = text.replace("[BUTTON_LINK_1]", link);
@@ -209,64 +215,7 @@ Email.forgotPassword = async (user) => {
       },
       Message: {
         Subject: {
-          Data: "Reset Password",
-        },
-        Body: {
-          Html: {
-            Data: text,
-          },
-        },
-      },
-    };
-   const result = await ses.sendEmail(params).promise();
-   //console.log("Email sent successfully", result);
-
-    // var mailOptions = {
-    //   from: `DripText <noreply@driptext.de>`,
-    //   to: user.email,
-    //   subject: "Reset Password",
-    //   html: text,
-    // };
-
-    // nodeMailer(mailOptions);
-  } catch (error) {
-    //console.log(error);
-    // throw error;
-    console.log("error sending email: ", error);
-
-  }
-};
-
-Email.forgotPasswordAdmin = async (user) => {
-  try {
-    const forgetPasswordToken = jwt.signToken({
-      userId: user.id,
-      roleId: user.roleId,
-      email: user.email,
-    });
-
-    var link =
-      "https://driptext-admin-panel.vercel.app/" +
-      "auth/forgetkey/" +
-      forgetPasswordToken;
-
-    const data = fs.readFileSync(
-      "./templates/emailForgotPassword.html",
-      "utf8"
-    );
-    var text = data;
-    text = text.replace("[USER_NAME]", user.firstName + " " + user.lastName);
-    text = text.replace("[BUTTON_LINK_1]", link);
-    text = text.replace("[TEXT_LINK]", link);
-    const params = {
-      Source: `DripText <noreply@driptext.de>`,
-      Destination: {
-        ToAddresses: [user.email],
-        // CcAddresses: ["backoffice@driptext.de"],
-      },
-      Message: {
-        Subject: {
-          Data: "Reset Password",
+          Data: emailSubject,
         },
         Body: {
           Html: {
@@ -290,20 +239,105 @@ Email.forgotPasswordAdmin = async (user) => {
     //console.log(error);
     // throw error;
     console.log("error sending email: ", error);
-
   }
 };
 
-Email.AwsEmailPassword = async (user) => {
+Email.forgotPasswordAdmin = async (user, language) => {
   try {
-    // const data = fs.readFileSync("./templates/awsPasswordUpdateEmail.html", "utf8");
-    // const filePath = path.join(__dirname, "templates", "awsPasswordUpdateEmail.html");
-    const filePath = path.join(
-      __dirname,
-      "..",
-      "templates",
-      "awsPasswordUpdateEmail.html"
-    );
+    const forgetPasswordToken = jwt.signToken({
+      userId: user.id,
+      roleId: user.roleId,
+      email: user.email,
+    });
+
+    var link =
+      "https://driptext-admin-panel.vercel.app/" +
+      "auth/forgetkey/" +
+      forgetPasswordToken;
+    
+    let data = ''
+    let emailSubject = ''
+    if (language === 'en') {
+      data = fs.readFileSync("./templates/english/emailForgotPassword.html", "utf8");
+      emailSubject = `Oops, forgot your password? No problem!`;
+    } else {
+      data = fs.readFileSync("./templates/emailForgotPassword.html", "utf8");
+      emailSubject = `Ups, Passwort vergessen? Kein Problem!`;
+
+      
+    }
+
+    //  data = fs.readFileSync(
+    //   "./templates/emailForgotPassword.html",
+    //   "utf8"
+    // );
+    var text = data;
+    text = text.replace("[USER_NAME]", user.firstName + " " + user.lastName);
+    text = text.replace("[BUTTON_LINK_1]", link);
+    text = text.replace("[TEXT_LINK]", link);
+    const params = {
+      Source: `DripText <noreply@driptext.de>`,
+      Destination: {
+        ToAddresses: [user.email],
+        // CcAddresses: ["backoffice@driptext.de"],
+      },
+      Message: {
+        Subject: {
+          Data: emailSubject,
+        },
+        Body: {
+          Html: {
+            Data: text,
+          },
+        },
+      },
+    };
+    const result = await ses.sendEmail(params).promise();
+    //console.log("Email sent successfully", result);
+
+    // var mailOptions = {
+    //   from: `DripText <noreply@driptext.de>`,
+    //   to: user.email,
+    //   subject: "Reset Password",
+    //   html: text,
+    // };
+
+    // nodeMailer(mailOptions);
+  } catch (error) {
+    //console.log(error);
+    // throw error;
+    console.log("error sending email: ", error);
+  }
+};
+
+Email.AwsEmailPassword = async (user, language) => {
+  try {
+    let filePath = "";
+    let emailSubject = ''
+    if (language === "en") {
+      filePath = path.join(
+        __dirname,
+        "..",
+        "templates",
+        "english",
+        "awsPasswordUpdateEmail.html"
+      );
+      emailSubject = `Access to the DripText WebApp`;
+    } else {
+      filePath = path.join(
+        __dirname,
+        "..",
+        "templates",
+        "awsPasswordUpdateEmail.html"
+      );
+      emailSubject = `Zugang zur DripText WebApp`;
+    }
+    //  filePath = path.join(
+    //   __dirname,
+    //   "..",
+    //   "templates",
+    //   "awsPasswordUpdateEmail.html"
+    // );
     // //console.log(filePath);
     const data = fs.readFileSync(filePath, "utf8");
     let text = data;
@@ -326,7 +360,7 @@ Email.AwsEmailPassword = async (user) => {
       },
       Message: {
         Subject: {
-          Data: "Action Required: Set Up Your New Password",
+          Data: emailSubject,
         },
         Body: {
           Html: {
@@ -340,7 +374,6 @@ Email.AwsEmailPassword = async (user) => {
   } catch (error) {
     // throw error;
     console.log("error sending email: ", error);
-
   }
 };
 
@@ -399,16 +432,35 @@ Email.sendBillingInfo = async (to, subject, clientData) => {
   }
 };
 
-Email.onBoadingSuccess = async (email, project) => {
+Email.onBoadingSuccess = async (email, project, language) => {
   try {
-    // const data = fs.readFileSync("./templates/awsPasswordUpdateEmail.html", "utf8");
-    // const filePath = path.join(__dirname, "templates", "awsPasswordUpdateEmail.html");
-    const filePath = path.join(
-      __dirname,
-      "..",
-      "templates",
-      "onBoardingSuccessEmail.html"
-    );
+    let filePath = ''
+    let emailSubject = ''
+    if (language === 'en') {
+       filePath = path.join(
+         __dirname,
+         "..",
+         "templates",
+         "english",
+         "onBoardingSuccessEmail.html"
+       );
+      emailSubject = `Onboarding for [PROJECT_NAME]`;
+    } else {
+       filePath = path.join(
+         __dirname,
+         "..",
+         "templates",
+         "onBoardingSuccessEmail.html"
+       );
+      emailSubject = `Onboarding für [PROJECT_NAME]`;
+      
+    }
+    //  filePath = path.join(
+    //   __dirname,
+    //   "..",
+    //   "templates",
+    //   "onBoardingSuccessEmail.html"
+    // );
     //console.log(filePath);
     const data = fs.readFileSync(filePath, "utf8");
     let text = data;
@@ -442,7 +494,7 @@ Email.onBoadingSuccess = async (email, project) => {
       },
       Message: {
         Subject: {
-          Data: "Onboarding abgeschlossen: Wir starten mit der Texterstellung",
+          Data: emailSubject,
         },
         Body: {
           Html: {
@@ -454,35 +506,53 @@ Email.onBoadingSuccess = async (email, project) => {
     await ses.sendEmail(params).promise();
     //console.log("on boarding success");
   } catch (error) {
-    console.log("error sending email: ", error)
+    console.log("error sending email: ", error);
   }
 };
 
-Email.sendInvoiceToCustomer = async (user, link) => {
+Email.sendInvoiceToCustomer = async (user, link, language) => {
   try {
-    // const data = fs.readFileSync("./templates/awsPasswordUpdateEmail.html", "utf8");
-    // const filePath = path.join(__dirname, "templates", "awsPasswordUpdateEmail.html");
-    const filePath = path.join(
-      __dirname,
-      "..",
-      "templates",
-      "customerInvoice.html"
-    );
+    let filePath = ''
+    let emailSubject = ''
+    if (language === 'en') {
+       filePath = path.join(
+         __dirname,
+         "..",
+         "templates",
+         "english",
+         "customerInvoice.html"
+       );
+      emailSubject = `DripText subscription for [PROJECT_DOMAIN] created`;
+    } else {
+       filePath = path.join(
+         __dirname,
+         "..",
+         "templates",
+         "customerInvoice.html"
+       );
+      emailSubject = `DripText-Abo für [PROJECT_DOMAIN] erstellt`;
+    }
+    //  filePath = path.join(
+    //   __dirname,
+    //   "..",
+    //   "templates",
+    //   "customerInvoice.html"
+    // );
     //console.log(filePath);
     const data = fs.readFileSync(filePath, "utf8");
     let text = data;
+
     
-
-    // const link = `https://driptext-app.vercel.app/auth/forgetkey/${forgetPasswordToken}`;
-    // text = text.replace("[USER_NAME]", `${user.firstName} ${user.lastName}`);
     text = text.replace("[DOWNLOAD_INVOICE_LINK]", link);
-    text = text.replace("[CUSTOMER_NAME]", `${user.firstName} ${user.lastName}`);
+    text = text.replace(
+      "[CUSTOMER_NAME]",
+      `${user.firstName} ${user.lastName}`
+    );
     text = text.replace("[EMAIL]", user.email);
-     text = text.replace(
-       "[DASHBOARD_LINK]",
-       "https://driptext-app.vercel.app/client-dashboard"
-     );
-
+    text = text.replace(
+      "[DASHBOARD_LINK]",
+      "https://driptext-app.vercel.app/client-dashboard"
+    );
 
     const params = {
       Source: `DripText <noreply@driptext.de>`,
@@ -493,7 +563,7 @@ Email.sendInvoiceToCustomer = async (user, link) => {
       },
       Message: {
         Subject: {
-          Data: "DripText Subscription Has Been Created",
+          Data: emailSubject,
         },
         Body: {
           Html: {
@@ -507,34 +577,41 @@ Email.sendInvoiceToCustomer = async (user, link) => {
   } catch (error) {
     // throw error;
     console.log("error sending email: ", error);
-
   }
 };
 
-Email.onBoardingRequest = async (user, project) => {
+Email.onBoardingRequest = async (user, project, language) => {
   try {
-    // const data = fs.readFileSync("./templates/awsPasswordUpdateEmail.html", "utf8");
-    // const filePath = path.join(__dirname, "templates", "awsPasswordUpdateEmail.html");
-    const filePath = path.join(
-      __dirname,
-      "..",
-      "templates",
-      "requestOnBoarding.html"
-    );
+    let filePath = ''
+    let emailSubject = ''
+    if (language === 'en') {
+       filePath = path.join(
+         __dirname,
+         "..",
+         "templates",
+         "english",
+         "requestOnBoarding.html"
+       );
+      emailSubject = `Welcome to DripText!`;
+    } else {
+       filePath = path.join(
+         __dirname,
+         "..",
+         "templates",
+         "requestOnBoarding.html"
+       );
+      emailSubject = `Willkommen bei DripText!`;
+    }
+    //  filePath = path.join(
+    //   __dirname,
+    //   "..",
+    //   "templates",
+    //   "requestOnBoarding.html"
+    // );
     //console.log(filePath);
     const data = fs.readFileSync(filePath, "utf8");
     let text = data;
-    // //console.log(text);
-    // const forgetPasswordToken = jwt.signToken({
-    //   userId: user.id,
-    //   roleId: user.role,
-    //   email: user.email,
-    // });
-
-    // const link = `https://driptext-app.vercel.app/auth/forgetkey/${forgetPasswordToken}`;
-    // text = text.replace("[USER_NAME]", `${user.firstName} ${user.lastName}`);
-    // text = text.replace("[BUTTON_LINK_1]", link);
-    //console.log("projectName: ", `${project.projectName}`);
+   
     text = text.replace(/{{project\.domain}}/g, `${project.projectName}`);
 
     const params = {
@@ -545,7 +622,7 @@ Email.onBoardingRequest = async (user, project) => {
       },
       Message: {
         Subject: {
-          Data: "Herzlich Willkommen bei DripText!",
+          Data: emailSubject,
         },
         Body: {
           Html: {
@@ -559,7 +636,6 @@ Email.onBoardingRequest = async (user, project) => {
   } catch (error) {
     // throw error;
     console.log("error sending email: ", error);
-
   }
 };
 

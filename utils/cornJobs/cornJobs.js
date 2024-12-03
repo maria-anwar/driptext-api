@@ -16,6 +16,8 @@ const ProjectTask = db.ProjectTask;
 const Freelancers = db.Freelancer;
 const freelancerEarnings = db.FreelancerEarning;
 const TrafficLight = db.TrafficLight;
+const Language = db.Language;
+
 
 const onBoardingReminder = async () => {
   try {
@@ -32,10 +34,11 @@ const onBoardingReminder = async () => {
         // }
         if (!user && item.user?.emailSubscription) {
           console.log("not found: ", item.user);
+          const userLanguage = await Language.findOne({userId: item.user._id})
 
           await clientEmails.onBoardingReminder(item.user.email, {
             projectDomain: item.projectName,
-          });
+          }, userLanguage?.language || "de");
         }
       });
     }
@@ -138,14 +141,16 @@ const taskDeadlineCheck = async () => {
         } else if (hoursDifference >= 24) {
           const freelancer = await Freelancers.findOne({ _id: task.texter });
           if (freelancer) {
+            const userLanguage = await Language.findOne({userId: freelancer._id})
             freelancerEmails.reminder24Hours(
-              freelancer.email,
+              freelancer,
               {
                 name: task.taskName,
                 keyword: task.keywords,
                 documentLink: task.fileLink,
               },
-              "Texter"
+              "Texter",
+              userLanguage?.language || "de"
             );
           }
         }
@@ -167,14 +172,16 @@ const taskDeadlineCheck = async () => {
         } else if (hoursDifference >= 24) {
           const freelancer = await Freelancers.findOne({ _id: task.lector });
           if (freelancer) {
+            const userLanguage = await Language.findOne({userId: freelancer._id})
             freelancerEmails.reminder24Hours(
-              freelancer.email,
+              freelancer,
               {
                 name: task.taskName,
                 keyword: task.keywords,
                 documentLink: task.fileLink,
               },
-              "Lector"
+              "Lector",
+              userLanguage?.language || "de"
             );
           }
         }
@@ -196,14 +203,16 @@ const taskDeadlineCheck = async () => {
         } else if (hoursDifference >= 24) {
           const freelancer = await Freelancers.findOne({ _id: task.seo });
           if (freelancer) {
+            const userLanguage = await Language.findOne({userId: freelancer._id})
             freelancerEmails.reminder24Hours(
-              freelancer.email,
+              freelancer,
               {
                 name: task.taskName,
                 keyword: task.keywords,
                 documentLink: task.fileLink,
               },
-              "SEO-Optimizer"
+              "SEO-Optimizer",
+              userLanguage?.language || "de"
             );
           }
         }
@@ -227,14 +236,16 @@ const taskDeadlineCheck = async () => {
             _id: task.metaLector,
           });
           if (freelancer) {
+            const userLanguage = await Language.findOne({userId: freelancer._id})
             freelancerEmails.reminder24Hours(
-              freelancer.email,
+              freelancer,
               {
                 name: task.taskName,
                 keyword: task.keywords,
                 documentLink: task.fileLink,
               },
-              "Meta Lector"
+              "Meta Lector",
+              userLanguage?.language || "de"
             );
           }
         }
@@ -248,136 +259,137 @@ const taskDeadlineCheck = async () => {
 const trafficLightDealineCheck = async () => {
   try {
     const allTasks = await ProjectTask.find({
-      isActive:"Y"
-    }).exec()
+      isActive: "Y",
+    }).exec();
 
-    const today = dayjs().startOf("day")
+    const today = dayjs().startOf("day");
 
-    allTasks.forEach(async task => {
+    allTasks.forEach(async (task) => {
       if (task.dueDate && today.isAfter(dayjs(task.dueDate))) {
-
         // Texter
         if (task.texter) {
-          const trafficLight = await TrafficLight.findOne({ freelancer: task.texter, role: "Texter" }).exec()
+          const trafficLight = await TrafficLight.findOne({
+            freelancer: task.texter,
+            role: "Texter",
+          }).exec();
+          if (trafficLight) {
+            const body = {
+              task: task._id,
+            };
+            const updatedTrafficLight = await TrafficLight.findOneAndUpdate(
+              { freelancer: task.texter },
+              {
+                $addToSet: { deadlineTasks: body },
+              },
+              { new: true }
+            );
+          } else {
+            const body = {
+              task: task._id,
+            };
+            const newTrafficLight = await TrafficLight.create({
+              freelancer: task.texter,
+              role: "Texter",
+              deadlineTasks: [body],
+            });
+          }
+        }
+
+        // Lector
+        if (task.lector) {
+          const trafficLight = await TrafficLight.findOne({
+            freelancer: task.lector,
+            role: "Lector",
+          }).exec();
           if (trafficLight) {
             const body = {
               task: task._id,
             };
 
-            const updatedTrafficLight = await TrafficLight.findOneAndUpdate({ freelancer: task.texter }, {
-              $push:{deadlineTasks: body}
-            },{new: true})
-            
+            const updatedTrafficLight = await TrafficLight.findOneAndUpdate(
+              { freelancer: task.lector },
+              {
+                $addToSet: { deadlineTasks: body },
+              },
+              { new: true }
+            );
           } else {
             const body = {
-              task: task._id
-            }
+              task: task._id,
+            };
             const newTrafficLight = await TrafficLight.create({
-              freelancer: task.texter,
-              role: "Texter",
-              deadlineTasks: [body]
-            })
+              freelancer: task.lector,
+              role: "Lector",
+              deadlineTasks: [body],
+            });
           }
         }
 
-        // Lector
-         if (task.lector) {
-           const trafficLight = await TrafficLight.findOne({
-             freelancer: task.lector,
-             role: "Lector",
-           }).exec();
-           if (trafficLight) {
-             const body = {
-               task: task._id,
-             };
-
-             const updatedTrafficLight = await TrafficLight.findOneAndUpdate(
-               { freelancer: task.lector },
-               {
-                 $push: { deadlineTasks: body },
-               },
-               { new: true }
-             );
-           } else {
-             const body = {
-               task: task._id,
-             };
-             const newTrafficLight = await TrafficLight.create({
-               freelancer: task.lector,
-               role: "Lector",
-               deadlineTasks: [body],
-             });
-           }
-         }
-        
         // seo optmizier
-         if (task.seo) {
-           const trafficLight = await TrafficLight.findOne({
-             freelancer: task.seo,
-             role: "SEO-Optimizer",
-           }).exec();
-           if (trafficLight) {
-             const body = {
-               task: task._id,
-             };
+        if (task.seo) {
+          const trafficLight = await TrafficLight.findOne({
+            freelancer: task.seo,
+            role: "SEO-Optimizer",
+          }).exec();
+          if (trafficLight) {
+            const body = {
+              task: task._id,
+            };
 
-             const updatedTrafficLight = await TrafficLight.findOneAndUpdate(
-               { freelancer: task.seo },
-               {
-                 $push: { deadlineTasks: body },
-               },
-               { new: true }
-             );
-           } else {
-             const body = {
-               task: task._id,
-             };
-             const newTrafficLight = await TrafficLight.create({
-               freelancer: task.seo,
-               role: "SEO-Optimizer",
-               deadlineTasks: [body],
-             });
-           }
-         }
-        
+            const updatedTrafficLight = await TrafficLight.findOneAndUpdate(
+              { freelancer: task.seo },
+              {
+                $addToSet: { deadlineTasks: body },
+              },
+              { new: true }
+            );
+          } else {
+            const body = {
+              task: task._id,
+            };
+            const newTrafficLight = await TrafficLight.create({
+              freelancer: task.seo,
+              role: "SEO-Optimizer",
+              deadlineTasks: [body],
+            });
+          }
+        }
+
         // Meta Lector
-         if (task.metaLector) {
-           const trafficLight = await TrafficLight.findOne({
-             freelancer: task.metaLector,
-             role: "Meta Lector",
-           }).exec();
-           if (trafficLight) {
-             const body = {
-               task: task._id,
-             };
+        if (task.metaLector) {
+          const trafficLight = await TrafficLight.findOne({
+            freelancer: task.metaLector,
+            role: "Meta Lector",
+          }).exec();
+          if (trafficLight) {
+            const body = {
+              task: task._id,
+            };
 
-             const updatedTrafficLight = await TrafficLight.findOneAndUpdate(
-               { freelancer: task.metaLector },
-               {
-                 $push: { deadlineTasks: body },
-               },
-               { new: true }
-             );
-           } else {
-             const body = {
-               task: task._id,
-             };
-             const newTrafficLight = await TrafficLight.create({
-               freelancer: task.metaLector,
-               role: "Meta Lector",
-               deadlineTasks: [body],
-             });
-           }
-         }
-        
+            const updatedTrafficLight = await TrafficLight.findOneAndUpdate(
+              { freelancer: task.metaLector },
+              {
+                $addToSet: { deadlineTasks: body },
+              },
+              { new: true }
+            );
+          } else {
+            const body = {
+              task: task._id,
+            };
+            const newTrafficLight = await TrafficLight.create({
+              freelancer: task.metaLector,
+              role: "Meta Lector",
+              deadlineTasks: [body],
+            });
+          }
+        }
       }
-
-    })
-    
+    });
   } catch (error) {
-    console.log("traffic light deadline check: ", error)
+    console.log("traffic light deadline check: ", error);
   }
-}
+};
 
 const calculateInvoice = async () => {
   // Get the start and end dates for the previous month, ensuring no time component
@@ -411,20 +423,20 @@ const calculateInvoice = async () => {
     },
     {
       $lookup: {
-        from: "projectTasks", // Name of the task collection
+        from: "projecttasks", // Name of the task collection
         localField: "task",
         foreignField: "_id",
         as: "task",
       },
     },
-    {
-      $lookup: {
-        from: "projects", // Name of the project collection
-        localField: "project",
-        foreignField: "_id",
-        as: "project",
-      },
-    },
+    // {
+    //   $lookup: {
+    //     from: "projects", // Name of the project collection
+    //     localField: "project",
+    //     foreignField: "_id",
+    //     as: "project",
+    //   },
+    // },
     {
       $lookup: {
         from: "freelancers", // Name of the freelancer collection
@@ -436,9 +448,9 @@ const calculateInvoice = async () => {
     {
       $unwind: { path: "$task", preserveNullAndEmptyArrays: true },
     },
-    {
-      $unwind: { path: "$project", preserveNullAndEmptyArrays: true },
-    },
+    // {
+    //   $unwind: { path: "$project", preserveNullAndEmptyArrays: true },
+    // },
     {
       $unwind: { path: "$freelancer", preserveNullAndEmptyArrays: true },
     },
@@ -464,14 +476,38 @@ const calculateInvoice = async () => {
 
 const monthlyFreelancingInvoicing = async () => {
   try {
+    console.log("monthly invoice job ...");
     const tempData = [];
     const earnings = await calculateInvoice();
     for (const earning of earnings) {
       let temp = {
+        freelancerId: earning.freelancer._id,
+        tasks: earning.earnings.map((item) => {
+          const desiredWords = item.task.desiredNumberOfWords;
+          const actualWords = item.task.actualNumberOfWords;
+
+          // Calculate 10% of the desired words
+          const tenPercentOfDesiredWords = desiredWords * 0.1;
+
+          let calculatedWords = 0;
+
+          // Check if actualWords are more than 10% greater than desiredWords
+          if (actualWords > desiredWords + tenPercentOfDesiredWords) {
+            calculatedWords = desiredWords * 1.1;
+          } else {
+            calculatedWords = actualWords;
+          }
+
+          return {
+            ...item.task,
+            role: item.role,
+            calculatedWords: calculatedWords.toString().split(".").at(0),
+          };
+        }),
         creditNo: "2024-10-001",
         date: "2024-10-22",
         performancePeriod: "2024-09-01 to 2024-09-30",
-        clientName: "John Doe Ltd.",
+        clientName: earning.freelancer.firstName,
         freelancerEmail: "",
         vatDescription: "",
         company: "",
@@ -511,8 +547,8 @@ const monthlyFreelancingInvoicing = async () => {
       let vat = 0;
       let vatDescription =
         "No VAT as the service is not taxed in the domestic market.";
-      temp.creditNo = dayjs().startOf("day").format("YYYY-MM-DD");
-      temp.date = dayjs().startOf("day").format("YYYY-MM-DD");
+      temp.creditNo = dayjs().startOf("day").format("DD.MM.YYYY");
+      temp.date = dayjs().startOf("day").format("DD.MM.YYYY");
       const startOfPreviousMonth = dayjs()
         .subtract(1, "month")
         .startOf("month")
@@ -530,8 +566,8 @@ const monthlyFreelancingInvoicing = async () => {
       const endOfPreviousMonthDate = new Date(endOfPreviousMonth);
 
       temp.performancePeriod = `${dayjs(startOfPreviousMonthDate).format(
-        "YYYY-MM-DD"
-      )} to ${dayjs(endOfPreviousMonthDate).format("YYYY-MM-DD")}`;
+        "DD.MM.YYYY"
+      )} to ${dayjs(endOfPreviousMonthDate).format("DD.MM.YYYY")}`;
       temp.clientName = `${earning.freelancer.firstName} ${earning.freelancer.lastName}`;
 
       for (const taskEarning of earning.earnings) {
@@ -578,12 +614,24 @@ const monthlyFreelancingInvoicing = async () => {
     const finalData = [];
 
     for (const temp of tempData) {
-      const link = await createInvoiceInGoogleSheets(temp);
-      finalData.push({ link, freelancerEmail: temp.freelancerEmail });
+      const obj = await createInvoiceInGoogleSheets(temp);
+      finalData.push({
+        invoice: obj.invoice,
+        tasks: obj.tasks,
+        freelancerEmail: temp.freelancerEmail,
+        freelancerName: temp.clientName,
+        freelancerId: temp.freelancerId
+      });
     }
 
     for (const data of finalData) {
-      freelancerEmails.monthlyInvoice(data.freelancerEmail, data.link);
+      const userLanguage = await Language.findOne({userId: data.freelancerId})
+      freelancerEmails.monthlyInvoice(
+        data.freelancerEmail,
+        data.invoice,
+        data.tasks,
+        userLanguage?.language || "de"
+      );
       const admins = await Users.aggregate([
         {
           $lookup: {
@@ -596,15 +644,28 @@ const monthlyFreelancingInvoicing = async () => {
         { $unwind: "$role" }, // Unwind to treat each role as a separate document
         { $match: { "role.title": "ProjectManger" } }, // Filter for specific title
       ]);
+      console.log("admins length: ", admins.length);
       for (const admin of admins) {
-        adminEmails.freelancerMonthlyInvoice(admin.email, data.link);
+        console.log("sending email");
+        const userLanguage = await Language.findOne({userId: admin._id})
+        await adminEmails.freelancerMonthlyInvoice(
+          {
+            name: data.freelancerName,
+            email: admin.email,
+          },
+          data.invoice,
+          data.tasks,
+          userLanguage?.language || "de"
+        );
       }
     }
 
     // const data = await createInvoiceInGoogleSheets(invoiceData);
 
     //  res.status(200).send({ message: "Success", data: earnings });
-  } catch (err) {}
+  } catch (err) {
+    console.log("error in freelancer monthly invoicing job: ", err);
+  }
 };
 
 module.exports = {

@@ -66,7 +66,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
   const createSheetResponse = await sheetsClient.spreadsheets.create({
     resource: {
       properties: {
-        title: `Invoice ${invoiceData.creditNo}`,
+        title: `${invoiceData.creditNo}`,
       },
     },
   });
@@ -116,14 +116,12 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
     ],
 
     // Column Headers for Items
-    ["", "Pos. Description Tasks Price Total", "", "", "", ""],
+    ["", "Pos. Description", "", "", "", ""],
 
     // Items (example hardcoded items)
     ...invoiceData.items.map((item, index) => [
       "", // Position
-      `${index + 1} ${item.description} ${item.amount} ${Number(
-        item.total
-      ).toFixed(2)}`,
+      `${index + 1} ${item.description}`,
       "",
       "",
       "",
@@ -373,11 +371,12 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
   });
 
   const sheetUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=pdf&portrait=true&gid=0&gridlines=false`;
-  const tasksLink = await exportFinishedTasks(invoiceData.tasks)
+  const obj = await exportFinishedTasks(invoiceData.tasks)
   // const sheetUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit#gid=0`;
   return {
     invoice: sheetUrl,
-    tasks: tasksLink
+    tasks: obj.tasksPdf,
+    tasksSheet: obj.tasksSheet,
   };
 };
 
@@ -430,7 +429,7 @@ exports.findOrCreateFolderInParent = async (parentFolderId, folderName) => {
 };
 
 const exportFinishedTasks = async (tasks) => {
-  console.log("inside export tasks function");
+  console.log("inside export finished tasks function");
   // console.log(
   //   "sample",
   //   tasks[0].keywords || "",
@@ -449,7 +448,7 @@ const exportFinishedTasks = async (tasks) => {
   const request = {
     resource: {
       properties: {
-        title: "Project Tasks Export",
+        title: "Project Finished Tasks By Freelancer",
       },
       // parents: [folderId], // Specify the folder ID here to save the file in that folder
     },
@@ -483,6 +482,7 @@ const exportFinishedTasks = async (tasks) => {
     task.type || "",
     task.desiredNumberOfWords || "",
     task.actualNumberOfWords || "",
+    task.calculatedWords,
   ]);
 
   const updateRequest = {
@@ -497,8 +497,9 @@ const exportFinishedTasks = async (tasks) => {
           "Keywords",
           "Status",
           "Type",
-          "Word Count Expectation",
+          "Expec. Words",
           "Actual Words",
+          "Billed Words",
           // "Word Count Expectation",
         ], // Headers
         ...taskData,
@@ -518,9 +519,14 @@ const exportFinishedTasks = async (tasks) => {
   });
 
   // Step 3: Export the Google Sheet as an Excel file (optional)
-  const exportUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`;
+  const tasksGoogleSheet = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`;
+  const tasksPdf = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=pdf&portrait=true&gid=0&gridlines=false`;
 
-  return exportUrl;
+
+  return {
+    tasksPdf,
+    tasksGoogleSheet
+  };
 };
 
 exports.exportTasksToSheetInFolder = async (tasks, folderId) => {

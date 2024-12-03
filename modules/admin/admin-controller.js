@@ -886,7 +886,10 @@ exports.trafficLightsTask = async (req, res) => {
         },
       ],
     })
-      .populate("freelancer")
+      .populate({
+        path: "freelancer",
+        select: "-password"
+      })
       .exec();
 
     // Filter tasks within the 90-day range and clean data

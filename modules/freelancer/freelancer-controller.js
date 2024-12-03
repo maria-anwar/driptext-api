@@ -18,6 +18,7 @@ const Projects = db.Project;
 const freelancerPrices = db.FreelancerPrice;
 const freelancerEarnings = db.FreelancerEarning;
 const TrafficLight = db.TrafficLight;
+const Language = db.Language;
 
 exports.create = async (req, res) => {
   try {
@@ -97,10 +98,10 @@ exports.create = async (req, res) => {
     };
     const user = await Freelancers.create(tempUser);
     freelancerEmails
-      .welcomeFreelancer(user)
+      .welcomeFreelancer(user, "de")
       .then((res) => console.log("email sent"))
       .catch((err) => console.log("email error"));
-    emails.AwsEmailPassword(user);
+    emails.AwsEmailPassword(user, "de");
     await session.commitTransaction();
     session.endSession();
 
@@ -617,22 +618,22 @@ exports.finishTask = async (req, res) => {
           },
           { new: true }
         );
-        if (task.metaLector) {
-          const taskMetaLector = await Freelancers.findOne({
-            _id: task.metaLector,
-          });
-          if (taskMetaLector) {
-            freelancerEmails.reminder24Hours(
-              taskMetaLector.email,
-              {
-                name: task.taskName,
-                keyword: task.keywords,
-                documentLink: task.fileLink,
-              },
-              "Meta Lector"
-            );
-          }
-        }
+        // if (task.metaLector) {
+        //   const taskMetaLector = await Freelancers.findOne({
+        //     _id: task.metaLector,
+        //   });
+        //   if (taskMetaLector) {
+        //     freelancerEmails.reminder24Hours(
+        //       taskMetaLector.email,
+        //       {
+        //         name: task.taskName,
+        //         keyword: task.keywords,
+        //         documentLink: task.fileLink,
+        //       },
+        //       "Meta Lector"
+        //     );
+        //   }
+        // }
       } else {
         await ProjectTask.findOneAndUpdate(
           { _id: req.body.taskId },
@@ -642,20 +643,20 @@ exports.finishTask = async (req, res) => {
           },
           { new: true }
         );
-        if (task.lector) {
-          const taskLector = await Freelancers.findOne({ _id: task.lector });
-          if (taskLector) {
-            freelancerEmails.reminder24Hours(
-              taskLector.email,
-              {
-                name: task.taskName,
-                keyword: task.keywords,
-                documentLink: task.fileLink,
-              },
-              "Lector"
-            );
-          }
-        }
+        // if (task.lector) {
+        //   const taskLector = await Freelancers.findOne({ _id: task.lector });
+        //   if (taskLector) {
+        //     freelancerEmails.reminder24Hours(
+        //       taskLector.email,
+        //       {
+        //         name: task.taskName,
+        //         keyword: task.keywords,
+        //         documentLink: task.fileLink,
+        //       },
+        //       "Lector"
+        //     );
+        //   }
+        // }
       }
     }
     if (task.status.toLowerCase() === "proofreading in progress") {
@@ -701,20 +702,20 @@ exports.finishTask = async (req, res) => {
           },
           { new: true }
         );
-        if (task.seo) {
-          const taskSeo = await Freelancers.findOne({ _id: task.seo });
-          if (taskSeo) {
-            freelancerEmails.reminder24Hours(
-              taskSeo.email,
-              {
-                name: task.taskName,
-                keyword: task.keywords,
-                documentLink: task.fileLink,
-              },
-              "SEO-Optimizer"
-            );
-          }
-        }
+        // if (task.seo) {
+        //   const taskSeo = await Freelancers.findOne({ _id: task.seo });
+        //   if (taskSeo) {
+        //     freelancerEmails.reminder24Hours(
+        //       taskSeo.email,
+        //       {
+        //         name: task.taskName,
+        //         keyword: task.keywords,
+        //         documentLink: task.fileLink,
+        //       },
+        //       "SEO-Optimizer"
+        //     );
+        //   }
+        // }
       }
       if (req.body.feedback) {
         const updatedTask = await ProjectTask.findOneAndUpdate(
@@ -727,46 +728,56 @@ exports.finishTask = async (req, res) => {
           { new: true }
         );
 
-
         const texterFreelancer = await Freelancers.findOne({
           _id: task.texter,
         });
 
         const project = await Projects.findOne({ _id: task.project });
         if (texterFreelancer) {
-
           // traffic Light System
-          const trafficLight = await TrafficLight.findOne({ freelancer: texterFreelancer._id, role: "Texter" })
+          const trafficLight = await TrafficLight.findOne({
+            freelancer: texterFreelancer._id,
+            role: "Texter",
+          });
           if (trafficLight) {
-             const body = {
-               task: task._id,
-             };
-            const updatedTrafficLight = await TrafficLight.findOneAndUpdate({ freelancer: texterFreelancer._id }, {
-              $push: { returnTasks: body}
-            },{new: true})
-            
+            const body = {
+              task: task._id,
+            };
+            const updatedTrafficLight = await TrafficLight.findOneAndUpdate(
+              { freelancer: texterFreelancer._id },
+              {
+                $push: { returnTasks: body },
+              },
+              { new: true }
+            );
           } else {
             const body = {
-              task: task._id
-            }
+              task: task._id,
+            };
             const newTrafficLight = await TrafficLight.create({
               freelancer: texterFreelancer._id,
               role: "Texter",
-              returnTasks: [body]
-
-            })
+              returnTasks: [body],
+            });
           }
-
 
           const taskBody = {
             name: task.taskName,
             keyword: task.keywords,
+            fileLink: task.fileLink,
             editorName: "Lector",
             projectName: project?.projectName,
             role: "Texter",
             feedback: req.body.feedback,
           };
-          freelancerEmails.taskInRevision(texterFreelancer.email, taskBody);
+          const userLanguage = await Language.findOne({
+            userId: texterFreelancer._id,
+          });
+          freelancerEmails.taskInRevision(
+            texterFreelancer,
+            taskBody,
+            userLanguage?.language || "de"
+          );
           const admins = await Users.aggregate([
             {
               $lookup: {
@@ -781,7 +792,14 @@ exports.finishTask = async (req, res) => {
           ]);
           if (admins && admins.length > 0) {
             for (const admin of admins) {
-              adminEmails.taskInRevision(admin.email, taskBody);
+              const userLanguage = await Language.findOne({
+                userId: admin._id,
+              });
+              adminEmails.taskInRevision(
+                admin.email,
+                taskBody,
+                userLanguage?.language || "de"
+              );
             }
           }
         }
@@ -824,22 +842,22 @@ exports.finishTask = async (req, res) => {
           },
           { new: true }
         );
-        if (task.metaLector) {
-          const taskMetaLector = await Freelancers.findOne({
-            _id: task.metaLector,
-          });
-          if (taskMetaLector) {
-            freelancerEmails.reminder24Hours(
-              taskMetaLector.email,
-              {
-                name: task.taskName,
-                keyword: task.keywords,
-                documentLink: task.fileLink,
-              },
-              "Meta Lector"
-            );
-          }
-        }
+        // if (task.metaLector) {
+        //   const taskMetaLector = await Freelancers.findOne({
+        //     _id: task.metaLector,
+        //   });
+        //   if (taskMetaLector) {
+        //     freelancerEmails.reminder24Hours(
+        //       taskMetaLector.email,
+        //       {
+        //         name: task.taskName,
+        //         keyword: task.keywords,
+        //         documentLink: task.fileLink,
+        //       },
+        //       "Meta Lector"
+        //     );
+        //   }
+        // }
       }
       if (!task.metaLector) {
         const earning = await freelancerEarnings.findOne({
@@ -881,6 +899,70 @@ exports.finishTask = async (req, res) => {
           { new: true }
         );
 
+        // send email texter
+        if (updateTask.texter) {
+          const freelancer = await Freelancers.findOne({
+            _id: updateTask.texter,
+          });
+          if (freelancer) {
+            const userLanguage = await Language.findOne({
+              userId: freelancer._id,
+            });
+            freelancerEmails.finishTask(
+              freelancer,
+              {
+                name: updateTask.taskName,
+                keyword: updateTask.keywords,
+                fileLink: updateTask.fileLink,
+              },
+              "Texter",
+              userLanguage?.language || "de"
+            );
+          }
+        }
+        // send email lector
+        if (updateTask.lector) {
+          const freelancer = await Freelancers.findOne({
+            _id: updateTask.lector,
+          });
+          if (freelancer) {
+            const userLanguage = await Language.findOne({
+              userId: freelancer._id,
+            });
+            freelancerEmails.finishTask(
+              freelancer,
+              {
+                name: updateTask.taskName,
+                keyword: updateTask.keywords,
+                fileLink: updateTask.fileLink,
+              },
+              "Lector",
+              userLanguage?.language || "de"
+            );
+          }
+        }
+        // send email seo optimizer
+        if (updateTask.seo) {
+          const freelancer = await Freelancers.findOne({
+            _id: updateTask.seo,
+          });
+          if (freelancer) {
+            const userLanguage = await Language.findOne({
+              userId: freelancer._id,
+            });
+            freelancerEmails.finishTask(
+              freelancer,
+              {
+                name: updateTask.taskName,
+                keyword: updateTask.keywords,
+                fileLink: updateTask.fileLink,
+              },
+              "SEO Optimizer",
+              userLanguage?.language || "de"
+            );
+          }
+        }
+
         const client = await Users.findOne({ _id: updateTask.user });
         if (client && client?.emailSubscription) {
           // freelancerEmails.finishTask(client.email, {
@@ -888,11 +970,16 @@ exports.finishTask = async (req, res) => {
           //   keyword: updateTask.keywords,
           //   documentLink: updateTask.fileLink,
           // });
-          clientEmails.taskCompleted(client.email, {
-            taskName: updateTask.taskName,
-            keyword: updateTask.keywords,
-            documentLink: updateTask.fileLink,
-          });
+          const userLanguage = await Language.findOne({ userId: client._id });
+          clientEmails.taskCompleted(
+            client.email,
+            {
+              taskName: updateTask.taskName,
+              keyword: updateTask.keywords,
+              documentLink: updateTask.fileLink,
+            },
+            userLanguage?.language || "de"
+          );
           const admins = await Users.aggregate([
             {
               $lookup: {
@@ -906,11 +993,16 @@ exports.finishTask = async (req, res) => {
             { $match: { "role.title": "ProjectManger" } }, // Filter for specific title
           ]);
           for (const admin of admins) {
-            adminEmails.taskCompleted(admin.email, {
-              taskName: updateTask.taskName,
-              keyword: updateTask.keywords,
-              documentLink: updateTask.fileLink,
-            });
+            const userLanguage = await Language.findOne({ userId: admin._id });
+            adminEmails.taskCompleted(
+              admin.email,
+              {
+                taskName: updateTask.taskName,
+                keyword: updateTask.keywords,
+                documentLink: updateTask.fileLink,
+              },
+              userLanguage?.language || "de"
+            );
           }
         }
 
@@ -971,12 +1063,20 @@ exports.finishTask = async (req, res) => {
           const taskBody = {
             name: task.taskName,
             keyword: task.keywords,
+            fileLink: task.fileLink,
             editorName: "Meta Lector",
             projectName: project?.projectName,
             role: "Texter",
             feedback: req.body.feedback,
           };
-          freelancerEmails.taskInRevision(texterFreelancer.email, taskBody);
+          const userLanguage = await Language.findOne({
+            userId: texterFreelancer._id,
+          });
+          freelancerEmails.taskInRevision(
+            texterFreelancer,
+            taskBody,
+            userLanguage?.language || "de"
+          );
           const admins = await Users.aggregate([
             {
               $lookup: {
@@ -991,7 +1091,14 @@ exports.finishTask = async (req, res) => {
           ]);
           if (admins && admins.length > 0) {
             for (const admin of admins) {
-              adminEmails.taskInRevision(admin.email, taskBody);
+              const userLanguage = await Language.findOne({
+                userId: admin._id,
+              });
+              adminEmails.taskInRevision(
+                admin.email,
+                taskBody,
+                userLanguage?.language || "de"
+              );
             }
           }
         }
@@ -1037,18 +1144,105 @@ exports.finishTask = async (req, res) => {
           { new: true }
         );
         await finalizeTask(task);
+
+        // send email texter
+        if (updatedTask.texter) {
+          const freelancer = await Freelancers.findOne({
+            _id: updatedTask.texter,
+          });
+          if (freelancer) {
+            const userLanguage = await Language.findOne({
+              userId: freelancer._id,
+            });
+            freelancerEmails.finishTask(
+              freelancer,
+              {
+                name: updatedTask.taskName,
+                keyword: updatedTask.keywords,
+                fileLink: updatedTask.fileLink,
+              },
+              "Texter",
+              userLanguage?.language || "de"
+            );
+          }
+        }
+        // send email lector
+        if (updatedTask.lector) {
+          const freelancer = await Freelancers.findOne({
+            _id: updatedTask.lector,
+          });
+          if (freelancer) {
+            const userLanguage = await Language.findOne({
+              userId: freelancer._id,
+            });
+            freelancerEmails.finishTask(
+              freelancer,
+              {
+                name: updatedTask.taskName,
+                keyword: updatedTask.keywords,
+                fileLink: updatedTask.fileLink,
+              },
+              "Lector",
+              userLanguage?.language || "de"
+            );
+          }
+        }
+        // send email seo optimizer
+        if (updatedTask.seo) {
+          const freelancer = await Freelancers.findOne({
+            _id: updatedTask.seo,
+          });
+          if (freelancer) {
+            const userLanguage = await Language.findOne({
+              userId: freelancer._id,
+            });
+            freelancerEmails.finishTask(
+              freelancer,
+              {
+                name: updatedTask.taskName,
+                keyword: updatedTask.keywords,
+                fileLink: updatedTask.fileLink,
+              },
+              "SEO Optimizer",
+              userLanguage?.language || "de"
+            );
+          }
+        }
+        // send email seo optimizer
+        if (updatedTask.metaLector) {
+          const freelancer = await Freelancers.findOne({
+            _id: updatedTask.metaLector,
+          });
+          if (freelancer) {
+            const userLanguage = await Language.findOne({
+              userId: freelancer._id,
+            });
+            freelancerEmails.finishTask(
+              freelancer,
+              {
+                name: updatedTask.taskName,
+                keyword: updatedTask.keywords,
+                fileLink: updatedTask.fileLink,
+              },
+              "Meta Lector",
+              userLanguage?.language || "de"
+            );
+          }
+        }
+
         const client = await Users.findOne({ _id: updatedTask.user });
         if (client && client?.emailSubscription) {
-          // freelancerEmails.finishTask(client.email, {
-          //   name: updatedTask.taskName,
-          //   keyword: updatedTask.keywords,
-          //   documentLink: updatedTask.fileLink,
-          // });
-          clientEmails.taskCompleted(client.email, {
-            taskName: updatedTask.taskName,
-            keyword: updatedTask.keywords,
-            documentLink: updatedTask.fileLink,
-          });
+          
+          const userLanguage = await Language.findOne({ userId: client._id });
+          clientEmails.taskCompleted(
+            client.email,
+            {
+              taskName: updatedTask.taskName,
+              keyword: updatedTask.keywords,
+              documentLink: updatedTask.fileLink,
+            },
+            userLanguage?.language || "de"
+          );
           const admins = await Users.aggregate([
             {
               $lookup: {
@@ -1062,11 +1256,16 @@ exports.finishTask = async (req, res) => {
             { $match: { "role.title": "ProjectManger" } }, // Filter for specific title
           ]);
           for (const admin of admins) {
-            adminEmails.taskCompleted(admin.email, {
-              taskName: updatedTask.taskName,
-              keyword: updatedTask.keywords,
-              documentLink: updatedTask.fileLink,
-            });
+            const userLanguage = await Language.findOne({ userId: admin._id });
+            adminEmails.taskCompleted(
+              admin.email,
+              {
+                taskName: updatedTask.taskName,
+                keyword: updatedTask.keywords,
+                documentLink: updatedTask.fileLink,
+              },
+              userLanguage?.language || "de"
+            );
           }
         }
         const updatedProject = await Projects.findOneAndUpdate(
@@ -1344,7 +1543,7 @@ exports.emailCheck = async (req, res) => {
     const { error, value } = joiSchema.validate(req.body);
 
     if (error) {
-      emails.errorEmail(req, error);
+      // emails.errorEmail(req, error);
 
       const message = error.details[0].message.replace(/"/g, "");
       res.status(401).send({

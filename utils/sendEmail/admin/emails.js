@@ -5,7 +5,7 @@ const nodeMailer = require("../../nodeMailer");
 const jwt = require("../../jwt");
 const crypto = require("../../../utils/crypto");
 const handlebars = require("handlebars");
-
+const dayjs = require("dayjs");
 const path = require("path");
 const baseURL = secrets.frontend_URL;
 
@@ -30,31 +30,50 @@ const awsNoreplySource = process.env.AWS_NOREPLY_SOURCE;
  */
 function Email() {}
 
-Email.assignFreelancer48Hours = async (email, obj) => {
+Email.assignFreelancer48Hours = async (email, obj, language) => {
   try {
-    // const data = fs.readFileSync("./templates/awsPasswordUpdateEmail.html", "utf8");
-    // const filePath = path.join(__dirname, "templates", "awsPasswordUpdateEmail.html");
-    const filePath = path.join(
-      __dirname,
-      "..",
-      "..",
-      "..",
-      "templates",
-      "admin",
-      "assignFreelancer48hours.html"
-    );
-    //console.log(filePath);
+      let filePath = "";
+      let emailSubject = '';
+    if (language === "en") {
+      filePath = path.join(
+        __dirname,
+        "..",
+        "..",
+        "..",
+        "templates",
+        "admin",
+        "english",
+        "assignFreelancer48hours.html"
+      );
+       
+        emailSubject = `Important: Assign employees for [TASK_NAME] ([KEYWORD])`;
+
+    } else {
+      filePath = path.join(
+        __dirname,
+        "..",
+        "..",
+        "..",
+        "templates",
+        "admin",
+        "assignFreelancer48hours.html"
+      );
+        emailSubject = `Wichtig: Mitarbeiter für [TASK_NAME] ([KEYWORD]) zuweisen`;
+
+    }
+
+    //  filePath = path.join(
+    //   __dirname,
+    //   "..",
+    //   "..",
+    //   "..",
+    //   "templates",
+    //   "admin",
+    //   "assignFreelancer48hours.html"
+    // );
+
     const data = fs.readFileSync(filePath, "utf8");
     let text = data;
-    // //console.log(text);
-    // const forgetPasswordToken = jwt.signToken({
-    //   userId: user.id,
-    //   roleId: user.role,
-    //   email: user.email,
-    // });
-
-    // const link = `https://driptext-app.vercel.app/auth/forgetkey/${forgetPasswordToken}`;
-    // text = text.replace("[USER_NAME]", `${user.firstName} ${user.lastName}`);
 
     text = text.replace(/\[TASK_NAME\]/g, obj.taskName);
     text = text.replace(/\[KEYWORD\]/g, obj.keyword);
@@ -62,9 +81,6 @@ Email.assignFreelancer48Hours = async (email, obj) => {
     text = text.replace(/\[PROJECT_NAME\]/g, obj.projectName);
     text = text.replace(/\[FREELANCER_NAME\]/g, obj.freelancerName);
     text = text.replace(/\[ROLE\]/g, obj.role);
-
-    //console.log("projectName: ", `${project.projectName}`);
-    // text = text.replace(/{{project\.domain}}/g, `${project.projectName}`);
 
     const params = {
       Source: `DripText <noreply@driptext.de>`,
@@ -74,7 +90,7 @@ Email.assignFreelancer48Hours = async (email, obj) => {
       },
       Message: {
         Subject: {
-          Data: `Auftrag ${task.name} (${task.keyword}) wurde zurückgegeben - Bitte überarbeiten`,
+          Data: emailSubject,
         },
         Body: {
           Html: {
@@ -91,31 +107,47 @@ Email.assignFreelancer48Hours = async (email, obj) => {
   }
 };
 
-Email.taskInRevision = async (email, task) => {
+Email.taskInRevision = async (email, task, language) => {
   try {
-    // const data = fs.readFileSync("./templates/awsPasswordUpdateEmail.html", "utf8");
-    // const filePath = path.join(__dirname, "templates", "awsPasswordUpdateEmail.html");
-    const filePath = path.join(
-      __dirname,
-      "..",
-      "..",
-      "..",
-      "templates",
-      "admin",
-      "taskInRevision.html"
-    );
-    //console.log(filePath);
+      let filePath = "";
+      let emailSubject = ''
+    if (language === "en") {
+      filePath = path.join(
+        __dirname,
+        "..",
+        "..",
+        "..",
+        "templates",
+        "admin",
+        "english",
+        "taskInRevision.html"
+      );
+        emailSubject = `Important: Please revise [TASK_NAME] ([KEYWORD])`;
+    } else {
+      filePath = path.join(
+        __dirname,
+        "..",
+        "..",
+        "..",
+        "templates",
+        "admin",
+        "taskInRevision.html"
+      );
+        emailSubject = `Wichtig: Bitte überarbeite [TASK_NAME] ([KEYWORD])`;
+    }
+
+    // const filePath = path.join(
+    //   __dirname,
+    //   "..",
+    //   "..",
+    //   "..",
+    //   "templates",
+    //   "admin",
+    //   "taskInRevision.html"
+    // );
+
     const data = fs.readFileSync(filePath, "utf8");
     let text = data;
-    // //console.log(text);
-    // const forgetPasswordToken = jwt.signToken({
-    //   userId: user.id,
-    //   roleId: user.role,
-    //   email: user.email,
-    // });
-
-    // const link = `https://driptext-app.vercel.app/auth/forgetkey/${forgetPasswordToken}`;
-    // text = text.replace("[USER_NAME]", `${user.firstName} ${user.lastName}`);
 
     text = text.replace(/\[TASK_NAME\]/g, task.name);
     text = text.replace("[KEYWORD]", task.keyword);
@@ -128,9 +160,6 @@ Email.taskInRevision = async (email, task) => {
     text = text.replace("[ROLE]", task.role);
     text = text.replace("[FEEDBACK]", task.feedback);
 
-    //console.log("projectName: ", `${project.projectName}`);
-    // text = text.replace(/{{project\.domain}}/g, `${project.projectName}`);
-
     const params = {
       Source: `DripText <noreply@driptext.de>`,
       Destination: {
@@ -139,7 +168,7 @@ Email.taskInRevision = async (email, task) => {
       },
       Message: {
         Subject: {
-          Data: `Auftrag ${task.name} (${task.keyword}) wurde zurückgegeben - Bitte überarbeiten`,
+          Data: emailSubject,
         },
         Body: {
           Html: {
@@ -156,31 +185,50 @@ Email.taskInRevision = async (email, task) => {
   }
 };
 
-Email.newBooking = async (email, obj) => {
+Email.newBooking = async (email, ob, language) => {
   try {
-    // const data = fs.readFileSync("./templates/awsPasswordUpdateEmail.html", "utf8");
-    // const filePath = path.join(__dirname, "templates", "awsPasswordUpdateEmail.html");
-    const filePath = path.join(
-      __dirname,
-      "..",
-      "..",
-      "..",
-      "templates",
-      "admin",
-      "newBooking.html"
-    );
+      let filePath = "";
+      let emailSubject = ''
+    if (language === "en") {
+      filePath = path.join(
+        __dirname,
+        "..",
+        "..",
+        "..",
+        "templates",
+        "admin",
+        "english",
+        "newBooking.html"
+      );
+        emailSubject = `New Booking ([PROJECT_DOMAIN]): Please assign a freelancer`;
+
+    } else {
+      filePath = path.join(
+        __dirname,
+        "..",
+        "..",
+        "..",
+        "templates",
+        "admin",
+        "newBooking.html"
+      );
+     
+        emailSubject = `Neue Buchung ([PROJECT_DOMAIN]): Bitte Freelancer zuweisen`;
+
+    }
+
+    // const filePath = path.join(
+    //   __dirname,
+    //   "..",
+    //   "..",
+    //   "..",
+    //   "templates",
+    //   "admin",
+    //   "newBooking.html"
+    // );
     //console.log(filePath);
     const data = fs.readFileSync(filePath, "utf8");
     let text = data;
-    // //console.log(text);
-    // const forgetPasswordToken = jwt.signToken({
-    //   userId: user.id,
-    //   roleId: user.role,
-    //   email: user.email,
-    // });
-
-    // const link = `https://driptext-app.vercel.app/auth/forgetkey/${forgetPasswordToken}`;
-    // text = text.replace("[USER_NAME]", `${user.firstName} ${user.lastName}`);
 
     text = text.replace(
       /\[DASHBOARD_LINK\]/g,
@@ -188,9 +236,6 @@ Email.newBooking = async (email, obj) => {
     );
     text = text.replace("[PROJECT_NAME]", obj.projectName);
 
-    //console.log("projectName: ", `${project.projectName}`);
-    // text = text.replace(/{{project\.domain}}/g, `${project.projectName}`);
-
     const params = {
       Source: `DripText <noreply@driptext.de>`,
       Destination: {
@@ -199,7 +244,7 @@ Email.newBooking = async (email, obj) => {
       },
       Message: {
         Subject: {
-          Data: `Neue Buchung: Bitte Freelancer zuweisen`,
+          Data: emailSubject,
         },
         Body: {
           Html: {
@@ -216,31 +261,47 @@ Email.newBooking = async (email, obj) => {
   }
 };
 
-Email.taskCompleted = async (email, obj) => {
+Email.taskCompleted = async (email, obj, language) => {
   try {
-    // const data = fs.readFileSync("./templates/awsPasswordUpdateEmail.html", "utf8");
-    // const filePath = path.join(__dirname, "templates", "awsPasswordUpdateEmail.html");
-    const filePath = path.join(
-      __dirname,
-      "..",
-      "..",
-      "..",
-      "templates",
-      "admin",
-      "taskCompleted.html"
-    );
+      let filePath = "";
+      let emailSubject = ''
+    if (language === "en") {
+      filePath = path.join(
+        __dirname,
+        "..",
+        "..",
+        "..",
+        "templates",
+        "admin",
+        "english",
+        "taskCompleted.html"
+      );
+        emailSubject = `Task [TASK_NAME] ([KEYWORD]) is completed`;
+    } else {
+      filePath = path.join(
+        __dirname,
+        "..",
+        "..",
+        "..",
+        "templates",
+        "admin",
+        "taskCompleted.html"
+      );
+        emailSubject = `Auftrag [TASK_NAME] ([KEYWORD]) ist fertig`;
+    }
+
+    // const filePath = path.join(
+    //   __dirname,
+    //   "..",
+    //   "..",
+    //   "..",
+    //   "templates",
+    //   "admin",
+    //   "taskCompleted.html"
+    // );
     //console.log(filePath);
     const data = fs.readFileSync(filePath, "utf8");
     let text = data;
-    // //console.log(text);
-    // const forgetPasswordToken = jwt.signToken({
-    //   userId: user.id,
-    //   roleId: user.role,
-    //   email: user.email,
-    // });
-
-    // const link = `https://driptext-app.vercel.app/auth/forgetkey/${forgetPasswordToken}`;
-    // text = text.replace("[USER_NAME]", `${user.firstName} ${user.lastName}`);
 
     text = text.replace(
       "[DASHBOARD_LINK]",
@@ -250,9 +311,6 @@ Email.taskCompleted = async (email, obj) => {
     text = text.replace("[TASK_LINK]", obj.documentLink);
     text = text.replace("[KEYWORD]", obj.keyword);
 
-    //console.log("projectName: ", `${project.projectName}`);
-    // text = text.replace(/{{project\.domain}}/g, `${project.projectName}`);
-
     const params = {
       Source: `DripText <noreply@driptext.de>`,
       Destination: {
@@ -261,7 +319,7 @@ Email.taskCompleted = async (email, obj) => {
       },
       Message: {
         Subject: {
-          Data: `Auftrag ${obj.taskName} (${obj.keyword}) ist abgeschlossen`,
+          Data: emailSubject,
         },
         Body: {
           Html: {
@@ -278,31 +336,48 @@ Email.taskCompleted = async (email, obj) => {
   }
 };
 
-Email.onBoardingCompleted = async (email, obj) => {
+Email.onBoardingCompleted = async (email, obj, language) => {
   try {
-    // const data = fs.readFileSync("./templates/awsPasswordUpdateEmail.html", "utf8");
-    // const filePath = path.join(__dirname, "templates", "awsPasswordUpdateEmail.html");
-    const filePath = path.join(
-      __dirname,
-      "..",
-      "..",
-      "..",
-      "templates",
-      "admin",
-      "onBoardingCompleted.html"
-    );
+      let filePath = "";
+      let emailSubject = ''
+    if (language === "en") {
+      filePath = path.join(
+        __dirname,
+        "..",
+        "..",
+        "..",
+        "templates",
+        "admin",
+        "english",
+        "onBoardingCompleted.html"
+      );
+        emailSubject = `Onboarding for [PROJECT_DOMAIN] completed`;
+        
+    } else {
+      filePath = path.join(
+        __dirname,
+        "..",
+        "..",
+        "..",
+        "templates",
+        "admin",
+        "onBoardingCompleted.html"
+      );
+        emailSubject = 'Onboarding für [PROJECT_DOMAIN] abgeschlossen'
+    }
+
+    // const filePath = path.join(
+    //   __dirname,
+    //   "..",
+    //   "..",
+    //   "..",
+    //   "templates",
+    //   "admin",
+    //   "onBoardingCompleted.html"
+    // );
     //console.log(filePath);
     const data = fs.readFileSync(filePath, "utf8");
     let text = data;
-    // //console.log(text);
-    // const forgetPasswordToken = jwt.signToken({
-    //   userId: user.id,
-    //   roleId: user.role,
-    //   email: user.email,
-    // });
-
-    // const link = `https://driptext-app.vercel.app/auth/forgetkey/${forgetPasswordToken}`;
-    // text = text.replace("[USER_NAME]", `${user.firstName} ${user.lastName}`);
 
     text = text.replace(
       "[DASHBOARD_LINK]",
@@ -312,9 +387,6 @@ Email.onBoardingCompleted = async (email, obj) => {
     text = text.replace("[CUSTOMER_EMAIL]", obj.email);
     text = text.replace(/\[PROJECT_NAME\]/g, obj.projectName);
 
-    //console.log("projectName: ", `${project.projectName}`);
-    // text = text.replace(/{{project\.domain}}/g, `${project.projectName}`);
-
     const params = {
       Source: `DripText <noreply@driptext.de>`,
       Destination: {
@@ -323,7 +395,7 @@ Email.onBoardingCompleted = async (email, obj) => {
       },
       Message: {
         Subject: {
-          Data: `Project's (${obj.projectName}) Has Been Completed`,
+          Data: emailSubject,
         },
         Body: {
           Html: {
@@ -340,52 +412,73 @@ Email.onBoardingCompleted = async (email, obj) => {
   }
 };
 
-Email.freelancerMonthlyInvoice = async (email, invoiceLink) => {
-  try {
-    // const data = fs.readFileSync("./templates/awsPasswordUpdateEmail.html", "utf8");
-    // const filePath = path.join(__dirname, "templates", "awsPasswordUpdateEmail.html");
-    const filePath = path.join(
-      __dirname,
-      "..",
-      "..",
-      "..",
-      "templates",
-      "admin",
-      "freelancerMonthlyInvoice.html"
-    );
-    //console.log(filePath);
+Email.freelancerMonthlyInvoice = async (
+  obj,
+  invoiceLink,
+  tasksLink,
+  language
+) => {
+    try {
+        let filePath = "";
+        let emailSubject = ''
+      if (language === "en") {
+        filePath = path.join(
+          __dirname,
+          "..",
+          "..",
+          "..",
+          "templates",
+          "admin",
+          "english",
+          "freelancerMonthlyInvoice.html"
+        );
+          emailSubject = `DripText Billing [LAST_MONTH] [CURRENT_YEAR]`;
+      } else {
+        filePath = path.join(
+          __dirname,
+          "..",
+          "..",
+          "..",
+          "templates",
+          "admin",
+          "freelancerMonthlyInvoice.html"
+        );
+          emailSubject = `DripText Abrechnung [LAST_MONTH] [CURRENT_YEAR]`;
+      }
+    // const filePath = path.join(
+    //   __dirname,
+    //   "..",
+    //   "..",
+    //   "..",
+    //   "templates",
+    //   "admin",
+    //   "freelancerMonthlyInvoice.html"
+    // );
+
+    console.log("inside sending email");
     const data = fs.readFileSync(filePath, "utf8");
     let text = data;
-    // //console.log(text);
-    // const forgetPasswordToken = jwt.signToken({
-    //   userId: user.id,
-    //   roleId: user.role,
-    //   email: user.email,
-    // });
 
-    // const link = `https://driptext-app.vercel.app/auth/forgetkey/${forgetPasswordToken}`;
-    // text = text.replace("[USER_NAME]", `${user.firstName} ${user.lastName}`);
-
-    text = text.replace("[MONTH]", dayjs().format("MMMM YYYY"));
-
-    // text = text.replace("[EDITOR_NAME]", task.editorName);
+    const lastMonth = dayjs().subtract(1, "month").format("MMMM YYYY");
+    console.log("last month: ", lastMonth);
+    console.log("obj: ", obj);
+    console.log("invoice link: ", invoiceLink);
+    console.log("tasks link: ", tasksLink);
+    text = text.replace(/\[MONTH\]/g, lastMonth);
+    console.log("after replacing month");
     text = text.replace("[INVOICE_LINK]", invoiceLink);
-    // text = text.replace("[PROJECT_NAME]", task.projectName);
-    // text = text.replace("[ROLE]", task.role);
-    // text = text.replace("[FEEDBACK]", task.feedback);
-
-    //console.log("projectName: ", `${project.projectName}`);
-    // text = text.replace(/{{project\.domain}}/g, `${project.projectName}`);
+    text = text.replace("[TASKS_LINK]", tasksLink);
+    text = text.replace("[FIRST_NAME]", obj.name);
 
     const params = {
       Source: `DripText <noreply@driptext.de>`,
       Destination: {
-        ToAddresses: [email],
+        ToAddresses: [obj.email],
         // CcAddresses: ["backoffice@driptext.de"],
       },
       Message: {
         Subject: {
-          Data: `Freelancer Monthly Invoice For ${dayjs().format("MMMM YYYY")}`,
+          Data: emailSubject,
         },
         Body: {
           Html: {
@@ -395,6 +488,7 @@ Email.freelancerMonthlyInvoice = async (email, invoiceLink) => {
       },
     };
     await ses.sendEmail(params).promise();
+    console.log("email sent");
     //console.log("on boarding request sent");
   } catch (error) {
     // throw error;

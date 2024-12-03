@@ -165,21 +165,7 @@ exports.addTask = async (req, res) => {
                 );
 
                 let createProjectTask = await ProjectTask.create(proectTaskObj);
-                const freelancer = await Freelancers.findOne({
-                  _id: project.metaLector,
-                });
-                if (freelancer) {
-                  const userLanguage = await Language.findOne({userId: freelancer._id})
-                  freelancerEmails.taskAssign(
-                    freelancer.email,
-                    {
-                      name: createProjectTask.taskName,
-                      keyword: createProjectTask.keywords,
-                    },
-                    "Meta Lector",
-                    userLanguage?.language || "de"
-                  );
-                }
+               
                 const totalFiles = await getFileCount(project.folderId);
                 const fileName = `${project.projectId}-${totalFiles + 1}-${
                   createProjectTask.keywords || "No Keywords"
@@ -207,6 +193,24 @@ exports.addTask = async (req, res) => {
                   },
                   { new: true }
                 );
+                 const freelancer = await Freelancers.findOne({
+                   _id: project.metaLector,
+                 });
+                 if (freelancer) {
+                   const userLanguage = await Language.findOne({
+                     userId: freelancer._id,
+                   });
+                   freelancerEmails.taskAssign(
+                     freelancer,
+                     {
+                       name: updateProjectTask.taskName,
+                       keyword: updateProjectTask.keywords,
+                       fileLink: updateProjectTask.fileLink,
+                     },
+                     "Meta Lector",
+                     userLanguage?.language || "de"
+                   );
+                 }
                 await Projects.findByIdAndUpdate(
                   projectId,
                   { $push: { projectTasks: createProjectTask._id } },
@@ -229,7 +233,7 @@ exports.addTask = async (req, res) => {
                   .slice(0, 2)
                   .toUpperCase();
                 let idChar = createProjectTask._id.toString().slice(-4);
-                const taskCounter = await getTaskCounter()
+                const taskCounter = await getTaskCounter();
                 let taskId = `${project.projectId}-${totalFiles + 1}`;
 
                 let updateTaskId = await ProjectTask.findByIdAndUpdate(
@@ -242,24 +246,26 @@ exports.addTask = async (req, res) => {
                   await session.commitTransaction();
                   session.endSession();
                   // await emails.onBoadingSuccess(getuser);
-                  if (updateProjectTask.texter) {
-                    const taskTexter = await Freelancers.findOne({
-                      _id: updateProjectTask.texter,
-                    });
-                    if (taskTexter) {
-                      const userLanguage = await Language.findOne({userId: taskTexter._id})
-                      freelancerEmails.reminder24Hours(
-                        taskTexter.email,
-                        {
-                          name: updateProjectTask.taskName,
-                          keyword: updateProjectTask.keywords,
-                          documentLink: updateProjectTask.fileLink,
-                        },
-                        "Texter",
-                        userLanguage?.language || "de"
-                      );
-                    }
-                  }
+                  // if (updateProjectTask.texter) {
+                  //   const taskTexter = await Freelancers.findOne({
+                  //     _id: updateProjectTask.texter,
+                  //   });
+                  //   if (taskTexter) {
+                  //     const userLanguage = await Language.findOne({
+                  //       userId: taskTexter._id,
+                  //     });
+                  //     freelancerEmails.reminder24Hours(
+                  //       taskTexter.email,
+                  //       {
+                  //         name: updateProjectTask.taskName,
+                  //         keyword: updateProjectTask.keywords,
+                  //         documentLink: updateProjectTask.fileLink,
+                  //       },
+                  //       "Texter",
+                  //       userLanguage?.language || "de"
+                  //     );
+                  //   }
+                  // }
 
                   res.send({
                     message: "OnBoarding successful",
@@ -346,23 +352,7 @@ exports.addTask = async (req, res) => {
               };
 
               let createProjectTask = await ProjectTask.create(proectTaskObj);
-              if (taskCount % 9 === 0) {
-                const freelancer = await Freelancers.findOne({
-                  _id: project.metaLector,
-                });
-                if (freelancer) {
-                  const userLanguage = await Language.findOne({userId: freelancer._id})
-                  freelancerEmails.taskAssign(
-                    freelancer.email,
-                    {
-                      name: createProjectTask.taskName,
-                      keyword: createProjectTask.keywords,
-                    },
-                    "Meta Lector",
-                    userLanguage?.language || "de"
-                  );
-                }
-              }
+              
               const totalFiles = await getFileCount(project.folderId);
               const fileName = `${project.projectId}-${totalFiles + 1}-${
                 createProjectTask.keywords || "No Keywords"
@@ -387,6 +377,26 @@ exports.addTask = async (req, res) => {
                 },
                 { new: true }
               );
+              if (taskCount % 9 === 0) {
+                const freelancer = await Freelancers.findOne({
+                  _id: project.metaLector,
+                });
+                if (freelancer) {
+                  const userLanguage = await Language.findOne({
+                    userId: freelancer._id,
+                  });
+                  freelancerEmails.taskAssign(
+                    freelancer,
+                    {
+                      name: updateProjectTask.taskName,
+                      keyword: updateProjectTask.keywords,
+                      fileLink: updateProjectTask.fileLink,
+                    },
+                    "Meta Lector",
+                    userLanguage?.language || "de"
+                  );
+                }
+              }
               let upadteProject = await Projects.findOneAndUpdate(
                 { _id: project._id },
                 {
@@ -437,24 +447,26 @@ exports.addTask = async (req, res) => {
                 await session.commitTransaction();
                 session.endSession();
                 // await emails.onBoadingSuccess(getuser);
-                if (updateProjectTask.texter) {
-                  const taskTexter = await Freelancers.findOne({
-                    _id: updateProjectTask.texter,
-                  });
-                  if (taskTexter) {
-                    const userLanguage = await Language.findOne({userId: taskTexter._id})
-                    freelancerEmails.reminder24Hours(
-                      taskTexter.email,
-                      {
-                        name: updateProjectTask.taskName,
-                        keyword: updateProjectTask.keywords,
-                        documentLink: updateProjectTask.fileLink,
-                      },
-                      "Texter",
-                      userLanguage?.language || "de"
-                    );
-                  }
-                }
+                // if (updateProjectTask.texter) {
+                //   const taskTexter = await Freelancers.findOne({
+                //     _id: updateProjectTask.texter,
+                //   });
+                //   if (taskTexter) {
+                //     const userLanguage = await Language.findOne({
+                //       userId: taskTexter._id,
+                //     });
+                //     freelancerEmails.reminder24Hours(
+                //       taskTexter.email,
+                //       {
+                //         name: updateProjectTask.taskName,
+                //         keyword: updateProjectTask.keywords,
+                //         documentLink: updateProjectTask.fileLink,
+                //       },
+                //       "Texter",
+                //       userLanguage?.language || "de"
+                //     );
+                //   }
+                // }
 
                 res.send({
                   message: "OnBoarding successful",
@@ -737,21 +749,7 @@ exports.importProjectTasks = async (req, res) => {
             );
 
             let createProjectTask = await ProjectTask.create(proectTaskObj);
-            const freelancer = await Freelancers.findOne({
-              _id: project.metaLector,
-            });
-            if (freelancer) {
-              const userLanguage = await Language.findOne({userId: freelancer._id})
-              freelancerEmails.taskAssign(
-                freelancer.email,
-                {
-                  name: createProjectTask.taskName,
-                  keyword: createProjectTask.keywords,
-                },
-                "Meta Lector",
-                userLanguage?.language || "de"
-              );
-            }
+
             //console.log("before creating file");
             const totalFiles = await getFileCount(project.folderId);
             const fileName = `${project.projectId}-${totalFiles + 1}-${
@@ -803,28 +801,49 @@ exports.importProjectTasks = async (req, res) => {
               { new: true }
             );
 
+            const freelancer = await Freelancers.findOne({
+              _id: project.metaLector,
+            });
+            if (freelancer) {
+              const userLanguage = await Language.findOne({
+                userId: freelancer._id,
+              });
+              freelancerEmails.taskAssign(
+                freelancer,
+                {
+                  name: updatedTask.taskName,
+                  keyword: updatedTask.keywords,
+                  fileLink: updatedTask.fileLink,
+                },
+                "Meta Lector",
+                userLanguage?.language || "de"
+              );
+            }
+
             if (upadteProject && createProjectTask) {
               await session.commitTransaction();
               session.endSession();
               // emails.onBoadingSuccess(user);
-              if (updatedTask.texter) {
-                const taskTexter = await Freelancers.findOne({
-                  _id: updatedTask.texter,
-                });
-                if (taskTexter) {
-                  const userLanguage = await Language.findOne({userId: taskTexter._id})
-                  freelancerEmails.reminder24Hours(
-                    taskTexter.email,
-                    {
-                      name: updatedTask.taskName,
-                      keyword: updatedTask.keywords,
-                      documentLink: updatedTask.fileLink,
-                    },
-                    "Texter",
-                    userLanguage?.language || "de"
-                  );
-                }
-              }
+              // if (updatedTask.texter) {
+              //   const taskTexter = await Freelancers.findOne({
+              //     _id: updatedTask.texter,
+              //   });
+              //   if (taskTexter) {
+              //     const userLanguage = await Language.findOne({
+              //       userId: taskTexter._id,
+              //     });
+              //     freelancerEmails.reminder24Hours(
+              //       taskTexter.email,
+              //       {
+              //         name: updatedTask.taskName,
+              //         keyword: updatedTask.keywords,
+              //         documentLink: updatedTask.fileLink,
+              //       },
+              //       "Texter",
+              //       userLanguage?.language || "de"
+              //     );
+              //   }
+              // }
 
               // res.send({
               //   message: "OnBoarding successful",
@@ -924,23 +943,7 @@ exports.importProjectTasks = async (req, res) => {
           };
 
           let createProjectTask = await ProjectTask.create(proectTaskObj);
-          if (taskCount % 9 === 0) {
-            const freelancer = await Freelancers.findOne({
-              _id: project.metaLector,
-            });
-            if (freelancer) {
-              const userLanguage = await Language.findOne({userId: freelancer._id})
-              freelancerEmails.taskAssign(
-                freelancer.email,
-                {
-                  name: createProjectTask.taskName,
-                  keyword: createProjectTask.keywords,
-                },
-                "Meta Lector",
-                userLanguage?.language || "de"
-              );
-            }
-          }
+          
           //console.log("before creating file");
           const totalFiles = await getFileCount(project.folderId);
           const fileName = `${project.projectId}-${totalFiles + 1}-${
@@ -994,8 +997,8 @@ exports.importProjectTasks = async (req, res) => {
 
           let nameChar = upadteProject.projectName.slice(0, 2).toUpperCase();
           let idChar = createProjectTask._id.toString().slice(-4);
-         const taskCounter = await getTaskCounter();
-         let taskId = `${project.projectId}-${totalFiles + 1}`;
+          const taskCounter = await getTaskCounter();
+          let taskId = `${project.projectId}-${totalFiles + 1}`;
 
           let updatedTask = await ProjectTask.findByIdAndUpdate(
             { _id: createProjectTask._id },
@@ -1006,29 +1009,51 @@ exports.importProjectTasks = async (req, res) => {
             },
             { new: true }
           );
+          if (taskCount % 9 === 0) {
+            const freelancer = await Freelancers.findOne({
+              _id: project.metaLector,
+            });
+            if (freelancer) {
+              const userLanguage = await Language.findOne({
+                userId: freelancer._id,
+              });
+              freelancerEmails.taskAssign(
+                freelancer,
+                {
+                  name: updatedTask.taskName,
+                  keyword: updatedTask.keywords,
+                  fileLink: updatedTask.fileLink,
+                },
+                "Meta Lector",
+                userLanguage?.language || "de"
+              );
+            }
+          }
 
           if (upadteProject && createProjectTask) {
             await session.commitTransaction();
             session.endSession();
             // emails.onBoadingSuccess(user);
-              if (updatedTask.texter) {
-                const taskTexter = await Freelancers.findOne({
-                  _id: updatedTask.texter,
-                });
-                if (taskTexter) {
-                  const userLanguage = await Language.findOne({userId: taskTexter._id})
-                  freelancerEmails.reminder24Hours(
-                    taskTexter.email,
-                    {
-                      name: updatedTask.taskName,
-                      keyword: updatedTask.keywords,
-                      documentLink: updatedTask.fileLink,
-                    },
-                    "Texter",
-                    userLanguage?.language || "de"
-                  );
-                }
-              }
+            // if (updatedTask.texter) {
+            //   const taskTexter = await Freelancers.findOne({
+            //     _id: updatedTask.texter,
+            //   });
+            //   if (taskTexter) {
+            //     const userLanguage = await Language.findOne({
+            //       userId: taskTexter._id,
+            //     });
+            //     freelancerEmails.reminder24Hours(
+            //       taskTexter.email,
+            //       {
+            //         name: updatedTask.taskName,
+            //         keyword: updatedTask.keywords,
+            //         documentLink: updatedTask.fileLink,
+            //       },
+            //       "Texter",
+            //       userLanguage?.language || "de"
+            //     );
+            //   }
+            // }
 
             // res.send({
             //   message: "OnBoarding successful",
@@ -1117,7 +1142,11 @@ exports.importProjectTasks = async (req, res) => {
           return;
         }
 
-        if (!row["Due Date"] || (row['Due Date'] && !dayjs(row["Due Date"].trim(), "DD.MM.YYYY").isValid())) {
+        if (
+          !row["Due Date"] ||
+          (row["Due Date"] &&
+            !dayjs(row["Due Date"].trim(), "DD.MM.YYYY").isValid())
+        ) {
           // console.log("due date: ", dayjs(row["Due Date"].toString().trim(), "DD.MM.YYYY", true))
           // console.log("Due Date result: ", dayjs(new Date(row["Due Date"].toString().trim())).toDate())
           checkCSVError = `Make sure due date is given and is valid date YYYY-MM-DD`;
@@ -1276,7 +1305,7 @@ exports.getAllTasks = async (req, res) => {
 
     const allTasks = await projectTasks.find({ isActive: "Y" });
 
-    const finalTasks = sortTasks(allTasks)
+    const finalTasks = sortTasks(allTasks);
 
     res.status(200).send({ message: "success", data: finalTasks });
   } catch (error) {
