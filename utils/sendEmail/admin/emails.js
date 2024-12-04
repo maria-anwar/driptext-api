@@ -295,8 +295,8 @@ Email.taskCompleted = async (email, obj, language) => {
       "[DASHBOARD_LINK]",
       "https://driptext-admin-panel.vercel.app/dashboard"
     );
-    text = text.replace(/\[KEYWORD\]/g, obj.taskName);
-    text = text.replace(/\[TASK_NAME\]/g, obj.documentLink);
+    text = text.replace(/\[KEYWORD\]/g, obj.keyword);
+    text = text.replace(/\[TASK_NAME\]/g, obj.taskName);
     text = text.replace("[CLIENT_FIRST_NAME]", obj.clientName);
     text = text.replace("[GOOGLE_DOC_LINK]", obj.fileLink);
 

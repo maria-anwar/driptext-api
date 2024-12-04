@@ -798,7 +798,7 @@ exports.finishTask = async (req, res) => {
                 userId: admin._id,
               });
               adminEmails.taskInRevision(
-                admin.email,
+                admin,
                 taskBody,
                 userLanguage?.language || "de"
               );
@@ -1100,7 +1100,7 @@ exports.finishTask = async (req, res) => {
                 userId: admin._id,
               });
               adminEmails.taskInRevision(
-                admin.email,
+                admin,
                 taskBody,
                 userLanguage?.language || "de"
               );
