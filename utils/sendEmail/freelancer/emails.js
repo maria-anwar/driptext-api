@@ -485,7 +485,7 @@ Email.monthlyInvoice = async (obj, invoiceLink, tasksLink, language) => {
       Source: `DripText <noreply@driptext.de>`,
       Destination: {
         ToAddresses: [obj.email],
-        // CcAddresses: ["backoffice@driptext.de"],
+        CcAddresses: ["backoffice@driptext.de"],
       },
       Message: {
         Subject: {

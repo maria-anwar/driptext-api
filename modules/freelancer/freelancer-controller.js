@@ -999,9 +999,10 @@ exports.finishTask = async (req, res) => {
             adminEmails.taskCompleted(
               admin.email,
               {
+                clientName: client.firstName,
                 taskName: updateTask.taskName,
                 keyword: updateTask.keywords,
-                documentLink: updateTask.fileLink,
+                fileLink: updateTask.fileLink,
               },
               userLanguage?.language || "de"
             );
@@ -1264,9 +1265,10 @@ exports.finishTask = async (req, res) => {
             adminEmails.taskCompleted(
               admin.email,
               {
+                clientName: client.firstName,
                 taskName: updatedTask.taskName,
                 keyword: updatedTask.keywords,
-                documentLink: updatedTask.fileLink,
+                fileLink: updatedTask.fileLink,
               },
               userLanguage?.language || "de"
             );

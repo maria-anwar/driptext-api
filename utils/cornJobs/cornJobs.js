@@ -121,6 +121,7 @@ const taskDeadlineCheck = async () => {
         task.status.toLowerCase() === "in rivision"
       ) {
         if (hoursDifference >= 48) {
+          const prevFreelacer = task.texter;
           await ProjectTask.findOneAndUpdate(
             { _id: task._id },
             {
@@ -140,8 +141,18 @@ const taskDeadlineCheck = async () => {
             { $unwind: "$role" }, // Unwind to treat each role as a separate document
             { $match: { "role.title": "ProjectManger" } }, // Filter for specific title
           ]);
-
+          const project = await Project.findOne({_id: task.project})
           for (const admin of admins) {
+            const userLanguage = await Language.findOne({ userId: admin._id })
+            
+            adminEmails.assignFreelancer48Hours(admin.email, {
+              freelancerName: `${prevFreelacer.firstName} ${prevFreelacer.lastName}`,
+              freelancerRole: "Texter",
+              taskName: task.taskName,
+              taskKeyword: task.keywords,
+              projectDomain: project?.projectName
+
+            },userLanguage?.language || "de")
           }
         } else if (hoursDifference >= 24) {
           const freelancer = await Freelancers.findOne({ _id: task.texter });
@@ -169,6 +180,8 @@ const taskDeadlineCheck = async () => {
         task.status.toLowerCase() === "proofreading in progress"
       ) {
         if (hoursDifference >= 48) {
+          const prevFreelacer = task?.lector;
+
           await ProjectTask.findOneAndUpdate(
             { _id: task._id },
             {
@@ -176,6 +189,36 @@ const taskDeadlineCheck = async () => {
             },
             { new: true }
           );
+            const admins = await Users.aggregate([
+              {
+                $lookup: {
+                  from: "roles", // The collection name where roles are stored
+                  localField: "role", // Field in Users referencing the Role document
+                  foreignField: "_id", // The primary field in Role that Users reference
+                  as: "role",
+                },
+              },
+              { $unwind: "$role" }, // Unwind to treat each role as a separate document
+              { $match: { "role.title": "ProjectManger" } }, // Filter for specific title
+            ]);
+            const project = await Project.findOne({ _id: task.project });
+            for (const admin of admins) {
+              const userLanguage = await Language.findOne({
+                userId: admin._id,
+              });
+
+              adminEmails.assignFreelancer48Hours(
+                admin.email,
+                {
+                  freelancerName: `${prevFreelacer.firstName} ${prevFreelacer.lastName}`,
+                  freelancerRole: "Lector",
+                  taskName: task.taskName,
+                  taskKeyword: task.keywords,
+                  projectDomain: project?.projectName,
+                },
+                userLanguage?.language || "de"
+              );
+            }
         } else if (hoursDifference >= 24) {
           const freelancer = await Freelancers.findOne({ _id: task.lector });
           if (freelancer) {
@@ -202,6 +245,8 @@ const taskDeadlineCheck = async () => {
         task.status.toLowerCase() === "seo optimization in progress"
       ) {
         if (hoursDifference >= 48) {
+          const prevFreelacer = task?.seo;
+
           await ProjectTask.findOneAndUpdate(
             { _id: task._id },
             {
@@ -209,6 +254,36 @@ const taskDeadlineCheck = async () => {
             },
             { new: true }
           );
+            const admins = await Users.aggregate([
+              {
+                $lookup: {
+                  from: "roles", // The collection name where roles are stored
+                  localField: "role", // Field in Users referencing the Role document
+                  foreignField: "_id", // The primary field in Role that Users reference
+                  as: "role",
+                },
+              },
+              { $unwind: "$role" }, // Unwind to treat each role as a separate document
+              { $match: { "role.title": "ProjectManger" } }, // Filter for specific title
+            ]);
+            const project = await Project.findOne({ _id: task.project });
+            for (const admin of admins) {
+              const userLanguage = await Language.findOne({
+                userId: admin._id,
+              });
+
+              adminEmails.assignFreelancer48Hours(
+                admin.email,
+                {
+                  freelancerName: `${prevFreelacer.firstName} ${prevFreelacer.lastName}`,
+                  freelancerRole: "SEO Optimizer",
+                  taskName: task.taskName,
+                  taskKeyword: task.keywords,
+                  projectDomain: project?.projectName,
+                },
+                userLanguage?.language || "de"
+              );
+            }
         } else if (hoursDifference >= 24) {
           const freelancer = await Freelancers.findOne({ _id: task.seo });
           if (freelancer) {
@@ -235,6 +310,8 @@ const taskDeadlineCheck = async () => {
         task.status.toLowerCase() === "2nd proofreading in progress"
       ) {
         if (hoursDifference >= 48) {
+          const prevFreelacer = task?.metaLector;
+
           await ProjectTask.findOneAndUpdate(
             { _id: task._id },
             {
@@ -242,6 +319,36 @@ const taskDeadlineCheck = async () => {
             },
             { new: true }
           );
+            const admins = await Users.aggregate([
+              {
+                $lookup: {
+                  from: "roles", // The collection name where roles are stored
+                  localField: "role", // Field in Users referencing the Role document
+                  foreignField: "_id", // The primary field in Role that Users reference
+                  as: "role",
+                },
+              },
+              { $unwind: "$role" }, // Unwind to treat each role as a separate document
+              { $match: { "role.title": "ProjectManger" } }, // Filter for specific title
+            ]);
+            const project = await Project.findOne({ _id: task.project });
+            for (const admin of admins) {
+              const userLanguage = await Language.findOne({
+                userId: admin._id,
+              });
+
+              adminEmails.assignFreelancer48Hours(
+                admin.email,
+                {
+                  freelancerName: `${prevFreelacer.firstName} ${prevFreelacer.lastName}`,
+                  freelancerRole: "Meta Lector",
+                  taskName: task.taskName,
+                  taskKeyword: task.keywords,
+                  projectDomain: project?.projectName,
+                },
+                userLanguage?.language || "de"
+              );
+            }
         } else if (hoursDifference >= 24) {
           const freelancer = await Freelancers.findOne({
             _id: task.metaLector,

@@ -32,8 +32,8 @@ function Email() {}
 
 Email.assignFreelancer48Hours = async (email, obj, language) => {
   try {
-      let filePath = "";
-      let emailSubject = '';
+    let filePath = "";
+    let emailSubject = "";
     if (language === "en") {
       filePath = path.join(
         __dirname,
@@ -45,9 +45,8 @@ Email.assignFreelancer48Hours = async (email, obj, language) => {
         "english",
         "assignFreelancer48hours.html"
       );
-       
-        emailSubject = `Important: Assign employees for [TASK_NAME] ([KEYWORD])`;
 
+      emailSubject = `Important: Assign employees for ${obj.taskName} (${obj.taskKeyword})`;
     } else {
       filePath = path.join(
         __dirname,
@@ -58,8 +57,7 @@ Email.assignFreelancer48Hours = async (email, obj, language) => {
         "admin",
         "assignFreelancer48hours.html"
       );
-        emailSubject = `Wichtig: Mitarbeiter für [TASK_NAME] ([KEYWORD]) zuweisen`;
-
+      emailSubject = `Wichtig: Mitarbeiter für ${obj.taskName} (${obj.taskKeyword}) zuweisen`;
     }
 
     //  filePath = path.join(
@@ -76,11 +74,16 @@ Email.assignFreelancer48Hours = async (email, obj, language) => {
     let text = data;
 
     text = text.replace(/\[TASK_NAME\]/g, obj.taskName);
-    text = text.replace(/\[KEYWORD\]/g, obj.keyword);
+    text = text.replace(/\[KEYWORD\]/g, obj.taskKeyword);
 
-    text = text.replace(/\[PROJECT_NAME\]/g, obj.projectName);
+    text = text.replace(/\[PROJECT_DOMAIN\]/g, obj.projectDomain);
     text = text.replace(/\[FREELANCER_NAME\]/g, obj.freelancerName);
     text = text.replace(/\[ROLE\]/g, obj.role);
+
+    text = text.replace(
+      /\[DASHBOARD_LINK\]/g,
+      "https://driptext-admin-panel.vercel.app/dashboard"
+    );
 
     const params = {
       Source: `DripText <noreply@driptext.de>`,
@@ -107,10 +110,10 @@ Email.assignFreelancer48Hours = async (email, obj, language) => {
   }
 };
 
-Email.taskInRevision = async (email, task, language) => {
+Email.taskInRevision = async (freelancer, task, language) => {
   try {
-      let filePath = "";
-      let emailSubject = ''
+    let filePath = "";
+    let emailSubject = "";
     if (language === "en") {
       filePath = path.join(
         __dirname,
@@ -122,7 +125,7 @@ Email.taskInRevision = async (email, task, language) => {
         "english",
         "taskInRevision.html"
       );
-        emailSubject = `Important: Please revise [TASK_NAME] ([KEYWORD])`;
+      emailSubject = `Important: Please revise ${task.name} (${task.keyword})`;
     } else {
       filePath = path.join(
         __dirname,
@@ -133,37 +136,31 @@ Email.taskInRevision = async (email, task, language) => {
         "admin",
         "taskInRevision.html"
       );
-        emailSubject = `Wichtig: Bitte überarbeite [TASK_NAME] ([KEYWORD])`;
+      emailSubject = `Wichtig: Bitte überarbeite ${task.name} (${task.keyword})`;
     }
-
-    // const filePath = path.join(
-    //   __dirname,
-    //   "..",
-    //   "..",
-    //   "..",
-    //   "templates",
-    //   "admin",
-    //   "taskInRevision.html"
-    // );
 
     const data = fs.readFileSync(filePath, "utf8");
     let text = data;
 
     text = text.replace(/\[TASK_NAME\]/g, task.name);
-    text = text.replace("[KEYWORD]", task.keyword);
+    text = text.replace(/\[KEYWORD\]/g, task.keyword);
     text = text.replace("[EDITOR_NAME]", task.editorName);
+    text = text.replace("[GOOGLE_DOC_LINK]", task.fileLink);
+    text = text.replace("[PROJECT_DOMAIN]", task.projectName);
+    text = text.replace("[FREELANCER_FIRST_NAME]", freelancer.firstName);
+
     text = text.replace(
-      "[TASK_LINK]",
+      /\[DASHBOARD_LINK\]/g,
       "https://driptext-admin-panel.vercel.app/dashboard"
     );
-    text = text.replace("[PROJECT_NAME]", task.projectName);
+
     text = text.replace("[ROLE]", task.role);
     text = text.replace("[FEEDBACK]", task.feedback);
 
     const params = {
       Source: `DripText <noreply@driptext.de>`,
       Destination: {
-        ToAddresses: [email],
+        ToAddresses: [freelancer.email],
         // CcAddresses: ["backoffice@driptext.de"],
       },
       Message: {
@@ -185,10 +182,10 @@ Email.taskInRevision = async (email, task, language) => {
   }
 };
 
-Email.newBooking = async (email, ob, language) => {
+Email.newBooking = async (email, obj, language) => {
   try {
-      let filePath = "";
-      let emailSubject = ''
+    let filePath = "";
+    let emailSubject = "";
     if (language === "en") {
       filePath = path.join(
         __dirname,
@@ -200,8 +197,7 @@ Email.newBooking = async (email, ob, language) => {
         "english",
         "newBooking.html"
       );
-        emailSubject = `New Booking ([PROJECT_DOMAIN]): Please assign a freelancer`;
-
+      emailSubject = `New Booking (${obj.projectName}): Please assign a freelancer`;
     } else {
       filePath = path.join(
         __dirname,
@@ -212,21 +208,10 @@ Email.newBooking = async (email, ob, language) => {
         "admin",
         "newBooking.html"
       );
-     
-        emailSubject = `Neue Buchung ([PROJECT_DOMAIN]): Bitte Freelancer zuweisen`;
 
+      emailSubject = `Neue Buchung (${projectName}): Bitte Freelancer zuweisen`;
     }
 
-    // const filePath = path.join(
-    //   __dirname,
-    //   "..",
-    //   "..",
-    //   "..",
-    //   "templates",
-    //   "admin",
-    //   "newBooking.html"
-    // );
-    //console.log(filePath);
     const data = fs.readFileSync(filePath, "utf8");
     let text = data;
 
@@ -234,7 +219,10 @@ Email.newBooking = async (email, ob, language) => {
       /\[DASHBOARD_LINK\]/g,
       "https://driptext-admin-panel.vercel.app/dashboard"
     );
-    text = text.replace("[PROJECT_NAME]", obj.projectName);
+    text = text.replace("[PROJECT_DOMAIN]", obj.projectName);
+    text = text.replace("[CLIENT_FIRST_NAME]", obj.clientFirstName);
+    text = text.replace("[CLIENT_LAST_NAME]", obj.clientLastName);
+    text = text.replace("[EMAIL]", obj.clientEmail);
 
     const params = {
       Source: `DripText <noreply@driptext.de>`,
@@ -263,8 +251,8 @@ Email.newBooking = async (email, ob, language) => {
 
 Email.taskCompleted = async (email, obj, language) => {
   try {
-      let filePath = "";
-      let emailSubject = ''
+    let filePath = "";
+    let emailSubject = "";
     if (language === "en") {
       filePath = path.join(
         __dirname,
@@ -276,7 +264,7 @@ Email.taskCompleted = async (email, obj, language) => {
         "english",
         "taskCompleted.html"
       );
-        emailSubject = `Task [TASK_NAME] ([KEYWORD]) is completed`;
+      emailSubject = `Task ${obj.taskName} (${obj.keyword}) is completed`;
     } else {
       filePath = path.join(
         __dirname,
@@ -287,7 +275,7 @@ Email.taskCompleted = async (email, obj, language) => {
         "admin",
         "taskCompleted.html"
       );
-        emailSubject = `Auftrag [TASK_NAME] ([KEYWORD]) ist fertig`;
+      emailSubject = `Auftrag ${obj.taskName} (${obj.keyword}) ist fertig`;
     }
 
     // const filePath = path.join(
@@ -307,9 +295,10 @@ Email.taskCompleted = async (email, obj, language) => {
       "[DASHBOARD_LINK]",
       "https://driptext-admin-panel.vercel.app/dashboard"
     );
-    text = text.replace("[TASK_NAME]", obj.taskName);
-    text = text.replace("[TASK_LINK]", obj.documentLink);
-    text = text.replace("[KEYWORD]", obj.keyword);
+    text = text.replace(/\[KEYWORD\]/g, obj.taskName);
+    text = text.replace(/\[TASK_NAME\]/g, obj.documentLink);
+    text = text.replace("[CLIENT_FIRST_NAME]", obj.clientName);
+    text = text.replace("[GOOGLE_DOC_LINK]", obj.fileLink);
 
     const params = {
       Source: `DripText <noreply@driptext.de>`,
@@ -338,8 +327,8 @@ Email.taskCompleted = async (email, obj, language) => {
 
 Email.onBoardingCompleted = async (email, obj, language) => {
   try {
-      let filePath = "";
-      let emailSubject = ''
+    let filePath = "";
+    let emailSubject = "";
     if (language === "en") {
       filePath = path.join(
         __dirname,
@@ -351,8 +340,7 @@ Email.onBoardingCompleted = async (email, obj, language) => {
         "english",
         "onBoardingCompleted.html"
       );
-        emailSubject = `Onboarding for [PROJECT_DOMAIN] completed`;
-        
+      emailSubject = `Onboarding for [PROJECT_DOMAIN] completed`;
     } else {
       filePath = path.join(
         __dirname,
@@ -363,7 +351,7 @@ Email.onBoardingCompleted = async (email, obj, language) => {
         "admin",
         "onBoardingCompleted.html"
       );
-        emailSubject = 'Onboarding für [PROJECT_DOMAIN] abgeschlossen'
+      emailSubject = "Onboarding für [PROJECT_DOMAIN] abgeschlossen";
     }
 
     // const filePath = path.join(
@@ -383,9 +371,10 @@ Email.onBoardingCompleted = async (email, obj, language) => {
       "[DASHBOARD_LINK]",
       "https://driptext-admin-panel.vercel.app/dashboard"
     );
-    text = text.replace("[CUSTOMER_NAME]", `${obj.firstName} ${obj.lastName}`);
-    text = text.replace("[CUSTOMER_EMAIL]", obj.email);
-    text = text.replace(/\[PROJECT_NAME\]/g, obj.projectName);
+    text = text.replace("[CLIENT_FIRST_NAME]", `${obj.firstName}`);
+    text = text.replace("[CLIENT_LAST_NAME]", `${obj.lastName}`);
+    text = text.replace("[EMAIL]", obj.email);
+    text = text.replace(/\[PROJECT_DOMAIN\]/g, obj.projectName);
 
     const params = {
       Source: `DripText <noreply@driptext.de>`,
@@ -418,33 +407,35 @@ Email.freelancerMonthlyInvoice = async (
   tasksLink,
   language
 ) => {
-    try {
-        let filePath = "";
-        let emailSubject = ''
-      if (language === "en") {
-        filePath = path.join(
-          __dirname,
-          "..",
-          "..",
-          "..",
-          "templates",
-          "admin",
-          "english",
-          "freelancerMonthlyInvoice.html"
-        );
-          emailSubject = `DripText Billing [LAST_MONTH] [CURRENT_YEAR]`;
-      } else {
-        filePath = path.join(
-          __dirname,
-          "..",
-          "..",
-          "..",
-          "templates",
-          "admin",
-          "freelancerMonthlyInvoice.html"
-        );
-          emailSubject = `DripText Abrechnung [LAST_MONTH] [CURRENT_YEAR]`;
-      }
+  try {
+    let filePath = "";
+    let emailSubject = "";
+    const lastMonth = dayjs().subtract(1, "month").format("MMMM YYYY");
+
+    if (language === "en") {
+      filePath = path.join(
+        __dirname,
+        "..",
+        "..",
+        "..",
+        "templates",
+        "admin",
+        "english",
+        "freelancerMonthlyInvoice.html"
+      );
+      emailSubject = `DripText Billing ${lastMonth}`;
+    } else {
+      filePath = path.join(
+        __dirname,
+        "..",
+        "..",
+        "..",
+        "templates",
+        "admin",
+        "freelancerMonthlyInvoice.html"
+      );
+      emailSubject = `DripText Abrechnung ${lastMonth}`;
+    }
     // const filePath = path.join(
     //   __dirname,
     //   "..",
@@ -459,10 +450,8 @@ Email.freelancerMonthlyInvoice = async (
     const data = fs.readFileSync(filePath, "utf8");
     let text = data;
 
-    const lastMonth = dayjs().subtract(1, "month").format("MMMM YYYY");
-    
     text = text.replace(/\[MONTH\]/g, lastMonth);
- 
+
     text = text.replace("[INVOICE_LINK]", invoiceLink);
     text = text.replace("[TASKS_LINK]", tasksLink);
     text = text.replace("[FIRST_NAME]", obj.name);

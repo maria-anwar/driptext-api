@@ -313,6 +313,9 @@ exports.create = async (req, res) => {
                     const userLanguage = await Language.findOne({userId: admin._id})
                     adminEmails.newBooking(admin.email, {
                       projectName: updatedProject.projectName,
+                      clientFirstName: user.firstName,
+                      clientLastName: user.lastName,
+                      clientEmail: user.email
                     }, userLanguage?.language || "de");
                   }
                 }
@@ -680,9 +683,16 @@ exports.create = async (req, res) => {
                   ]);
                   for (const admin of admins) {
                     const userLanguage = await Language.findOne({userId: admin._id})
-                    adminEmails.newBooking(admin.email, {
-                      projectName: final_project.projectName,
-                    }, userLanguage?.language || "de");
+                    adminEmails.newBooking(
+                      admin.email,
+                      {
+                        projectName: final_project.projectName,
+                        clientFirstName: user.firstName,
+                        clientLastName: user.lastName,
+                        clientEmail: user.email,
+                      },
+                      userLanguage?.language || "de"
+                    );
                   }
                 }
                 // emails
@@ -1036,6 +1046,9 @@ exports.create = async (req, res) => {
                     admin.email,
                     {
                       projectName: final_project.projectName,
+                      clientFirstName: user.firstName,
+                      clientLastName: user.lastName,
+                      clientEmail: user.email,
                     },
                     userLanguage?.language || "de"
                   );
