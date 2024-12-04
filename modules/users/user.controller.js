@@ -585,19 +585,39 @@ exports.create = async (req, res) => {
                   project: newProject._id,
                 });
 
-                const updatedProject = await Projects.findOneAndUpdate(
+                const updatedProjectFinalProject = await Projects.findOneAndUpdate(
                   { _id: newProject._id },
                   {
                     plan: userPlan._id,
                   },
                   { new: true }
                 );
-                final_project = updatedProject;
+                final_project = updatedProjectFinalProject;
                 await Users.findByIdAndUpdate(
                   { _id: alredyExist._id },
                   { $push: { projects: final_project._id } },
                   { new: true }
                 );
+                let nameChar = final_project.projectName
+                  .slice(0, 2)
+                  .toUpperCase();
+                let idChar = final_project._id.toString().slice(-4);
+                const projectCounter = await getProjectCounter();
+                let projectId = `${user.firstName[0].toUpperCase()}${user.lastName[0].toUpperCase()}-${
+                  projectCounter?.seq
+                }`;
+                const folderObj = await createFolder(projectId);
+
+                const updatedProject = await Projects.findByIdAndUpdate(
+                  { _id: final_project._id },
+                  {
+                    projectId: projectId,
+                    folderLink: folderObj.folderLink,
+                    folderId: folderObj.folderId,
+                  },
+                  { new: true }
+                );
+                final_project = updatedProject;
               }
 
               //   let createProject = await Projects.findOneAndUpdate(
@@ -607,25 +627,7 @@ exports.create = async (req, res) => {
               //       new: true,
               //     }
               //   );
-                let nameChar = final_project.projectName
-                  .slice(0, 2)
-                  .toUpperCase();
-                let idChar = final_project._id.toString().slice(-4);
-                const projectCounter = await getProjectCounter();
-                let projectId = `${user.firstName[0].toUpperCase()}${user.lastName[0].toUpperCase()}-${
-                  projectCounter?.seq
-                }`;
-              const folderObj = await createFolder(projectId);
-
-              const updatedProject = await Projects.findByIdAndUpdate(
-                { _id: final_project._id },
-                {
-                  projectId: projectId,
-                  folderLink: folderObj.folderLink,
-                  folderId: folderObj.folderId,
-                },
-                { new: true }
-              );
+                
 
               // await Users.findByIdAndUpdate(
               //   { _id: alredyExist._id },
@@ -634,20 +636,12 @@ exports.create = async (req, res) => {
               // );
               const userLanguage = await Language.findOne({userId: user._id})
               if (subscription !== "") {
-                // const clientData = {
-                //   clientName: `${req.body.firstName} ${req.body.lastName}`,
-                //   clientEmail: `${req.body.email}`,
-                //   subscriptionStatus: `${billResponse.subscription.status}`,
-                //   subscriptionStartDate: `${billResponse.subscription.subscription_items[0].current_term_start}`,
-                //   subscriptionEndDate: `${billResponse.subscription.subscription_items[0].current_term_end}`,
-                //   paymentMethodType: `${billResponse.customer.payment_method.type}`,
-                //   amount: `${billResponse.subscription.subscription_items[0].unit_price}`,
-                // };
+               
                 // Send email
 
                 if (alredyExist?.emailSubscription) {
                   emails
-                    .onBoardingRequest(user, createProject, userLanguage?.language || "de")
+                    .onBoardingRequest(user, final_project, userLanguage?.language || "de")
                     .then((res) => {
                       console.log("request on boarding sent");
                     })
@@ -687,7 +681,7 @@ exports.create = async (req, res) => {
                   for (const admin of admins) {
                     const userLanguage = await Language.findOne({userId: admin._id})
                     adminEmails.newBooking(admin.email, {
-                      projectName: updatedProject.projectName,
+                      projectName: final_project.projectName,
                     }, userLanguage?.language || "de");
                   }
                 }
@@ -873,17 +867,13 @@ exports.create = async (req, res) => {
 
             let final_project = "";
             if (project) {
-              console.log("project already exists", project);
+              // console.log("project already exists", project);
               let plan = await Plans.findOne({ _id: req.body.planId });
               //   console.log("plan: ", plan);
               let subPlan = await SubPlans.findOne({
                 _id: req.body.subPlanId,
               });
-              //   console.log("sub plan: ", subPlan);
-              console.log(
-                "test number: ",
-                project.plan.totalTexts + Number(plan.texts * subPlan.duration)
-              );
+              
               const prevUserPlan = await UserPlan.findOne({
                 project: project._id,
               });
