@@ -220,6 +220,19 @@ exports.assignFreelancersByProject = async (req, res) => {
             { metaLector: req.body.freelancerId },
             { new: true }
           );
+           const userLanguage = await Language.findOne({
+             userId: freelancer._id,
+           });
+           freelancerEmails.taskAssign(
+             freelancer,
+             {
+               name: task.taskName,
+               keyword: task.keywords,
+               fileLink: task.fileLink,
+             },
+             "Meta Lector",
+             userLanguage?.language || "de"
+           );
         }
       } else {
         if (projectTasks && projectTasks.length > 1) {

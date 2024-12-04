@@ -569,6 +569,7 @@ const monthlyFreelancingInvoicing = async () => {
             ...item.task,
             role: item.role,
             calculatedWords: calculatedWords.toString().split(".").at(0),
+            freelancerName: `${earning.freelancer.firstName} ${earning.freelancer.lastName}`
           };
         }),
         creditNo: "2024-10-001",
@@ -719,6 +720,7 @@ const monthlyFreelancingInvoicing = async () => {
       console.log("admins length: ", admins.length);
       for (const admin of admins) {
         console.log("sending email");
+        // mariaanwar996@gmail.com
         const userLanguage = await Language.findOne({ userId: admin._id });
         await adminEmails.freelancerMonthlyInvoice(
           {

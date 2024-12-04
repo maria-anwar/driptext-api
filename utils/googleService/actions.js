@@ -371,7 +371,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
   });
 
   const sheetUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=pdf&portrait=true&gid=0&gridlines=false`;
-  const obj = await exportFinishedTasks(invoiceData.tasks);
+  const obj = await exportFinishedTasks(invoiceData.tasks, invoiceData.clientName);
   // const sheetUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit#gid=0`;
   return {
     invoice: sheetUrl,
@@ -428,14 +428,16 @@ exports.findOrCreateFolderInParent = async (parentFolderId, folderName) => {
   }
 };
 
-const exportFinishedTasks = async (tasks) => {
+const exportFinishedTasks = async (tasks, freelancerName) => {
   console.log("inside export finished tasks function");
+    const lastMonth = dayjs().subtract(1, "month").format("MMMM YYYY");
+
 
   // Step 1: Create the Google Sheet
   const request = {
     resource: {
       properties: {
-        title: "Finished Tasks By Freelancer",
+        title: `Finished Tasks In ${lastMonth} By ${freelancerName}`,
       },
     },
     fields: "spreadsheetId",
@@ -453,12 +455,14 @@ const exportFinishedTasks = async (tasks) => {
     task.type || "",
     task.desiredNumberOfWords || "",
     task.actualNumberOfWords || "",
-    task?.calculatedWords || "1650",
+    task?.calculatedWords,
   ]);
+
+  const title = `Finished Tasks In ${lastMonth} By ${freelancerName}`;
 
   // Prepare data with heading
   const values = [
-    ["Finished Tasks By Freelancer"],
+    [title],
     [],
     [
       "Finished Date",
@@ -520,7 +524,7 @@ const exportFinishedTasks = async (tasks) => {
                 },
               },
               userEnteredValue: {
-                stringValue: "Finished Tasks By Freelancer",
+                stringValue: title,
               },
             },
             fields:

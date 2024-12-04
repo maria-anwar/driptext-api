@@ -478,14 +478,14 @@ Email.monthlyInvoice = async (obj, invoiceLink, tasksLink, language) => {
 
      text = text.replace("[INVOICE_LINK]", invoiceLink);
      text = text.replace("[TASKS_LINK]", tasksLink);
-     text = text.replace("[FIRST_NAME]", obj.name);
+     text = text.replace(/\[FIRST_NAME\]/g, obj.name);
    
 
     const params = {
       Source: `DripText <noreply@driptext.de>`,
       Destination: {
         ToAddresses: [obj.email],
-        CcAddresses: ["backoffice@driptext.de"],
+        // CcAddresses: ["backoffice@driptext.de"],
       },
       Message: {
         Subject: {
