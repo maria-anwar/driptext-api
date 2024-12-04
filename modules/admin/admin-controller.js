@@ -920,7 +920,6 @@ exports.trafficLightsTask = async (req, res) => {
   }
 }
 
-
 exports.editProjectManager = async (req, res) => {
   try {
     if (!req.role || req.role.toLowerCase() !== "projectmanger") {

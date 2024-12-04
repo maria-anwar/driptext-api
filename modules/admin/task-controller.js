@@ -66,18 +66,6 @@ exports.addTask = async (req, res) => {
       const userId = req.body.userId ? req.body.userId : null;
       const projectId = req.body.projectId;
       const projectName = req.body.projectName.trim();
-      // const speech = req.body.speech.trim();
-      // const prespective = req.body.prespective.trim();
-
-      //   let companyInfoObj = {
-      //     companyBackgorund: req.body.companyBackgorund,
-      //     companyAttributes: req.body.companyAttributes,
-      //     comapnyServices: req.body.comapnyServices,
-      //     customerContent: req.body.customerContent,
-      //     customerIntrest: req.body.customerIntrest,
-      //     contentPurpose: req.body.contentPurpose,
-      //     contentInfo: req.body.contentInfo,
-      //   };
 
       var whereClause;
       if (userId) {
@@ -122,15 +110,6 @@ exports.addTask = async (req, res) => {
               if (taskCount === 0) {
                 let projectStatus;
                 let taskStatus = "Uninitialized";
-                // if (speech !== "" && prespective !== "") {
-                // projectStatus = "Free Trial";
-                // taskStatus = "Ready to Start";
-                // }
-
-                // let createCompany = await Company.create({
-                //   ...companyInfoObj,
-                //   user: project.user._id,
-                // });
 
                 let proectTaskObj = {
                   keywords: req.body.keyword,
@@ -140,24 +119,16 @@ exports.addTask = async (req, res) => {
                   comments: req.body.comment,
                   project: project._id,
                   desiredNumberOfWords: req.body.wordCount,
-                  //   status: taskStatus,
+
                   user: userId,
-                  //   onBoarding: createCompany._id,
+
                   published: true,
                   metaLector: project.metaLector,
-                  //   tasks: taskCount,
                 };
 
                 let upadteProject = await Projects.findOneAndUpdate(
                   { _id: project._id },
                   {
-                    // speech: speech,
-                    // prespective: prespective,
-                    // projectStatus: projectStatus,
-                    // onBoarding: true,
-                    // boardingInfo: newOnBoarding._id,
-                    // duration: "1",
-                    // numberOfTasks: "1",
                     openTasks: 1,
                     tasks: 1,
                   },
@@ -165,7 +136,7 @@ exports.addTask = async (req, res) => {
                 );
 
                 let createProjectTask = await ProjectTask.create(proectTaskObj);
-               
+
                 const totalFiles = await getFileCount(project.folderId);
                 const fileName = `${project.projectId}-${totalFiles + 1}-${
                   createProjectTask.keywords || "No Keywords"
@@ -193,24 +164,24 @@ exports.addTask = async (req, res) => {
                   },
                   { new: true }
                 );
-                 const freelancer = await Freelancers.findOne({
-                   _id: project.metaLector,
-                 });
-                 if (freelancer) {
-                   const userLanguage = await Language.findOne({
-                     userId: freelancer._id,
-                   });
-                   freelancerEmails.taskAssign(
-                     freelancer,
-                     {
-                       name: updateProjectTask.taskName,
-                       keyword: updateProjectTask.keywords,
-                       fileLink: updateProjectTask.fileLink,
-                     },
-                     "Meta Lector",
-                     userLanguage?.language || "de"
-                   );
-                 }
+                const freelancer = await Freelancers.findOne({
+                  _id: project.metaLector,
+                });
+                if (freelancer) {
+                  const userLanguage = await Language.findOne({
+                    userId: freelancer._id,
+                  });
+                  freelancerEmails.taskAssign(
+                    freelancer,
+                    {
+                      name: updateProjectTask.taskName,
+                      keyword: updateProjectTask.keywords,
+                      fileLink: updateProjectTask.fileLink,
+                    },
+                    "Meta Lector",
+                    userLanguage?.language || "de"
+                  );
+                }
                 await Projects.findByIdAndUpdate(
                   projectId,
                   { $push: { projectTasks: createProjectTask._id } },
@@ -289,8 +260,6 @@ exports.addTask = async (req, res) => {
                 project: projectId,
               }).populate("plan");
 
-              //console.log("user plan: ", userPlan);
-
               if (!userPlan.subscription) {
                 res
                   .status(500)
@@ -298,18 +267,6 @@ exports.addTask = async (req, res) => {
                 return;
               }
 
-              // if (
-              //   dayjs(new Date()).isAfter(
-              //     dayjs(userPlan.endMonthDate, "day")
-              //   ) ||
-              //   userPlan.tasksPerMonthCount >= userPlan.tasksPerMonth
-              // ) {
-              //   res
-              //     .status(500)
-              //     .send({ message: "This user have reached monthly limit" });
-
-              //   return;
-              // }
               if (userPlan.textsRemaining === 0) {
                 res
                   .status(500)
@@ -323,17 +280,8 @@ exports.addTask = async (req, res) => {
                 return;
               }
 
-              // if (taskCount <= userPlan.plan.texts - 1) {
               let projectStatus;
               let taskStatus = "Uninitialized";
-              // if (speech !== "" && prespective !== "") {
-              //   projectStatus = "Ready";
-              // }
-
-              //   let createCompany = await Company.create({
-              //     ...companyInfoObj,
-              //     user: project.user._id,
-              //   });
 
               let proectTaskObj = {
                 keywords: req.body.keyword,
@@ -352,7 +300,7 @@ exports.addTask = async (req, res) => {
               };
 
               let createProjectTask = await ProjectTask.create(proectTaskObj);
-              
+
               const totalFiles = await getFileCount(project.folderId);
               const fileName = `${project.projectId}-${totalFiles + 1}-${
                 createProjectTask.keywords || "No Keywords"
@@ -400,13 +348,6 @@ exports.addTask = async (req, res) => {
               let upadteProject = await Projects.findOneAndUpdate(
                 { _id: project._id },
                 {
-                  // speech: speech,
-                  // prespective: prespective,
-                  //   onBoarding: true,
-                  // boardingInfo: newOnBoarding._id,
-                  // duration: userPlan.subPlan.duration,
-                  // numberOfTasks: userPlan.plan.texts,
-                  // projectStatus: projectStatus,
                   $inc: { openTasks: 1 },
                   tasks: taskCount + 1,
                 },
@@ -424,7 +365,6 @@ exports.addTask = async (req, res) => {
                   $inc: {
                     textsCount: 1,
                     textsRemaining: -1,
-                    // tasksPerMonthCount: 1,
                   },
                 },
                 { new: true }
@@ -943,7 +883,7 @@ exports.importProjectTasks = async (req, res) => {
           };
 
           let createProjectTask = await ProjectTask.create(proectTaskObj);
-          
+
           //console.log("before creating file");
           const totalFiles = await getFileCount(project.folderId);
           const fileName = `${project.projectId}-${totalFiles + 1}-${

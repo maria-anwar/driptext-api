@@ -949,41 +949,46 @@ exports.create = async (req, res) => {
                 project: newProject._id,
               });
               console.log("userplan id: ", userPlan);
-              const updatedProject = await Projects.findOneAndUpdate(
+              const updatedProjectForFinal = await Projects.findOneAndUpdate(
                 { _id: newProject._id },
                 {
                   plan: userPlan._id,
                 },
                 { new: true }
               );
-              final_project = updatedProject;
+              final_project = updatedProjectForFinal;
               let pushProjectId = await Users.findByIdAndUpdate(
                 { _id: alredyExist._id },
                 { $push: { projects: final_project._id } },
                 { new: true }
               );
+              let nameChar = final_project.projectName
+                .slice(0, 2)
+                .toUpperCase();
+              let idChar = final_project._id.toString().slice(-4);
+              // let projectId = nameChar + "-" + idChar;
+              const projectCounter = await getProjectCounter();
+              let projectId = `${user.firstName[0].toUpperCase()}${user.lastName[0].toUpperCase()}-${
+                projectCounter?.seq
+              }`;
+              const folderObj = await createFolder(projectId);
+
+              let updatedProject = await Projects.findByIdAndUpdate(
+                { _id: final_project._id },
+                {
+                  projectId: projectId,
+                  folderLink: folderObj.folderLink,
+                  folderId: folderObj.folderId,
+                },
+                { new: true }
+              );
+
+              final_project = updatedProject;
             }
 
             // let createProject = await Projects.create(projectObj);
 
-            let nameChar = final_project.projectName.slice(0, 2).toUpperCase();
-            let idChar = final_project._id.toString().slice(-4);
-            // let projectId = nameChar + "-" + idChar;
-             const projectCounter = await getProjectCounter();
-             let projectId = `${user.firstName[0].toUpperCase()}${user.lastName[0].toUpperCase()}-${
-               projectCounter?.seq
-             }`;
-            const folderObj = await createFolder(projectId);
-
-            let updatedProject = await Projects.findByIdAndUpdate(
-              { _id: final_project._id },
-              {
-                projectId: projectId,
-                folderLink: folderObj.folderLink,
-                folderId: folderObj.folderId,
-              },
-              { new: true }
-            );
+            
 
             // let pushProjectId = await Users.findByIdAndUpdate(
             //   { _id: alredyExist._id },
@@ -1037,9 +1042,13 @@ exports.create = async (req, res) => {
                 ]);
                 for (const admin of admins) {
                   const userLanguage = await Language.findOne({userId: admin._id})
-                  adminEmails.newBooking(admin.email, {
-                    projectName: updatedProject.projectName,
-                  }, userLanguage?.language || "de");
+                  adminEmails.newBooking(
+                    admin.email,
+                    {
+                      projectName: final_project.projectName,
+                    },
+                    userLanguage?.language || "de"
+                  );
                 }
               }
               // Send email
