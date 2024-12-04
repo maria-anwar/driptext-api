@@ -209,7 +209,7 @@ Email.newBooking = async (email, obj, language) => {
         "newBooking.html"
       );
 
-      emailSubject = `Neue Buchung (${projectName}): Bitte Freelancer zuweisen`;
+      emailSubject = `Neue Buchung (${obj.projectName}): Bitte Freelancer zuweisen`;
     }
 
     const data = fs.readFileSync(filePath, "utf8");
