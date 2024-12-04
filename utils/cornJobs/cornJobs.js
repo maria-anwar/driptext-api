@@ -299,7 +299,7 @@ const trafficLightDealineCheck = async () => {
                 date: dayjs().startOf("day"),
                 task: task._id,
               };
-              const alreadyPresent = await Project.findOne({
+              const alreadyPresent = await TrafficLight.findOne({
                 deadlineTasks: { $elemMatch: { task: task._id } },
               }).exec();
               if (!alreadyPresent) {
@@ -341,7 +341,7 @@ const trafficLightDealineCheck = async () => {
                 task: task._id,
               };
 
-              const alreadyPresent = await Project.findOne({
+              const alreadyPresent = await TrafficLight.findOne({
                 deadlineTasks: { $elemMatch: { task: task._id } },
               }).exec();
 
@@ -383,7 +383,7 @@ const trafficLightDealineCheck = async () => {
                 date: dayjs().startOf("day"),
                 task: task._id,
               };
-              const alreadyPresent = await Project.findOne({
+              const alreadyPresent = await TrafficLight.findOne({
                 deadlineTasks: { $elemMatch: { task: task._id } },
               }).exec();
 
@@ -425,7 +425,7 @@ const trafficLightDealineCheck = async () => {
                 date: dayjs().startOf("day"),
                 task: task._id,
               };
-              const alreadyPresent = await Project.findOne({
+              const alreadyPresent = await TrafficLight.findOne({
                 deadlineTasks: { $elemMatch: { task: task._id } },
               }).exec();
 

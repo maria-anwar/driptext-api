@@ -133,6 +133,7 @@ exports.test = async (req, res) => {
   try {
     const tempData = [];
     const earnings = await calculateInvoice();
+    console.log("earning length: ", earnings.length)
     for (const earning of earnings) {
       let temp = {
         tasks: earning.earnings.map(item => ({...item.task, role: item.role})),
@@ -247,7 +248,8 @@ exports.test = async (req, res) => {
       const obj = await createInvoiceInGoogleSheets(temp);
       finalData.push({
         invoice: obj.invoice,
-        tasks: obj.tasks
+        tasks: obj.tasks,
+        tasksSheet: obj.tasksSheet
       });
     }
 

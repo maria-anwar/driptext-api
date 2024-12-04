@@ -103,7 +103,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
     [invoiceData.street, "", "", "", "", "", ""],
     [
       `VAT: ${
-        (invoiceData?.vatId || invoiceData.vatId.toString() === "null")
+        invoiceData?.vatId || invoiceData.vatId.toString() === "null"
           ? "No VAT-Id Given"
           : invoiceData?.vatId
       }`,
@@ -371,12 +371,12 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
   });
 
   const sheetUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=pdf&portrait=true&gid=0&gridlines=false`;
-  const obj = await exportFinishedTasks(invoiceData.tasks)
+  const obj = await exportFinishedTasks(invoiceData.tasks);
   // const sheetUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit#gid=0`;
   return {
     invoice: sheetUrl,
     tasks: obj.tasksPdf,
-    tasksSheet: obj.tasksSheet,
+    tasksSheet: obj.tasksGoogleSheet,
   };
 };
 
@@ -430,27 +430,13 @@ exports.findOrCreateFolderInParent = async (parentFolderId, folderName) => {
 
 const exportFinishedTasks = async (tasks) => {
   console.log("inside export finished tasks function");
-  // console.log(
-  //   "sample",
-  //   tasks[0].keywords || "",
-  //   tasks[0].dueDate ? dayjs(tasks[0].dueDate).format("YYYY-MM-DD") : "",
-  //   tasks[0].topic || "",
-  //   tasks[0].type || "",
-  //   tasks[0].onBoarding.companyBackgorund || "",
-  //   tasks[0].onBoarding.companyAttributes || "",
-  //   tasks[0].onBoarding.companyServices || "",
-  //   tasks[0].onBoarding.customerContent || "",
-  //   tasks[0].onBoarding.customerIntrest || "",
-  //   tasks[0].onBoarding.contentPurpose || "",
-  //   tasks[0].onBoarding.contentInfo || ""
-  // );
-  // Step 1: Create a new Google Sheet in the specific folder
+
+  // Step 1: Create the Google Sheet
   const request = {
     resource: {
       properties: {
-        title: "Project Finished Tasks By Freelancer",
+        title: "Finished Tasks By Freelancer",
       },
-      // parents: [folderId], // Specify the folder ID here to save the file in that folder
     },
     fields: "spreadsheetId",
   };
@@ -458,22 +444,7 @@ const exportFinishedTasks = async (tasks) => {
   const createResponse = await sheets.spreadsheets.create(request);
   const spreadsheetId = createResponse.data.spreadsheetId;
 
-  // // Step 2: Retrieve the current parent (root folder) of the spreadsheet
-  // const fileResponse = await drive.files.get({
-  //   fileId: spreadsheetId,
-  //   fields: "parents",
-  // });
-  // const previousParent = fileResponse.data.parents[0]; // Assuming it's in root
-
-  // // Step 3: Move the spreadsheet to the desired folder and remove from root folder
-  // await drive.files.update({
-  //   fileId: spreadsheetId,
-  //   addParents: folderId, // Add to desired folder
-  //   removeParents: previousParent, // Remove from root folder
-  //   fields: "id, parents",
-  // });
-
-  // Step 2: Write tasks to the sheet
+  // Step 2: Prepare Task Data
   const taskData = tasks.map((task, index) => [
     task.finishedDate ? dayjs(task.finishedDate).format("DD.MM.YYYY") : "",
     task.role,
@@ -482,33 +453,132 @@ const exportFinishedTasks = async (tasks) => {
     task.type || "",
     task.desiredNumberOfWords || "",
     task.actualNumberOfWords || "",
-    task.calculatedWords,
+    task?.calculatedWords || "1650",
   ]);
 
+  // Prepare data with heading
+  const values = [
+    ["Finished Tasks By Freelancer"],
+    [],
+    [
+      "Finished Date",
+      "Role",
+      "Keywords",
+      "Status",
+      "Type",
+      "Expec. Words",
+      "Actual Words",
+      "Billed Words",
+    ], // Headers
+    ...taskData,
+  ];
+
+  // Step 3: Update the Google Sheet with data
   const updateRequest = {
     spreadsheetId,
     range: "Sheet1!A1",
     valueInputOption: "RAW",
+    resource: { values },
+  };
+
+  await sheets.spreadsheets.values.update(updateRequest);
+
+  // Step 4: Apply Bold Formatting to the Header Row
+  const batchUpdateRequest = {
+    spreadsheetId,
     resource: {
-      values: [
-        [
-          "Finished Date",
-          "Role",
-          "Keywords",
-          "Status",
-          "Type",
-          "Expec. Words",
-          "Actual Words",
-          "Billed Words",
-          // "Word Count Expectation",
-        ], // Headers
-        ...taskData,
+      requests: [
+        // Merge cells in the first row to span all columns
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0, // Default sheet is Sheet1 with ID 0
+              startRowIndex: 0, // Title row
+              endRowIndex: 1,
+              startColumnIndex: 0, // Start from the first column
+              endColumnIndex: 8, // Adjust this to match the number of columns (8 for example)
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        {
+          repeatCell: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 0, // Title row after merging
+              endRowIndex: 1,
+              startColumnIndex: 0,
+              endColumnIndex: 8, // Same as the number of columns to apply format
+            },
+            cell: {
+              userEnteredFormat: {
+                horizontalAlignment: "CENTER",
+                wrapStrategy: "WRAP",
+                textFormat: {
+                  bold: true,
+                  fontSize: 16, // Adjust font size as needed
+                },
+              },
+              userEnteredValue: {
+                stringValue: "Finished Tasks By Freelancer",
+              },
+            },
+            fields:
+              "userEnteredFormat(horizontalAlignment, wrapStrategy, textFormat), userEnteredValue",
+          },
+        },
+        {
+          repeatCell: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 2, // Header row
+              endRowIndex: 3,
+              startColumnIndex: 0,
+              endColumnIndex: 8, // Apply to header columns as needed
+            },
+            cell: {
+              userEnteredFormat: {
+                horizontalAlignment: "CENTER",
+                wrapStrategy: "WRAP",
+                textFormat: {
+                  bold: true,
+                  fontSize: 10,
+                },
+              },
+            },
+            fields:
+              "userEnteredFormat(horizontalAlignment, wrapStrategy, textFormat)",
+          },
+        },
+        {
+          repeatCell: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 3, // Start from the first task row
+              endRowIndex: values.length,
+              startColumnIndex: 0,
+              endColumnIndex: 8, // Adjust this if you have more columns
+            },
+            cell: {
+              userEnteredFormat: {
+                horizontalAlignment: "CENTER",
+                wrapStrategy: "WRAP",
+                textFormat: {
+                  fontSize: 10, // Adjust font size as needed
+                },
+              },
+            },
+            fields:
+              "userEnteredFormat(horizontalAlignment, wrapStrategy, textFormat)",
+          },
+        },
       ],
     },
   };
 
-  await sheets.spreadsheets.values.update(updateRequest);
-  // 3. Set view-only permissions
+  await sheets.spreadsheets.batchUpdate(batchUpdateRequest);
+
+  // Step 5: Make the Google Sheet Publicly Accessible
   const driveClient = google.drive({ version: "v3", auth });
   await driveClient.permissions.create({
     fileId: spreadsheetId,
@@ -518,14 +588,13 @@ const exportFinishedTasks = async (tasks) => {
     },
   });
 
-  // Step 3: Export the Google Sheet as an Excel file (optional)
+  // Step 6: Export Links
   const tasksGoogleSheet = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`;
   const tasksPdf = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=pdf&portrait=true&gid=0&gridlines=false`;
 
-
   return {
     tasksPdf,
-    tasksGoogleSheet
+    tasksGoogleSheet,
   };
 };
 

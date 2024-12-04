@@ -1370,7 +1370,7 @@ exports.getTasks = async (req, res) => {
     }).populate({ path: "project", populate: ["plan", "onBoardingInfo"] });
 
     // Get the current month and year
-    const today = dayjs(); // Current date
+    const today = dayjs().startOf("day"); // Current date
     const currentMonth = today.month(); // Current month (0-based, so 0 is January)
     const currentYear = today.year(); // Current year
 
