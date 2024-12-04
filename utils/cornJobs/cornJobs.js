@@ -18,7 +18,6 @@ const freelancerEarnings = db.FreelancerEarning;
 const TrafficLight = db.TrafficLight;
 const Language = db.Language;
 
-
 const onBoardingReminder = async () => {
   try {
     console.log("starting corn job");
@@ -34,11 +33,17 @@ const onBoardingReminder = async () => {
         // }
         if (!user && item.user?.emailSubscription) {
           console.log("not found: ", item.user);
-          const userLanguage = await Language.findOne({userId: item.user._id})
+          const userLanguage = await Language.findOne({
+            userId: item.user._id,
+          });
 
-          await clientEmails.onBoardingReminder(item.user.email, {
-            projectDomain: item.projectName,
-          }, userLanguage?.language || "de");
+          await clientEmails.onBoardingReminder(
+            item.user.email,
+            {
+              projectDomain: item.projectName,
+            },
+            userLanguage?.language || "de"
+          );
         }
       });
     }
@@ -141,7 +146,9 @@ const taskDeadlineCheck = async () => {
         } else if (hoursDifference >= 24) {
           const freelancer = await Freelancers.findOne({ _id: task.texter });
           if (freelancer) {
-            const userLanguage = await Language.findOne({userId: freelancer._id})
+            const userLanguage = await Language.findOne({
+              userId: freelancer._id,
+            });
             freelancerEmails.reminder24Hours(
               freelancer,
               {
@@ -172,7 +179,9 @@ const taskDeadlineCheck = async () => {
         } else if (hoursDifference >= 24) {
           const freelancer = await Freelancers.findOne({ _id: task.lector });
           if (freelancer) {
-            const userLanguage = await Language.findOne({userId: freelancer._id})
+            const userLanguage = await Language.findOne({
+              userId: freelancer._id,
+            });
             freelancerEmails.reminder24Hours(
               freelancer,
               {
@@ -203,7 +212,9 @@ const taskDeadlineCheck = async () => {
         } else if (hoursDifference >= 24) {
           const freelancer = await Freelancers.findOne({ _id: task.seo });
           if (freelancer) {
-            const userLanguage = await Language.findOne({userId: freelancer._id})
+            const userLanguage = await Language.findOne({
+              userId: freelancer._id,
+            });
             freelancerEmails.reminder24Hours(
               freelancer,
               {
@@ -236,7 +247,9 @@ const taskDeadlineCheck = async () => {
             _id: task.metaLector,
           });
           if (freelancer) {
-            const userLanguage = await Language.findOne({userId: freelancer._id})
+            const userLanguage = await Language.findOne({
+              userId: freelancer._id,
+            });
             freelancerEmails.reminder24Hours(
               freelancer,
               {
@@ -259,6 +272,7 @@ const taskDeadlineCheck = async () => {
 const trafficLightDealineCheck = async () => {
   try {
     const allTasks = await ProjectTask.find({
+      finishedDate: null,
       isActive: "Y",
     }).exec();
 
@@ -266,130 +280,175 @@ const trafficLightDealineCheck = async () => {
 
     allTasks.forEach(async (task) => {
       if (task.dueDate && today.isAfter(dayjs(task.dueDate))) {
-        // Texter
-        if (task.texter) {
-          const trafficLight = await TrafficLight.findOne({
-            freelancer: task.texter,
-            role: "Texter",
-          }).exec();
-          if (trafficLight) {
-            const body = {
-              date: dayjs().startOf("day"),
-              task: task._id,
-            };
-            const updatedTrafficLight = await TrafficLight.findOneAndUpdate(
-              { freelancer: task.texter },
-              {
-                $addToSet: { deadlineTasks: body },
-              },
-              { new: true }
-            );
-          } else {
-            const body = {
-              date: dayjs().startOf("day"),
-              task: task._id,
-            };
-            const newTrafficLight = await TrafficLight.create({
+        if (
+          task.status.toLowerCase() === "ready to work" ||
+          task.status.toLowerCase() === "ready for rivision (lector)" ||
+          task.status.toLowerCase() === "ready for rivision (meta lector)" ||
+          task.status.toLowerCase() === "in progress" ||
+          task.status.toLowerCase() === "in rivision (lector)" ||
+          task.status.toLowerCase() === "in rivision (meta lector)"
+        ) {
+          if (task.texter) {
+            // Texter
+            const trafficLight = await TrafficLight.findOne({
               freelancer: task.texter,
               role: "Texter",
-              deadlineTasks: [body],
-            });
+            }).exec();
+            if (trafficLight) {
+              const body = {
+                date: dayjs().startOf("day"),
+                task: task._id,
+              };
+              const alreadyPresent = await Project.findOne({
+                deadlineTasks: { $elemMatch: { task: task._id } },
+              }).exec();
+              if (!alreadyPresent) {
+                const updatedTrafficLight = await TrafficLight.findOneAndUpdate(
+                  { freelancer: task.texter },
+                  {
+                    $push: { deadlineTasks: body },
+                  },
+                  { new: true }
+                );
+              }
+            } else {
+              const body = {
+                date: dayjs().startOf("day"),
+                task: task._id,
+              };
+              const newTrafficLight = await TrafficLight.create({
+                freelancer: task.texter,
+                role: "Texter",
+                deadlineTasks: [body],
+              });
+            }
           }
         }
 
-        // Lector
-        if (task.lector) {
-          const trafficLight = await TrafficLight.findOne({
-            freelancer: task.lector,
-            role: "Lector",
-          }).exec();
-          if (trafficLight) {
-            const body = {
-              date: dayjs().startOf("day"),
-              task: task._id,
-            };
-
-            const updatedTrafficLight = await TrafficLight.findOneAndUpdate(
-              { freelancer: task.lector },
-              {
-                $addToSet: { deadlineTasks: body },
-              },
-              { new: true }
-            );
-          } else {
-            const body = {
-              date: dayjs().startOf("day"),
-              task: task._id,
-            };
-            const newTrafficLight = await TrafficLight.create({
+        if (
+          task.status.toLowerCase() === "ready for proofreading" ||
+          task.status.toLowerCase() === "proofreading in progress"
+        ) {
+          // Lector
+          if (task.lector) {
+            const trafficLight = await TrafficLight.findOne({
               freelancer: task.lector,
               role: "Lector",
-              deadlineTasks: [body],
-            });
+            }).exec();
+            if (trafficLight) {
+              const body = {
+                date: dayjs().startOf("day"),
+                task: task._id,
+              };
+
+              const alreadyPresent = await Project.findOne({
+                deadlineTasks: { $elemMatch: { task: task._id } },
+              }).exec();
+
+              if (!alreadyPresent) {
+                const updatedTrafficLight = await TrafficLight.findOneAndUpdate(
+                  { freelancer: task.lector },
+                  {
+                    $push: { deadlineTasks: body },
+                  },
+                  { new: true }
+                );
+              }
+            } else {
+              const body = {
+                date: dayjs().startOf("day"),
+                task: task._id,
+              };
+              const newTrafficLight = await TrafficLight.create({
+                freelancer: task.lector,
+                role: "Lector",
+                deadlineTasks: [body],
+              });
+            }
           }
         }
 
-        // seo optmizier
-        if (task.seo) {
-          const trafficLight = await TrafficLight.findOne({
-            freelancer: task.seo,
-            role: "SEO-Optimizer",
-          }).exec();
-          if (trafficLight) {
-            const body = {
-              date: dayjs().startOf("day"),
-              task: task._id,
-            };
-
-            const updatedTrafficLight = await TrafficLight.findOneAndUpdate(
-              { freelancer: task.seo },
-              {
-                $addToSet: { deadlineTasks: body },
-              },
-              { new: true }
-            );
-          } else {
-            const body = {
-              date: dayjs().startOf("day"),
-              task: task._id,
-            };
-            const newTrafficLight = await TrafficLight.create({
+        if (
+          task.status.toLowerCase() === "ready for seo optimization" ||
+          task.status.toLowerCase() === "seo optimization in progress"
+        ) {
+          // seo optmizier
+          if (task.seo) {
+            const trafficLight = await TrafficLight.findOne({
               freelancer: task.seo,
               role: "SEO-Optimizer",
-              deadlineTasks: [body],
-            });
+            }).exec();
+            if (trafficLight) {
+              const body = {
+                date: dayjs().startOf("day"),
+                task: task._id,
+              };
+              const alreadyPresent = await Project.findOne({
+                deadlineTasks: { $elemMatch: { task: task._id } },
+              }).exec();
+
+              if (!alreadyPresent) {
+                const updatedTrafficLight = await TrafficLight.findOneAndUpdate(
+                  { freelancer: task.seo },
+                  {
+                    $push: { deadlineTasks: body },
+                  },
+                  { new: true }
+                );
+              }
+            } else {
+              const body = {
+                date: dayjs().startOf("day"),
+                task: task._id,
+              };
+              const newTrafficLight = await TrafficLight.create({
+                freelancer: task.seo,
+                role: "SEO-Optimizer",
+                deadlineTasks: [body],
+              });
+            }
           }
         }
 
-        // Meta Lector
-        if (task.metaLector) {
-          const trafficLight = await TrafficLight.findOne({
-            freelancer: task.metaLector,
-            role: "Meta Lector",
-          }).exec();
-          if (trafficLight) {
-            const body = {
-              date: dayjs().startOf("day"),
-              task: task._id,
-            };
-
-            const updatedTrafficLight = await TrafficLight.findOneAndUpdate(
-              { freelancer: task.metaLector },
-              {
-                $addToSet: { deadlineTasks: body },
-              },
-              { new: true }
-            );
-          } else {
-            const body = {
-              date: dayjs().startOf("day"),
-              task: task._id,
-            };
-            const newTrafficLight = await TrafficLight.create({
+        if (
+          task.status.toLowerCase() === "ready for 2nd proofreading" ||
+          task.status.toLowerCase() === "2nd proofreading in progress"
+        ) {
+          // Meta Lector
+          if (task.metaLector) {
+            const trafficLight = await TrafficLight.findOne({
               freelancer: task.metaLector,
               role: "Meta Lector",
-              deadlineTasks: [body],
-            });
+            }).exec();
+            if (trafficLight) {
+              const body = {
+                date: dayjs().startOf("day"),
+                task: task._id,
+              };
+              const alreadyPresent = await Project.findOne({
+                deadlineTasks: { $elemMatch: { task: task._id } },
+              }).exec();
+
+              if (!alreadyPresent) {
+                const updatedTrafficLight = await TrafficLight.findOneAndUpdate(
+                  { freelancer: task.metaLector },
+                  {
+                    $push: { deadlineTasks: body },
+                  },
+                  { new: true }
+                );
+              }
+            } else {
+              const body = {
+                date: dayjs().startOf("day"),
+                task: task._id,
+              };
+              const newTrafficLight = await TrafficLight.create({
+                freelancer: task.metaLector,
+                role: "Meta Lector",
+                deadlineTasks: [body],
+              });
+            }
           }
         }
       }
@@ -628,12 +687,14 @@ const monthlyFreelancingInvoicing = async () => {
         tasks: obj.tasks,
         freelancerEmail: temp.freelancerEmail,
         freelancerName: temp.clientName,
-        freelancerId: temp.freelancerId
+        freelancerId: temp.freelancerId,
       });
     }
 
     for (const data of finalData) {
-      const userLanguage = await Language.findOne({userId: data.freelancerId})
+      const userLanguage = await Language.findOne({
+        userId: data.freelancerId,
+      });
       freelancerEmails.monthlyInvoice(
         {
           name: data.freelancerName,
@@ -658,7 +719,7 @@ const monthlyFreelancingInvoicing = async () => {
       console.log("admins length: ", admins.length);
       for (const admin of admins) {
         console.log("sending email");
-        const userLanguage = await Language.findOne({userId: admin._id})
+        const userLanguage = await Language.findOne({ userId: admin._id });
         await adminEmails.freelancerMonthlyInvoice(
           {
             name: data.freelancerName,
