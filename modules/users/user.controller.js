@@ -290,12 +290,7 @@ exports.create = async (req, res) => {
                       subscriptionInvoice.download.download_url,
                       userLanguage?.language || "de"
                     )
-                    .then((res) => {
-                      console.log("billing email success: ", res);
-                    })
-                    .catch((err) => {
-                      console.log("billing email error: ", err);
-                    });
+                    
 
                   const admins = await Users.aggregate([
                     {
@@ -663,12 +658,7 @@ exports.create = async (req, res) => {
                       subscriptionInvoice.download.download_url,
                       userLanguage?.language || "de"
                     )
-                    .then((res) => {
-                      console.log("billing email success: ", res);
-                    })
-                    .catch((err) => {
-                      console.log("billing email error: ", err);
-                    });
+                    
                   const admins = await Users.aggregate([
                     {
                       $lookup: {
@@ -709,7 +699,7 @@ exports.create = async (req, res) => {
                 //   });
               }
               if (final_project) {
-                emails.AwsEmailPassword(user, userLanguage?.language || "de");
+                // emails.AwsEmailPassword(user, userLanguage?.language || "de");
 
                 let getuser = await Users.findOne({ _id: user._id })
                   .select("firstName lastName email role password")
@@ -1022,12 +1012,6 @@ exports.create = async (req, res) => {
                     subscriptionInvoice.download.download_url,
                     userLanguage?.language || "de"
                   )
-                  .then((res) => {
-                    console.log("billing email success: ", res);
-                  })
-                  .catch((err) => {
-                    console.log("billing email error: ", err);
-                  });
                 const admins = await Users.aggregate([
                   {
                     $lookup: {
