@@ -41,6 +41,7 @@ const onBoardingReminder = async () => {
             item.user.email,
             {
               projectDomain: item.projectName,
+              firstName: user.firstName
             },
             userLanguage?.language || "de"
           );

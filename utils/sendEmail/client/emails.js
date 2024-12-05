@@ -45,7 +45,7 @@ Email.contactSupport = async (email, info, language) => {
         "english",
         "contactSupport.html"
       );
-        emailSubject = `Support form from [CLIENT_FIRST_NAME] [CLIENT_LAST_NAME]`;
+        emailSubject = `Support form from ${info.firstName} ${info.lastName}`;
     } else {
       filePath = path.join(
         __dirname,
@@ -56,7 +56,7 @@ Email.contactSupport = async (email, info, language) => {
         "client",
         "contactSupport.html"
       );
-        emailSubject = `Support-Formular von [CLIENT_FIRST_NAME] [CLIENT_LAST_NAME]`;
+        emailSubject = `Support-Formular von ${info.firstName} ${info.lastName}`;
     }
     // filePath = path.join(
     //   __dirname,
@@ -144,8 +144,14 @@ Email.onBoardingReminder = async (email, obj, language) => {
     let text = data;
 
     text = text.replace(/\[PROJECT_DOMAIN\]/g, obj.projectDomain);
+    text = text.replace(/\[CLIENT_FIRST_NAME\]/g, obj.firstName);
     text = text.replace(
-      "[DASHBOARD_LINK]",
+      /\[BUTTON_LINK_1\]/g,
+      "https://driptext-app.vercel.app/client-dashboard"
+    );
+
+    text = text.replace(
+      /\[DASHBOARD_LINK\]/g,
       "https://driptext-app.vercel.app/client-dashboard"
     );
 
@@ -189,7 +195,7 @@ Email.taskCompleted = async (email, obj, language) => {
         "english",
         "taskCompleted.html"
       );
-        emailSubject = `Text [TASK_NAME] ([KEYWORD]) is completed`;
+        emailSubject = `Text ${obj.taskName} (${obj.keyword}) is completed`;
     } else {
       filePath = path.join(
         __dirname,
@@ -200,7 +206,7 @@ Email.taskCompleted = async (email, obj, language) => {
         "client",
         "taskCompleted.html"
       );
-        emailSubject = `Text [TASK_NAME] ([KEYWORD]) ist fertig`;
+        emailSubject = `Text ${obj.taskName} (${obj.keyword}) ist fertig`;
     }
 
     // const filePath = path.join(
@@ -216,9 +222,11 @@ Email.taskCompleted = async (email, obj, language) => {
     const data = fs.readFileSync(filePath, "utf8");
     let text = data;
 
-    text = text.replace("[TASK_NAME]", obj.taskName);
-    text = text.replace("[TASK_LINK]", obj.documentLink);
-    text = text.replace("[KEYWORD]", obj.keyword);
+    text = text.replace(/\[TASK_NAME\]/g, obj.taskName);
+    text = text.replace(/\[KEYWORD\]/g, obj.keyword);
+    text = text.replace("[CLIENT_FIRST_NAME]", obj.clientName);
+    text = text.replace("[GOOGLE_DOC_LINK]", obj.fileLink);
+
 
     text = text.replace(
       "[DASHBOARD_LINK]",
@@ -265,7 +273,7 @@ Email.workStarted = async (email, obj, language) => {
        "english",
        "workStarted.html"
      );
-       emailSubject = `We are starting with the text creation for [PROJECT_DOMAIN]`;
+       emailSubject = `We are starting with the text creation for ${obj.projectName}`;
    } else {
      filePath = path.join(
        __dirname,
@@ -276,7 +284,7 @@ Email.workStarted = async (email, obj, language) => {
        "client",
        "workStarted.html"
      );
-       emailSubject = `Wir beginnen mit der Texterstellung für [PROJECT_DOMAIN]`;
+       emailSubject = `Wir beginnen mit der Texterstellung für ${obj.projectName}`;
    }
     // const filePath = path.join(
     //   __dirname,
@@ -292,7 +300,9 @@ Email.workStarted = async (email, obj, language) => {
     let text = data;
     
 
-    text = text.replace(/\[PROJECT_NAME\]/g, obj.projectName);
+    text = text.replace(/\[PROJECT_DOMAIN\]/g, obj.projectName);
+    text = text.replace(/\[CLIENT_FIRST_NAME\]/g, obj.clientName);
+
 
     text = text.replace(
       "[DASHBOARD_LINK]",

@@ -286,7 +286,7 @@ exports.create = async (req, res) => {
                 if (subscriptionInvoice && subscriptionInvoice.download) {
                   emails
                     .sendInvoiceToCustomer(
-                      user,
+                      {...user, projectDomain: createProject.projectName},
                       subscriptionInvoice.download.download_url,
                       userLanguage?.language || "de"
                     )
@@ -659,7 +659,7 @@ exports.create = async (req, res) => {
                 if (subscriptionInvoice && subscriptionInvoice.download) {
                   emails
                     .sendInvoiceToCustomer(
-                      user,
+                      {...user, projectDomain: final_project.projectName},
                       subscriptionInvoice.download.download_url,
                       userLanguage?.language || "de"
                     )
@@ -1018,7 +1018,7 @@ exports.create = async (req, res) => {
               if (subscriptionInvoice && subscriptionInvoice.download) {
                 emails
                   .sendInvoiceToCustomer(
-                    user,
+                    {...user, projectDomain: final_project.projectName},
                     subscriptionInvoice.download.download_url,
                     userLanguage?.language || "de"
                   )
@@ -1440,7 +1440,7 @@ exports.onboarding = async (req, res) => {
 
       if (user?.emailSubscription) {
         const userLanguage = await Language.findOne({userId: user._id})
-         emails.onBoadingSuccess(user.email, {
+         emails.onBoadingSuccess(user, {
            projectName: updatedProject.projectName,
          }, userLanguage?.language || "de");
       }

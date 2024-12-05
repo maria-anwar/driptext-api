@@ -200,10 +200,6 @@ Email.forgotPassword = async (user, language) => {
       emailSubject = `Ups, Passwort vergessen? Kein Problem!`;
     }
 
-    //  data = fs.readFileSync(
-    //   "./templates/emailForgotPassword.html",
-    //   "utf8"
-    // );
     var text = data;
     text = text.replace("[USER_NAME]", user.firstName + " " + user.lastName);
     text = text.replace("[BUTTON_LINK_1]", link);
@@ -332,13 +328,7 @@ Email.AwsEmailPassword = async (user, language) => {
       );
       emailSubject = `Zugang zur DripText WebApp`;
     }
-    //  filePath = path.join(
-    //   __dirname,
-    //   "..",
-    //   "templates",
-    //   "awsPasswordUpdateEmail.html"
-    // );
-    // //console.log(filePath);
+  
     const data = fs.readFileSync(filePath, "utf8");
     let text = data;
     // //console.log(text);
@@ -349,7 +339,7 @@ Email.AwsEmailPassword = async (user, language) => {
     });
 
     const link = `https://driptext-app.vercel.app/auth/forgetkey/${forgetPasswordToken}`;
-    text = text.replace("[USER_NAME]", `${user.firstName} ${user.lastName}`);
+    text = text.replace("[CLIENT_FIRST_NAME]", `${user.firstName} ${user.lastName}`);
     text = text.replace("[BUTTON_LINK_1]", link);
 
     const params = {
@@ -432,7 +422,7 @@ Email.sendBillingInfo = async (to, subject, clientData) => {
   }
 };
 
-Email.onBoadingSuccess = async (email, project, language) => {
+Email.onBoadingSuccess = async (user, project, language) => {
   try {
     let filePath = ''
     let emailSubject = ''
@@ -444,7 +434,7 @@ Email.onBoadingSuccess = async (email, project, language) => {
          "english",
          "onBoardingSuccessEmail.html"
        );
-      emailSubject = `Onboarding for [PROJECT_NAME]`;
+      emailSubject = `Onboarding for ${project.projectName}`;
     } else {
        filePath = path.join(
          __dirname,
@@ -452,7 +442,7 @@ Email.onBoadingSuccess = async (email, project, language) => {
          "templates",
          "onBoardingSuccessEmail.html"
        );
-      emailSubject = `Onboarding für [PROJECT_NAME]`;
+      emailSubject = `Onboarding für ${project.projectName}`;
       
     }
     //  filePath = path.join(
@@ -466,10 +456,12 @@ Email.onBoadingSuccess = async (email, project, language) => {
     let text = data;
 
     text = text.replace("[PROJECT_NAME]", project.projectName);
-    text = text.replace(
-      "[PROJECT_LINK]",
-      "https://driptext-app.vercel.app/client-dashboard"
-    );
+    text = text.replace("[CLIENT_FIRST_NAME]", user.firstName);
+
+    // text = text.replace(
+    //   "[PROJECT_LINK]",
+    //   "https://driptext-app.vercel.app/client-dashboard"
+    // );
     text = text.replace(
       "[DASHBOARD_LINK]",
       "https://driptext-app.vercel.app/client-dashboard"
@@ -489,7 +481,7 @@ Email.onBoadingSuccess = async (email, project, language) => {
     const params = {
       Source: `DripText <noreply@driptext.de>`,
       Destination: {
-        ToAddresses: [email],
+        ToAddresses: [user.email],
         // CcAddresses: ["backoffice@driptext.de"],
       },
       Message: {
@@ -522,7 +514,7 @@ Email.sendInvoiceToCustomer = async (user, link, language) => {
          "english",
          "customerInvoice.html"
        );
-      emailSubject = `DripText subscription for [PROJECT_DOMAIN] created`;
+      emailSubject = `DripText subscription for ${user.projectDomain} created`;
     } else {
        filePath = path.join(
          __dirname,
@@ -530,7 +522,7 @@ Email.sendInvoiceToCustomer = async (user, link, language) => {
          "templates",
          "customerInvoice.html"
        );
-      emailSubject = `DripText-Abo für [PROJECT_DOMAIN] erstellt`;
+      emailSubject = `DripText-Abo für ${user.projectDomain} erstellt`;
     }
     //  filePath = path.join(
     //   __dirname,
@@ -543,14 +535,13 @@ Email.sendInvoiceToCustomer = async (user, link, language) => {
     let text = data;
 
     
-    text = text.replace("[DOWNLOAD_INVOICE_LINK]", link);
-    text = text.replace(
-      "[CUSTOMER_NAME]",
-      `${user.firstName} ${user.lastName}`
-    );
+    text = text.replace("[BUTTON_LINK_1]", link);
+    text = text.replace(/\[CLIENT_FIRST_NAME\]/g, `${user.firstName}`);
+    text = text.replace(/\[CLIENT_LAST_NAME\]/g, `${user.lastName}`);
+    text = text.replace(/\[PROJECT_DOMAIN\]/g, `${user.projectDomain}`);
     text = text.replace("[EMAIL]", user.email);
     text = text.replace(
-      "[DASHBOARD_LINK]",
+      /\[DASHBOARD_LINK\]/g,
       "https://driptext-app.vercel.app/client-dashboard"
     );
 
@@ -612,7 +603,17 @@ Email.onBoardingRequest = async (user, project, language) => {
     const data = fs.readFileSync(filePath, "utf8");
     let text = data;
    
-    text = text.replace(/{{project\.domain}}/g, `${project.projectName}`);
+    text = text.replace(/\[PROJECT_DOMAIN\]/g, `${project.projectName}`);
+    text = text.replace(/\[CLIENT_FIRST_NAME\]/g, `${user.firstName}`);
+     text = text.replace(
+       /\[BUTTON_LINK_1\]/g,
+       "https://driptext-app.vercel.app/client-dashboard"
+     );
+    text = text.replace(
+      /\[DASHBOARD_LINK\]/g,
+      "https://driptext-app.vercel.app/client-dashboard"
+    );
+
 
     const params = {
       Source: `DripText <noreply@driptext.de>`,

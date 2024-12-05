@@ -265,7 +265,7 @@ exports.assignFreelancersByProject = async (req, res) => {
       const client = await Users.findOne({ _id: project.user });
       if (client && client?.emailSubscription) {
         const userLanguage = await Language.findOne({userId: client._id})
-        clientEmails.workStarted(client.email, { projectName: project.projectName }, userLanguage?.language || "de").then(async res => {
+        clientEmails.workStarted(client.email, { projectName: project.projectName, clientName: client.firstName }, userLanguage?.language || "de").then(async res => {
           await Projects.findOneAndUpdate({ _id: project._id }, {
             workStarted: true
           },{new: true})
