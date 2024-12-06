@@ -8,6 +8,7 @@ const {
   getWordCount,
   createInvoiceInGoogleSheets,
   exportFinishedTasks,
+  freelancerInvoiceSpreadSheet,
 } = require("../../utils/googleService/actions");
 const { getSubscriptionInvoice } = require("../../utils/chargebee/actions");
 const freelancerEmails = require("../../utils/sendEmail/freelancer/emails");
@@ -20,6 +21,75 @@ const Roles = db.Role;
 const Billings = db.Billing.Billings;
 const freelancerEarnings = db.FreelancerEarning;
 const counter = db.Counters;
+const ProjectTask = db.ProjectTask;
+
+
+exports.clientMonthlyTasks = async (req, res) => {
+  try {
+    // Get the start of the previous month
+    // const startOfMonth = dayjs().subtract(1, "month").startOf("month").toDate();
+    const startOfMonth = dayjs().startOf("month").toDate();
+
+
+    // Get the end of the previous month
+    // const endOfMonth = dayjs().subtract(1, "month").endOf("month").toDate();
+    const endOfMonth = dayjs().endOf("month").toDate();
+
+    const pipeline = [
+      // Match tasks where finishedDate is not null and is within the desired range
+      {
+        $match: {
+          finishedDate: { $ne: null, $gte: startOfMonth, $lte: endOfMonth },
+        },
+      },
+      // Group tasks by user and collect task details
+      {
+        $group: {
+          _id: "$user", // Group by user ID
+          tasks: { $push: "$$ROOT" }, // Optional: collect full task details
+          taskCount: { $sum: 1 }, // Optional: count tasks
+        },
+      },
+      // Optionally lookup user details
+      {
+        $lookup: {
+          from: "users", // Replace with your users collection name
+          localField: "_id",
+          foreignField: "_id",
+          as: "userDetails",
+        },
+      },
+      // Format the result
+      {
+        $project: {
+          _id: 0, // Remove MongoDB's default _id field
+          user: { $arrayElemAt: ["$userDetails", 0] }, // Include user details
+          tasks: 1,
+          taskCount: 1,
+        },
+      },
+    ];
+
+    const tasksGroupedByUser = await ProjectTask.aggregate(pipeline).exec();
+    res.status(200).send({message: "Success", data: tasksGroupedByUser})
+  } catch (error) {
+    res.status(500).send({message: error?.message || "Something went wrong"})
+  }
+}
+
+exports.designFreelancerInvoice = async (req, res) => {
+  try {
+
+    const url = await freelancerInvoiceSpreadSheet(
+      "1pJ-YKbrfcjNGOe40nEKAtQvzdsY8tRMOzianOFtZbeQ"
+    );
+
+    res.status(200).send({url: url})
+    
+  } catch (error) {
+    res.status(500).send({message: error?.message || "Something went wrong"})
+  }
+}
 
 exports.customerInvoice = async (req, res) => {
   try {

@@ -340,7 +340,7 @@ Email.onBoardingCompleted = async (email, obj, language) => {
         "english",
         "onBoardingCompleted.html"
       );
-      emailSubject = `Onboarding for [PROJECT_DOMAIN] completed`;
+      emailSubject = `Onboarding for ${obj.projectName} completed`;
     } else {
       filePath = path.join(
         __dirname,
@@ -351,7 +351,7 @@ Email.onBoardingCompleted = async (email, obj, language) => {
         "admin",
         "onBoardingCompleted.html"
       );
-      emailSubject = "Onboarding für [PROJECT_DOMAIN] abgeschlossen";
+      emailSubject = `Onboarding für ${obj.projectName} abgeschlossen`;
     }
 
     // const filePath = path.join(

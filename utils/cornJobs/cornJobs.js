@@ -850,6 +850,16 @@ const monthlyFreelancingInvoicing = async () => {
   }
 };
 
+const clientMonthlyTasks = async () => {
+  try {
+
+    const data = await ProjectTask
+    
+  } catch (error) {
+    console.log("client monthly tasks email: ", error)
+  }
+}
+
 module.exports = {
   onBoardingReminder,
   subscriptonCheck,

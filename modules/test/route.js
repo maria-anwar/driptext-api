@@ -11,6 +11,14 @@ router.get("/test", (req, res) => {
   testController.test(req, res);
 });
 
+router.get("/freelancerInvoice", (req, res) => {
+  testController.designFreelancerInvoice(req, res);
+});
+
+router.get("/clientMonthlyTasks", (req, res) => {
+  testController.clientMonthlyTasks(req, res);
+});
+
 router.get("/testEmail", (req, res) => {
   testController.testEmail(req, res);
 });

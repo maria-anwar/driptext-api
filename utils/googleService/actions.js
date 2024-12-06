@@ -59,6 +59,305 @@ exports.createTaskFile = async (folderId, taskName) => {
   return { fileId, fileLink };
 };
 
+exports.freelancerInvoiceSpreadSheet = async (spreadsheetId) => {
+  const sheetsClient = google.sheets({ version: "v4", auth });
+
+  // 1. Create a new spreadsheet for the invoice
+  // const createSheetResponse = await sheetsClient.spreadsheets.create({
+  //   resource: {
+  //     properties: {
+  //       title: `Design Freelancer Invoice`,
+  //     },
+  //   },
+  // });
+
+  // const spreadsheetId = createSheetResponse.data.spreadsheetId;
+
+  console.log("spreadsheet id: ", spreadsheetId);
+
+  // Hardcoded layout as per the template
+  const values = [
+    // Header
+    ["", "", "", "", "", "", ""],
+    ["", "", "", "", "", "", ""],
+    [
+      `       DripText Ltd. - Makariou Avenue 59, 3rd Floor, Office 301 - 6017 Larnaca, Cyprus`,
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+    ],
+    ["", "", "", "", "", "", ""],
+    ["", "", "", "", "", "", ""],
+    ["", "", "", "", "Credit No: ", `Credit No`],
+    ["", "", "", "", "Date: ", `Date`],
+    ["", "", "", "", "Performance Period: ", `performance period`],
+    ["Company", "", "", "", "", "", ""],
+    ["City", "", "", "", "", "", ""],
+    ["Street", "", "", "", "", "", ""],
+    [`VAT: vat`, "", "", "", "", "", ""],
+
+    // Column Headers for Items
+    ["", "Pos. Description", "", "", "", ""],
+
+    // Items (example hardcoded items)
+    ["", "", "", "", "", ""],
+    // [1, "Service A", "", 2, 100, 200],
+
+    // Totals
+    ["", "", "", "", "", `Subtotal: subtotal`],
+    ["", "", "", "", "", `VAT: vat`],
+    ["", "", "", "", "", `Total:`],
+    ["", "", "", "", "", "", ""],
+
+    // Footer (bank account details)
+    ["", "vat description", "", "", "", ""],
+    ["", "", "", "", "", "", ""],
+    ["", "", "", "", "", "", ""],
+
+    [
+      "DripText Ltd.: Contact Bank Account: Makariou Avenue 59,3rd Floor, Office 301 hallo@driptext.de DripText Ltd.",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+    ],
+    [
+      "6017 Laranaca,Cyprus Accounting: IBAN: LT53 3250 0668 1851 9925 VAT:CY10424462P backoffice@driptext.de BIC: REVOLT21",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+    ],
+
+    ["DripText Ltd.:", "", "", "Contact", "", "Bank Account:"],
+    [
+      "Makariou Avenue 59,3rd Floor, Office 301",
+      "",
+      "",
+      "hallo@driptext.de",
+      "",
+      "DripText Ltd.",
+    ],
+    [
+      "6017 Laranaca,Cyprus",
+      "",
+      "",
+      "Accounting:",
+      "",
+      "IBAN: LT53 3250 0668 1851 9925",
+    ],
+    ["VAT:CY10424462P", "", "", "backoffice@driptext.de", "", "BIC: REVOLT21"],
+  ];
+
+  const updateValuesRequest = {
+    spreadsheetId: spreadsheetId,
+    range: "Sheet1!A1",
+    valueInputOption: "RAW",
+    resource: { values },
+  };
+  await sheetsClient.spreadsheets.values.update(updateValuesRequest);
+
+  // 2. Format the spreadsheet
+  const formatRequest = {
+    spreadsheetId: spreadsheetId,
+    resource: {
+      requests: [
+        // removing other cells
+        {
+          deleteDimension: {
+            range: {
+              sheetId: 0, // Assuming it's the first sheet; replace with your sheet ID
+              dimension: "COLUMNS",
+              startIndex: 7, // Column H (0-indexed)
+            },
+          },
+        },
+        // Every cell of sheet text wrap
+        {
+          repeatCell: {
+            range: {
+              sheetId: 0, // Replace with your sheet ID
+            },
+            cell: {
+              userEnteredFormat: {
+                wrapStrategy: "WRAP", // Enable text wrapping
+              },
+            },
+            fields: "userEnteredFormat.wrapStrategy",
+          },
+        },
+        // Merge Top Line
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 2,
+              endRowIndex: 3,
+              startColumnIndex: 0,
+              endColumnIndex: 6,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+
+        {
+          repeatCell: {
+            range: {
+              sheetId: 0, // Replace with your sheet ID
+              startRowIndex: 2, // Start row index of merged cells
+              endRowIndex: 3, // End row index of merged cells
+              startColumnIndex: 0, // Start column index of merged cells
+              endColumnIndex: 6, // End column index of merged cells
+            },
+            cell: {
+              userEnteredFormat: {
+                horizontalAlignment: "LEFT", // Align text to the left
+                textFormat: {
+                  fontSize: 8, // Optional: Adjust font size
+                },
+              },
+            },
+            fields: "userEnteredFormat(horizontalAlignment,textFormat)",
+          },
+        },
+
+        
+
+        // widths of columns
+        // Set width for column A (0)
+        {
+          updateDimensionProperties: {
+            range: {
+              sheetId: 0, // Replace with your sheet ID
+              dimension: "COLUMNS",
+              startIndex: 0,
+              endIndex: 1,
+            },
+            properties: {
+              pixelSize: 100, // Width for column A
+            },
+            fields: "pixelSize",
+          },
+        },
+        // Set width for column B (1)
+        {
+          updateDimensionProperties: {
+            range: {
+              sheetId: 0, // Replace with your sheet ID
+              dimension: "COLUMNS",
+              startIndex: 1,
+              endIndex: 2,
+            },
+            properties: {
+              pixelSize: 120, // Width for column B
+            },
+            fields: "pixelSize",
+          },
+        },
+        // Set width for column C (2)
+        {
+          updateDimensionProperties: {
+            range: {
+              sheetId: 0, // Replace with your sheet ID
+              dimension: "COLUMNS",
+              startIndex: 2,
+              endIndex: 3,
+            },
+            properties: {
+              pixelSize: 130, // Width for column C
+            },
+            fields: "pixelSize",
+          },
+        },
+        // Set width for column D (3)
+        {
+          updateDimensionProperties: {
+            range: {
+              sheetId: 0, // Replace with your sheet ID
+              dimension: "COLUMNS",
+              startIndex: 3,
+              endIndex: 4,
+            },
+            properties: {
+              pixelSize: 140, // Width for column D
+            },
+            fields: "pixelSize",
+          },
+        },
+        // Set width for column E (4)
+        {
+          updateDimensionProperties: {
+            range: {
+              sheetId: 0, // Replace with your sheet ID
+              dimension: "COLUMNS",
+              startIndex: 4,
+              endIndex: 5,
+            },
+            properties: {
+              pixelSize: 150, // Width for column E
+            },
+            fields: "pixelSize",
+          },
+        },
+        // Set width for column F (5)
+        {
+          updateDimensionProperties: {
+            range: {
+              sheetId: 0, // Replace with your sheet ID
+              dimension: "COLUMNS",
+              startIndex: 5,
+              endIndex: 6,
+            },
+            properties: {
+              pixelSize: 160, // Width for column F
+            },
+            fields: "pixelSize",
+          },
+        },
+        // Set width for column G (6)
+        {
+          updateDimensionProperties: {
+            range: {
+              sheetId: 0, // Replace with your sheet ID
+              dimension: "COLUMNS",
+              startIndex: 6,
+              endIndex: 7,
+            },
+            properties: {
+              pixelSize: 170, // Width for column G
+            },
+            fields: "pixelSize",
+          },
+        },
+      ],
+    },
+  };
+
+  await sheetsClient.spreadsheets.batchUpdate(formatRequest);
+
+  // 3. Set view-only permissions
+  const driveClient = google.drive({ version: "v3", auth });
+  await driveClient.permissions.create({
+    fileId: spreadsheetId,
+    resource: {
+      role: "reader",
+      type: "anyone",
+    },
+  });
+
+  // const sheetUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=pdf&portrait=true&gid=0&gridlines=false`;
+  const sheetUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit#gid=0`;
+
+  return sheetUrl;
+};
+
 exports.createInvoiceInGoogleSheets = async (invoiceData) => {
   const sheetsClient = google.sheets({ version: "v4", auth });
 
@@ -212,20 +511,6 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
             mergeType: "MERGE_ALL",
           },
         },
-        // Merge Cells for the Company Name
-        // {
-        //   mergeCells: {
-        //     range: {
-        //       sheetId: 0,
-        //       startRowIndex: 4,
-        //       endRowIndex: 5,
-        //       startColumnIndex: 0,
-        //       endColumnIndex: 7,
-        //     },
-        //     mergeType: "MERGE_ALL",
-        //   },
-        // },
-        // Set background for "Pos." header
         {
           repeatCell: {
             range: {
@@ -305,40 +590,6 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
             fields: "userEnteredFormat(horizontalAlignment)",
           },
         },
-        // Add borders for item list and totals
-        // {
-        //   updateBorders: {
-        //     range: {
-        //       sheetId: 0,
-        //       startRowIndex: 12,
-        //       endRowIndex: 13, // Adjust based on number of items
-        //       startColumnIndex: 0,
-        //       endColumnIndex: 6,
-        //     },
-        //     top: { style: "SOLID" },
-        //     bottom: { style: "SOLID" },
-        //     // left: { style: "SOLID" },
-        //     // right: { style: "SOLID" },
-        //   },
-        // },
-        // Footer Formatting (Bank details)
-        // {
-        //   repeatCell: {
-        //     range: {
-        //       sheetId: 0,
-        //       startRowIndex: 11,
-        //       endRowIndex: 12,
-        //       startColumnIndex: 0,
-        //       endColumnIndex: 6,
-        //     },
-        //     cell: {
-        //       userEnteredFormat: {
-        //         horizontalAlignment: "RIGHT",
-        //       },
-        //     },
-        //     fields: "userEnteredFormat.horizontalAlignment",
-        //   },
-        // },
         // Resize columns for the layout
         {
           updateDimensionProperties: {
@@ -371,7 +622,10 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
   });
 
   const sheetUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=pdf&portrait=true&gid=0&gridlines=false`;
-  const obj = await exportFinishedTasks(invoiceData.tasks, invoiceData.clientName);
+  const obj = await exportFinishedTasks(
+    invoiceData.tasks,
+    invoiceData.clientName
+  );
   // const sheetUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit#gid=0`;
   return {
     invoice: sheetUrl,
@@ -430,8 +684,7 @@ exports.findOrCreateFolderInParent = async (parentFolderId, folderName) => {
 
 const exportFinishedTasks = async (tasks, freelancerName) => {
   console.log("inside export finished tasks function");
-    const lastMonth = dayjs().subtract(1, "month").format("MMMM YYYY");
-
+  const lastMonth = dayjs().subtract(1, "month").format("MMMM YYYY");
 
   // Step 1: Create the Google Sheet
   const request = {
