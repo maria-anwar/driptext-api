@@ -771,6 +771,7 @@ exports.finishTask = async (req, res) => {
             projectName: project?.projectName,
             role: "Texter",
             feedback: req.body.feedback,
+            freelancerName: texterFreelancer.firstName
           };
           const userLanguage = await Language.findOne({
             userId: texterFreelancer._id,
@@ -1074,6 +1075,7 @@ exports.finishTask = async (req, res) => {
             projectName: project?.projectName,
             role: "Texter",
             feedback: req.body.feedback,
+            freelancerName: texterFreelancer.firstName
           };
           const userLanguage = await Language.findOne({
             userId: texterFreelancer._id,

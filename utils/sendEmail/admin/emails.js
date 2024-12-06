@@ -147,7 +147,7 @@ Email.taskInRevision = async (freelancer, task, language) => {
     text = text.replace("[EDITOR_NAME]", task.editorName);
     text = text.replace("[GOOGLE_DOC_LINK]", task.fileLink);
     text = text.replace("[PROJECT_DOMAIN]", task.projectName);
-    text = text.replace("[FREELANCER_FIRST_NAME]", freelancer.firstName);
+    text = text.replace("[FREELANCER_FIRST_NAME]", task.freelancerName);
 
     text = text.replace(
       /\[DASHBOARD_LINK\]/g,
