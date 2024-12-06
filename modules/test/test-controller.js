@@ -34,6 +34,16 @@ exports.customerInvoice = async (req, res) => {
   }
 };
 
+exports.testEmail = async (req, res) => {
+  try {
+    await emails.sendInvoiceToCustomer({ firstName: "frist Name", lastName:"last name", projectDomain:"project domain", email: "abdullahmuneer402@gmail.com" }, "abc", "de")
+    res.status(200).send({message: "email sent"})
+    
+  } catch (error) {
+    res.statuss(500).send({message: error?.message || "something went wrong"})
+  }
+}
+
 const calculateInvoice = async () => {
   // Get the start and end dates for the previous month, ensuring no time component
   const startOfPreviousMonth = dayjs("2024-12-1")

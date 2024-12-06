@@ -549,8 +549,8 @@ Email.sendInvoiceToCustomer = async (user, link, language) => {
       Source: `DripText <noreply@driptext.de>`,
       Destination: {
         ToAddresses: [user.email],
-        CcAddresses: ["backoffice@driptext.de"],
         // CcAddresses: ["backoffice@driptext.de"],
+       
       },
       Message: {
         Subject: {
@@ -567,8 +567,8 @@ Email.sendInvoiceToCustomer = async (user, link, language) => {
     //console.log("on boarding success");
   } catch (error) {
     // throw error;
-    // console.log("error sending email: ", error);
-    throw new Error(`error sending customer invoice in email function: ${error}`)
+    console.log("error sending email: ", error);
+    // throw new Error(`error sending customer invoice in email function: ${error}`)
   }
 };
 

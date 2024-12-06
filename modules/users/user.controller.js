@@ -284,9 +284,9 @@ exports.create = async (req, res) => {
                   subscription.subscriptionData.invoice.id
                 );
                 if (subscriptionInvoice && subscriptionInvoice.download) {
-                  emails
+                  await emails
                     .sendInvoiceToCustomer(
-                      {...user, projectDomain: createProject.projectName},
+                      {firstName: user.firstName, lastName: user.lastName, email: user.email, projectDomain: createProject.projectName},
                       subscriptionInvoice.download.download_url,
                       userLanguage?.language || "de"
                     )
@@ -652,9 +652,9 @@ exports.create = async (req, res) => {
                   subscription.subscriptionData.invoice.id
                 );
                 if (subscriptionInvoice && subscriptionInvoice.download) {
-                  emails
+                  await emails
                     .sendInvoiceToCustomer(
-                      {...user, projectDomain: final_project.projectName},
+                      {firstName: user.firstName, lastName: user.lastName, email: user.email, projectDomain: final_project.projectName},
                       subscriptionInvoice.download.download_url,
                       userLanguage?.language || "de"
                     )
@@ -1006,12 +1006,27 @@ exports.create = async (req, res) => {
                 subscription.subscriptionData.invoice.id
               );
               if (subscriptionInvoice && subscriptionInvoice.download) {
-                emails
+                await emails
                   .sendInvoiceToCustomer(
-                    {...user, projectDomain: final_project.projectName},
+                    {firstName: user.firstName, lastName:user.lastName, email: user.email, projectDomain: final_project.projectName},
                     subscriptionInvoice.download.download_url,
                     userLanguage?.language || "de"
-                  )
+                )
+                
+                if (alredyExist?.emailSubscription) {
+                  emails
+                    .onBoardingRequest(
+                      user,
+                      createProject,
+                      userLanguage?.language || "de"
+                    )
+                    .then((res) => {
+                      console.log("request on boarding sent");
+                    })
+                    .catch((err) => {
+                      console.log("could not sent on boarding email");
+                    });
+                }
                 const admins = await Users.aggregate([
                   {
                     $lookup: {
