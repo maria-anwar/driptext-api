@@ -1013,11 +1013,11 @@ exports.create = async (req, res) => {
                     userLanguage?.language || "de"
                 )
                 
-                if (alredyExist?.emailSubscription) {
+                if (user?.emailSubscription) {
                   emails
                     .onBoardingRequest(
                       user,
-                      createProject,
+                      final_project,
                       userLanguage?.language || "de"
                     )
                     .then((res) => {
