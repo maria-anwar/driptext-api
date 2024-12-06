@@ -567,7 +567,8 @@ Email.sendInvoiceToCustomer = async (user, link, language) => {
     //console.log("on boarding success");
   } catch (error) {
     // throw error;
-    console.log("error sending email: ", error);
+    // console.log("error sending email: ", error);
+    throw new Error(`error sending customer invoice in email function: ${error}`)
   }
 };
 
