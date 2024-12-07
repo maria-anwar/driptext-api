@@ -9,6 +9,7 @@ const {
   createInvoiceInGoogleSheets,
   exportFinishedTasks,
   freelancerInvoiceSpreadSheet,
+  getColumnWidth,
 } = require("../../utils/googleService/actions");
 const { getSubscriptionInvoice } = require("../../utils/chargebee/actions");
 const freelancerEmails = require("../../utils/sendEmail/freelancer/emails");
@@ -81,10 +82,12 @@ exports.designFreelancerInvoice = async (req, res) => {
   try {
 
     const url = await freelancerInvoiceSpreadSheet(
-      "1pJ-YKbrfcjNGOe40nEKAtQvzdsY8tRMOzianOFtZbeQ"
+      "1tbgscnf0-NNGlbXOE2FhefABCPohqC6WOFOWzvllPK8"
     );
 
-    res.status(200).send({url: url})
+    // const columnWidth = await getColumnWidth()
+
+    res.status(200).send({ url });
     
   } catch (error) {
     res.status(500).send({message: error?.message || "Something went wrong"})

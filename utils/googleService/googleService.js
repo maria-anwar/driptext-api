@@ -32,6 +32,38 @@ const auth = new google.auth.GoogleAuth({
   ],
 });
 
+console.log("inside setting google service account")
+
+// Function to fetch authenticated email
+async function checkAuthenticatedEmail() {
+  try {
+    const authClient = await auth.getClient();
+    const oauth2 = google.oauth2({
+      auth: authClient,
+      version: "v2",
+    });
+
+    const userInfo = await oauth2.userinfo.get();
+    console.log(`Authenticated as: ${userInfo.data.email}`);
+  } catch (err) {
+    console.error("Error fetching authenticated email:", err);
+  }
+}
+
+async function testAuth() {
+  try {
+    const authClient = await auth.getClient();
+    const projectId = await auth.getProjectId();
+    console.log("Authenticated successfully!");
+    console.log(`Project ID: ${projectId}`);
+  } catch (err) {
+    console.error("Authentication error:", err);
+  }
+}
+
+// Call the function
+testAuth();
+
 const drive = google.drive({ version: "v3", auth });
 const docs = google.docs({ version: "v1", auth });
 const sheets = google.sheets({ version: "v4", auth }); 

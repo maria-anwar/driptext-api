@@ -59,19 +59,37 @@ exports.createTaskFile = async (folderId, taskName) => {
   return { fileId, fileLink };
 };
 
-exports.freelancerInvoiceSpreadSheet = async (spreadsheetId) => {
+exports.getColumnWidth = async () => {
+  try {
+    const sheetsClient = google.sheets({ version: "v4", auth });
+    const response = await sheetsClient.spreadsheets.get({
+      spreadsheetId: "18Dgu3yK2pVvRp6t-zUAu7YNuIOw0qR7SgWaeDAdgWVU",
+      ranges: [`2024-4-139_Invoice!A1:G1`], // Replace `Sheet1!A1:G1` with your range.
+      fields: `sheets.data.columnMetadata.pixelSize`,
+    });
+
+    // Check and log the width of the desired column.
+    // const columnWidth =
+    //   response.result.sheets[0].data[0].columnMetadata[columnIndex].pixelSize;
+    return response
+  } catch (error) {
+    console.log("get column width error: ", error);
+  }
+};
+
+exports.freelancerInvoiceSpreadSheet = async (spreadsheetIddd) => {
   const sheetsClient = google.sheets({ version: "v4", auth });
 
   // 1. Create a new spreadsheet for the invoice
-  // const createSheetResponse = await sheetsClient.spreadsheets.create({
-  //   resource: {
-  //     properties: {
-  //       title: `Design Freelancer Invoice`,
-  //     },
-  //   },
-  // });
+  const createSheetResponse = await sheetsClient.spreadsheets.create({
+    resource: {
+      properties: {
+        title: `Design Freelancer Invoice`,
+      },
+    },
+  });
 
-  // const spreadsheetId = createSheetResponse.data.spreadsheetId;
+  const spreadsheetId = createSheetResponse.data.spreadsheetId;
 
   console.log("spreadsheet id: ", spreadsheetId);
 
@@ -91,34 +109,55 @@ exports.freelancerInvoiceSpreadSheet = async (spreadsheetId) => {
     ],
     ["", "", "", "", "", "", ""],
     ["", "", "", "", "", "", ""],
-    ["", "", "", "", "Credit No: ", `Credit No`],
-    ["", "", "", "", "Date: ", `Date`],
-    ["", "", "", "", "Performance Period: ", `performance period`],
-    ["Company", "", "", "", "", "", ""],
+    ["", "", "", "", "Invoice No: ", "", ""],
+    ["Company", "", "", "", "Date: ", "", ""],
+    [
+      "First name last name",
+      "",
+      "",
+      "",
+      "Performance Period: ",
+      "",
+      "01.03.2024-01.03.2024",
+    ],
     ["City", "", "", "", "", "", ""],
     ["Street", "", "", "", "", "", ""],
-    [`VAT: vat`, "", "", "", "", "", ""],
-
-    // Column Headers for Items
-    ["", "Pos. Description", "", "", "", ""],
-
-    // Items (example hardcoded items)
-    ["", "", "", "", "", ""],
-    // [1, "Service A", "", 2, 100, 200],
-
-    // Totals
-    ["", "", "", "", "", `Subtotal: subtotal`],
-    ["", "", "", "", "", `VAT: vat`],
-    ["", "", "", "", "", `Total:`],
+    ["VAT: vat", "", "", "", "", "", ""],
     ["", "", "", "", "", "", ""],
-
-    // Footer (bank account details)
-    ["", "vat description", "", "", "", ""],
+    ["", "", "", "", "", "", "date"],
     ["", "", "", "", "", "", ""],
     ["", "", "", "", "", "", ""],
-
+    ["Invoice No. 1234", "", "", "", "", "", ""],
+    [],
+    [],
+    [],
+    ["Pos", "Description", "", "", "Amount", "Price", "Total"],
+    [],
     [
-      "DripText Ltd.: Contact Bank Account: Makariou Avenue 59,3rd Floor, Office 301 hallo@driptext.de DripText Ltd.",
+      "1",
+      "Content delivered in the performance period",
+      "",
+      "",
+      "1",
+      "9,000€",
+      "9,000€",
+    ],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    ["", "Subtotal", "", "", "", "", "9,000€"],
+    [],
+    ["", "", "0 %VAT", "", "", "", "0,00€"],
+    [],
+    ["", "Total", "", "", "", "", "9,000€"],
+    [],
+    ["Details of created content see attached.", "", "", "", "", "", ""],
+    [],
+    [
+      "No VAT accoroding to Reverse-Charge. Payment is due within 7 days from the date of this invoice.",
       "",
       "",
       "",
@@ -126,8 +165,9 @@ exports.freelancerInvoiceSpreadSheet = async (spreadsheetId) => {
       "",
       "",
     ],
+    [],
     [
-      "6017 Laranaca,Cyprus Accounting: IBAN: LT53 3250 0668 1851 9925 VAT:CY10424462P backoffice@driptext.de BIC: REVOLT21",
+      "Thank you very much for your trust. We appreciate doing bussiness with you.",
       "",
       "",
       "",
@@ -135,6 +175,9 @@ exports.freelancerInvoiceSpreadSheet = async (spreadsheetId) => {
       "",
       "",
     ],
+    [],
+    [],
+    [],
 
     ["DripText Ltd.:", "", "", "Contact", "", "Bank Account:"],
     [
@@ -179,6 +222,25 @@ exports.freelancerInvoiceSpreadSheet = async (spreadsheetId) => {
             },
           },
         },
+        {
+          repeatCell: {
+            range: {
+              sheetId: 0, // Replace with your sheet ID
+              startRowIndex: 0, // Start from the first row (0-indexed)
+              endRowIndex: 1000, // Use a large number to cover all rows (adjust as needed)
+              startColumnIndex: 6, // Column G (0-indexed)
+              endColumnIndex: 7, // Column G (exclusive)
+            },
+            cell: {
+              userEnteredFormat: {
+                horizontalAlignment: "RIGHT", // Align text to the right
+              },
+            },
+            fields: "userEnteredFormat.horizontalAlignment",
+          },
+        },
+        // Column G Right Aligned
+
         // Every cell of sheet text wrap
         {
           repeatCell: {
@@ -206,6 +268,428 @@ exports.freelancerInvoiceSpreadSheet = async (spreadsheetId) => {
             mergeType: "MERGE_ALL",
           },
         },
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 5,
+              endRowIndex: 6,
+              startColumnIndex: 4,
+              endColumnIndex: 6,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 6,
+              endRowIndex: 7,
+              startColumnIndex: 4,
+              endColumnIndex: 6,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 7,
+              endRowIndex: 8,
+              startColumnIndex: 4,
+              endColumnIndex: 6,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 6,
+              endRowIndex: 7,
+              startColumnIndex: 0,
+              endColumnIndex: 2,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 7,
+              endRowIndex: 8,
+              startColumnIndex: 0,
+              endColumnIndex: 2,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 8,
+              endRowIndex: 9,
+              startColumnIndex: 0,
+              endColumnIndex: 2,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 9,
+              endRowIndex: 10,
+              startColumnIndex: 0,
+              endColumnIndex: 2,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 10,
+              endRowIndex: 11,
+              startColumnIndex: 0,
+              endColumnIndex: 2,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 15,
+              endRowIndex: 16,
+              startColumnIndex: 0,
+              endColumnIndex: 2,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 19,
+              endRowIndex: 20,
+              startColumnIndex: 1,
+              endColumnIndex: 4,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 20,
+              endRowIndex: 21,
+              startColumnIndex: 1,
+              endColumnIndex: 4,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 21,
+              endRowIndex: 22,
+              startColumnIndex: 1,
+              endColumnIndex: 4,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 34,
+              endRowIndex: 35,
+              startColumnIndex: 0,
+              endColumnIndex: 7,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 36,
+              endRowIndex: 37,
+              startColumnIndex: 0,
+              endColumnIndex: 7,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 38,
+              endRowIndex: 39,
+              startColumnIndex: 0,
+              endColumnIndex: 7,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 42,
+              endRowIndex: 43,
+              startColumnIndex: 0,
+              endColumnIndex: 3,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 43,
+              endRowIndex: 44,
+              startColumnIndex: 0,
+              endColumnIndex: 3,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 44,
+              endRowIndex: 45,
+              startColumnIndex: 0,
+              endColumnIndex: 3,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 45,
+              endRowIndex: 46,
+              startColumnIndex: 0,
+              endColumnIndex: 3,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 42,
+              endRowIndex: 43,
+              startColumnIndex: 3,
+              endColumnIndex: 5,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 43,
+              endRowIndex: 44,
+              startColumnIndex: 3,
+              endColumnIndex: 5,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 44,
+              endRowIndex: 45,
+              startColumnIndex: 3,
+              endColumnIndex: 5,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 45,
+              endRowIndex: 46,
+              startColumnIndex: 3,
+              endColumnIndex: 5,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 42,
+              endRowIndex: 43,
+              startColumnIndex: 5,
+              endColumnIndex: 7,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 43,
+              endRowIndex: 44,
+              startColumnIndex: 5,
+              endColumnIndex: 7,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 44,
+              endRowIndex: 45,
+              startColumnIndex: 5,
+              endColumnIndex: 7,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 45,
+              endRowIndex: 46,
+              startColumnIndex: 5,
+              endColumnIndex: 7,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        {
+          repeatCell: {
+            range: {
+              sheetId: 0, // Replace with your sheet ID
+              startRowIndex: 42, // Start from the first row (0-indexed)
+              endRowIndex: 46, // Use a large number to cover all rows (adjust as needed)
+              startColumnIndex: 0, // Column G (0-indexed)
+              endColumnIndex: 7, // Column G (exclusive)
+            },
+            cell: {
+              userEnteredFormat: {
+                
+                textFormat: {
+                 
+                 
+                  foregroundColor: {
+                    red: 0.6, // Light gray color for the font
+                    green: 0.6,
+                    blue: 0.6,
+                  },
+                },
+              },
+            },
+            fields:
+              ",userEnteredFormat.textFormat",
+          },
+        },
+        {
+          repeatCell: {
+            range: {
+              sheetId: 0, // Replace with your sheet ID
+              startRowIndex: 19, // Start from the first row (0-indexed)
+              endRowIndex: 20, // Use a large number to cover all rows (adjust as needed)
+              startColumnIndex: 0, // Column G (0-indexed)
+              endColumnIndex: 7, // Column G (exclusive)
+            },
+            cell: {
+              userEnteredFormat: {
+                backgroundColor: {
+                  red: 0.8, // Gray color (0.5, 0.5, 0.5 for gray)
+                  green: 0.8,
+                  blue: 0.8,
+                },
+                textFormat: {
+                  bold: true, // Make text bold
+                },
+              },
+            },
+            fields:
+              "userEnteredFormat.backgroundColor,userEnteredFormat.textFormat",
+          },
+        },
+        {
+          repeatCell: {
+            range: {
+              sheetId: 0, // Replace with your sheet ID
+              startRowIndex: 32, // Start from the first row (0-indexed)
+              endRowIndex: 33, // Use a large number to cover all rows (adjust as needed)
+              startColumnIndex: 0, // Column G (0-indexed)
+              endColumnIndex: 7, // Column G (exclusive)
+            },
+            cell: {
+              userEnteredFormat: {
+                backgroundColor: {
+                  red: 0.8, // Gray color (0.5, 0.5, 0.5 for gray)
+                  green: 0.8,
+                  blue: 0.8,
+                },
+                textFormat: {
+                  bold: true, // Make text bold
+                },
+              },
+            },
+            fields:
+              "userEnteredFormat.backgroundColor,userEnteredFormat.textFormat",
+          },
+        },
+        {
+          repeatCell: {
+            range: {
+              sheetId: 0, // Replace with your sheet ID
+              startRowIndex: 15, // Start from the first row (0-indexed)
+              endRowIndex: 16, // Use a large number to cover all rows (adjust as needed)
+              startColumnIndex: 0, // Column G (0-indexed)
+              endColumnIndex: 1, // Column G (exclusive)
+            },
+            cell: {
+              userEnteredFormat: {
+                horizontalAlignment: "LEFT", // Align text to the right
+                textFormat: {
+                  bold: true, // Make text bold
+                },
+              },
+            },
+            fields:
+              "userEnteredFormat.horizontalAlignment,userEnteredFormat.textFormat",
+          },
+        },
 
         {
           repeatCell: {
@@ -228,8 +712,6 @@ exports.freelancerInvoiceSpreadSheet = async (spreadsheetId) => {
           },
         },
 
-        
-
         // widths of columns
         // Set width for column A (0)
         {
@@ -241,7 +723,7 @@ exports.freelancerInvoiceSpreadSheet = async (spreadsheetId) => {
               endIndex: 1,
             },
             properties: {
-              pixelSize: 100, // Width for column A
+              pixelSize: 60, // Width for column A
             },
             fields: "pixelSize",
           },
@@ -256,7 +738,7 @@ exports.freelancerInvoiceSpreadSheet = async (spreadsheetId) => {
               endIndex: 2,
             },
             properties: {
-              pixelSize: 120, // Width for column B
+              pixelSize: 100, // Width for column B
             },
             fields: "pixelSize",
           },
@@ -271,7 +753,7 @@ exports.freelancerInvoiceSpreadSheet = async (spreadsheetId) => {
               endIndex: 3,
             },
             properties: {
-              pixelSize: 130, // Width for column C
+              pixelSize: 100, // Width for column C
             },
             fields: "pixelSize",
           },
@@ -286,7 +768,7 @@ exports.freelancerInvoiceSpreadSheet = async (spreadsheetId) => {
               endIndex: 4,
             },
             properties: {
-              pixelSize: 140, // Width for column D
+              pixelSize: 180, // Width for column D
             },
             fields: "pixelSize",
           },
@@ -301,7 +783,7 @@ exports.freelancerInvoiceSpreadSheet = async (spreadsheetId) => {
               endIndex: 5,
             },
             properties: {
-              pixelSize: 150, // Width for column E
+              pixelSize: 77, // Width for column E
             },
             fields: "pixelSize",
           },
@@ -316,7 +798,7 @@ exports.freelancerInvoiceSpreadSheet = async (spreadsheetId) => {
               endIndex: 6,
             },
             properties: {
-              pixelSize: 160, // Width for column F
+              pixelSize: 69, // Width for column F
             },
             fields: "pixelSize",
           },
@@ -331,7 +813,7 @@ exports.freelancerInvoiceSpreadSheet = async (spreadsheetId) => {
               endIndex: 7,
             },
             properties: {
-              pixelSize: 170, // Width for column G
+              pixelSize: 145, // Width for column G
             },
             fields: "pixelSize",
           },
