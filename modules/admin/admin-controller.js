@@ -876,11 +876,11 @@ exports.trafficLightsTask = async (req, res) => {
     }
 
     const ninetyDaysAgo = dayjs().subtract(90, "day").startOf("day").toDate();
-    const allTasks = await ProjectTask.find({}).select("texter,lector,seo,metaLector").exec()
+    const allTasks = await ProjectTask.find({}).select("texter lector seo metaLector").exec()
     const texterIds = allTasks.map(item => item?.texter.toString() || "")
     const lectorIds = allTasks.map(item => item?.lector.toString() || "")
     const seoIds = allTasks.map(item => item?.seo.toString() || "")
-    const metaLectorIds = allTasks.map(item => item.metaLector.toString() || "")
+    const metaLectorIds = allTasks.map(item => item?.metaLector.toString() || "")
     const trafficLights = await TrafficLight.find({
       $or: [
         {
@@ -912,7 +912,7 @@ exports.trafficLightsTask = async (req, res) => {
     });
 
     const finalFilteredTasks = filteredTasks.map(obj => {
-      const freelancerId = obj.freelancer._id
+      const freelancerId = obj.freelancer._id.toString()
       let count = 0
       if (texterIds.includes(freelancerId)) {
         count = count + 1
