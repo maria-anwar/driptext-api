@@ -847,19 +847,32 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
   const createSheetResponse = await sheetsClient.spreadsheets.create({
     resource: {
       properties: {
-        title: `${invoiceData.creditNo}`,
+        title: `Invoice-${invoiceData.invoiceNo}`,
       },
     },
   });
 
   const spreadsheetId = createSheetResponse.data.spreadsheetId;
+  let vatName = ''
+  let vatDescription = ''
+
+  if (invoiceData.vat === 0) {
+    vatName = "0 %VAT";
+    vatDescription =
+      "No VAT accoroding to Reverse-Charge. Payment is due within 7 days from the date of this invoice.";
+  }
+  if (invoiceData.vat > 0) {
+    vatName = "19% VAT"
+    vatDescription = "VAT CY Ltd (19%)";
+  }
 
   // Hardcoded layout as per the template
   const values = [
     // Header
     ["", "", "", "", "", "", ""],
+    ["", "", "", "", "", "", ""],
     [
-      "DripText Ltd. – Poseidonos Ave 47, Limnaria Westblock A2, Office 25",
+      `       DripText Ltd. - Makariou Avenue 59, 3rd Floor, Office 301 - 6017 Larnaca, Cyprus`,
       "",
       "",
       "",
@@ -869,24 +882,40 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
     ],
     ["", "", "", "", "", "", ""],
     ["", "", "", "", "", "", ""],
-    ["", "", "", "", "Credit No: ", `${invoiceData.creditNo}`],
-    ["", "", "", "", "Date: ", `${invoiceData.date}`],
     [
       "",
+      "",
+      "",
+      "",
+      "Invoice No: ",
+      "",
+      `${dayjs().year()}-${dayjs().month() + 1}-${invoiceData.invoiceNo}`,
+    ],
+    [
+      invoiceData.company,
+      "",
+      "",
+      "",
+      "Date: ",
+      "",
+      dayjs().format("DD.MM.YYYY"),
+    ],
+    [
+      invoiceData.clientName,
       "",
       "",
       "",
       "Performance Period: ",
-      `${invoiceData.performancePeriod}`,
+      "",
+      invoiceData.performancePeriod,
     ],
-    [invoiceData.company, "", "", "", "", "", ""],
     [invoiceData.city, "", "", "", "", "", ""],
     [invoiceData.street, "", "", "", "", "", ""],
     [
       `VAT: ${
-        invoiceData?.vatId || invoiceData.vatId.toString() === "null"
-          ? "No VAT-Id Given"
-          : invoiceData?.vatId
+        invoiceData?.vatId === "null"
+          ? "No Vat Id Given"
+          : invoiceData.invoiceNo
       }`,
       "",
       "",
@@ -895,76 +924,99 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
       "",
       "",
     ],
-
-    // Column Headers for Items
-    ["", "Pos. Description", "", "", "", ""],
-
-    // Items (example hardcoded items)
-    ...invoiceData.items.map((item, index) => [
-      "", // Position
-      `${index + 1} ${item.description}`,
+    ["", "", "", "", "", "", ""],
+    ["", "", "", "", "", "", dayjs().format("DD.MM.YYYY")],
+    ["", "", "", "", "", "", ""],
+    ["", "", "", "", "", "", ""],
+    [
+      `Invoice No. ${dayjs().year()}-${dayjs().month() + 1}-${
+        invoiceData.invoiceNo
+      }`,
       "",
       "",
       "",
       "",
+      "",
+      "",
+    ],
+    [],
+    [],
+    [],
+    ["Pos", "Description", "", "", "Tasks", "Price", "Total"],
+    [],
+    ...invoiceData.items.map((item) => [
+      "1",
+      item.description,
+      "",
+      "",
+      item.amount,
+      `${Number(item.price).toFixed(2)}€`,
+      `${Number(item.total).toFixed(2)}€`,
     ]),
-    // [1, "Service A", "", 2, 100, 200],
-
-    // Totals
-    [
-      "",
-      "",
-      "",
-      "",
-      "",
-      `Subtotal: ${Number(invoiceData.subtotal).toFixed(2)}`,
-    ],
-    ["", "", "", "", "", `VAT: ${Number(invoiceData.vat).toFixed(2)}`],
-    ["", "", "", "", "", `Total: ${Number(invoiceData.total).toFixed(2)}`],
-    ["", "", "", "", "", "", ""],
-
-    // Footer (bank account details)
-    ["", invoiceData.vatDescription, "", "", "", ""],
-    ["", "", "", "", "", "", ""],
-    ["", "", "", "", "", "", ""],
-
-    [
-      "DripText Ltd.: Contact Bank Account: Makariou Avenue 59,3rd Floor, Office 301 hallo@driptext.de DripText Ltd.",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-    ],
-    [
-      "6017 Laranaca,Cyprus Accounting: IBAN: LT53 3250 0668 1851 9925 VAT:CY10424462P backoffice@driptext.de BIC: REVOLT21",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-    ],
-
-    // ["DripText Ltd.:", "", "", "Contact", "", "Bank Account:"],
     // [
-    //   "Makariou Avenue 59,3rd Floor, Office 301",
+    //   "1",
+    //   "Content delivered in the performance period",
     //   "",
     //   "",
-    //   "hallo@driptext.de",
-    //   "",
-    //   "DripText Ltd.",
+    //   "1",
+    //   "9,000€",
+    //   "9,000€",
     // ],
-    // [
-    //   "6017 Laranaca,Cyprus",
-    //   "",
-    //   "",
-    //   "Accounting:",
-    //   "",
-    //   "IBAN: LT53 3250 0668 1851 9925",
-    // ],
-    // ["VAT:CY10424462P", "", "", "backoffice@driptext.de", "", "BIC: REVOLT21"],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [
+      "",
+      "Subtotal",
+      "",
+      "",
+      "",
+      "",
+      `${Number(invoiceData.subtotal).toFixed(2)}€`,
+    ],
+    [],
+    ["", "", vatName, "", "", "", `${Number(invoiceData.vat).toFixed(2)}€`],
+    [],
+    ["", "Total", "", "", "", "", `${Number(invoiceData.total).toFixed(2)}€`],
+    [],
+    ["Details of created content see attached.", "", "", "", "", "", ""],
+    [],
+    [vatDescription, "", "", "", "", "", ""],
+    [],
+    [
+      "Thank you very much for your trust. We appreciate doing bussiness with you.",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+    ],
+    [],
+    [],
+    [],
+
+    ["DripText Ltd.:", "", "", "Contact", "", "Bank Account:"],
+    [
+      "Makariou Avenue 59,3rd Floor, Office 301",
+      "",
+      "",
+      "hallo@driptext.de",
+      "",
+      "DripText Ltd.",
+    ],
+    [
+      "6017 Laranaca,Cyprus",
+      "",
+      "",
+      "Accounting:",
+      "",
+      "IBAN: LT53 3250 0668 1851 9925",
+    ],
+    ["VAT:CY10424462P", "", "", "backoffice@driptext.de", "", "BIC: REVOLT21"],
   ];
 
   const updateValuesRequest = {
@@ -980,14 +1032,381 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
     spreadsheetId: spreadsheetId,
     resource: {
       requests: [
-        // Merge Cells for the Address Header
+        // removing other cells
+        {
+          deleteDimension: {
+            range: {
+              sheetId: 0, // Assuming it's the first sheet; replace with your sheet ID
+              dimension: "COLUMNS",
+              startIndex: 7, // Column H (0-indexed)
+            },
+          },
+        },
+        {
+          repeatCell: {
+            range: {
+              sheetId: 0, // Replace with your sheet ID
+              startRowIndex: 0, // Start from the first row (0-indexed)
+              endRowIndex: 1000, // Use a large number to cover all rows (adjust as needed)
+              startColumnIndex: 6, // Column G (0-indexed)
+              endColumnIndex: 7, // Column G (exclusive)
+            },
+            cell: {
+              userEnteredFormat: {
+                horizontalAlignment: "RIGHT", // Align text to the right
+              },
+            },
+            fields: "userEnteredFormat.horizontalAlignment",
+          },
+        },
+        // Column G Right Aligned
+
+        // Every cell of sheet text wrap
+        {
+          repeatCell: {
+            range: {
+              sheetId: 0, // Replace with your sheet ID
+            },
+            cell: {
+              userEnteredFormat: {
+                wrapStrategy: "WRAP", // Enable text wrapping
+              },
+            },
+            fields: "userEnteredFormat.wrapStrategy",
+          },
+        },
+        // Merge Top Line
         {
           mergeCells: {
             range: {
               sheetId: 0,
-              startRowIndex: 1,
-              endRowIndex: 2,
+              startRowIndex: 2,
+              endRowIndex: 3,
               startColumnIndex: 0,
+              endColumnIndex: 6,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 5,
+              endRowIndex: 6,
+              startColumnIndex: 4,
+              endColumnIndex: 6,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 6,
+              endRowIndex: 7,
+              startColumnIndex: 4,
+              endColumnIndex: 6,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 7,
+              endRowIndex: 8,
+              startColumnIndex: 4,
+              endColumnIndex: 6,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 6,
+              endRowIndex: 7,
+              startColumnIndex: 0,
+              endColumnIndex: 2,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 7,
+              endRowIndex: 8,
+              startColumnIndex: 0,
+              endColumnIndex: 2,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 8,
+              endRowIndex: 9,
+              startColumnIndex: 0,
+              endColumnIndex: 2,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 9,
+              endRowIndex: 10,
+              startColumnIndex: 0,
+              endColumnIndex: 2,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 10,
+              endRowIndex: 11,
+              startColumnIndex: 0,
+              endColumnIndex: 2,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 15,
+              endRowIndex: 16,
+              startColumnIndex: 0,
+              endColumnIndex: 2,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 19,
+              endRowIndex: 20,
+              startColumnIndex: 1,
+              endColumnIndex: 4,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 20,
+              endRowIndex: 21,
+              startColumnIndex: 1,
+              endColumnIndex: 4,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 21,
+              endRowIndex: 22,
+              startColumnIndex: 1,
+              endColumnIndex: 4,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 34,
+              endRowIndex: 35,
+              startColumnIndex: 0,
+              endColumnIndex: 7,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 36,
+              endRowIndex: 37,
+              startColumnIndex: 0,
+              endColumnIndex: 7,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 38,
+              endRowIndex: 39,
+              startColumnIndex: 0,
+              endColumnIndex: 7,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 42,
+              endRowIndex: 43,
+              startColumnIndex: 0,
+              endColumnIndex: 3,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 43,
+              endRowIndex: 44,
+              startColumnIndex: 0,
+              endColumnIndex: 3,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 44,
+              endRowIndex: 45,
+              startColumnIndex: 0,
+              endColumnIndex: 3,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 45,
+              endRowIndex: 46,
+              startColumnIndex: 0,
+              endColumnIndex: 3,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 42,
+              endRowIndex: 43,
+              startColumnIndex: 3,
+              endColumnIndex: 5,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 43,
+              endRowIndex: 44,
+              startColumnIndex: 3,
+              endColumnIndex: 5,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 44,
+              endRowIndex: 45,
+              startColumnIndex: 3,
+              endColumnIndex: 5,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 45,
+              endRowIndex: 46,
+              startColumnIndex: 3,
+              endColumnIndex: 5,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 42,
+              endRowIndex: 43,
+              startColumnIndex: 5,
+              endColumnIndex: 7,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 43,
+              endRowIndex: 44,
+              startColumnIndex: 5,
+              endColumnIndex: 7,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 44,
+              endRowIndex: 45,
+              startColumnIndex: 5,
+              endColumnIndex: 7,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 45,
+              endRowIndex: 46,
+              startColumnIndex: 5,
               endColumnIndex: 7,
             },
             mergeType: "MERGE_ALL",
@@ -996,95 +1415,234 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
         {
           repeatCell: {
             range: {
-              sheetId: 0,
-              startRowIndex: 11,
-              endRowIndex: 12,
-              startColumnIndex: 0,
-              endColumnIndex: 6,
+              sheetId: 0, // Replace with your sheet ID
+              startRowIndex: 42, // Start from the first row (0-indexed)
+              endRowIndex: 46, // Use a large number to cover all rows (adjust as needed)
+              startColumnIndex: 0, // Column G (0-indexed)
+              endColumnIndex: 7, // Column G (exclusive)
             },
             cell: {
               userEnteredFormat: {
-                // backgroundColor: {
-                //   red: 0.8,
-                //   green: 0.8,
-                //   blue: 0.8,
-                // },
-                // horizontalAlignment: "LEFT",
-
                 textFormat: {
-                  bold: true,
+                  foregroundColor: {
+                    red: 0.6, // Light gray color for the font
+                    green: 0.6,
+                    blue: 0.6,
+                  },
                 },
               },
             },
-            fields: "userEnteredFormat(textFormat.bold)",
-          },
-        },
-        // Set background for "Pos." header
-        {
-          repeatCell: {
-            range: {
-              sheetId: 0,
-              startRowIndex: 13,
-              endRowIndex: 16,
-              startColumnIndex: 3,
-              endColumnIndex: 6,
-            },
-            cell: {
-              userEnteredFormat: {
-                // backgroundColor: {
-                //   red: 0.8,
-                //   green: 0.8,
-                //   blue: 0.8,
-                // },
-                horizontalAlignment: "RIGHT",
-
-                textFormat: {
-                  bold: true,
-                },
-              },
-            },
-            fields: "userEnteredFormat(horizontalAlignment,textFormat.bold)",
+            fields: ",userEnteredFormat.textFormat",
           },
         },
         {
           repeatCell: {
             range: {
-              sheetId: 0,
-              startRowIndex: 4,
-              endRowIndex: 7,
-              startColumnIndex: 4,
-              endColumnIndex: 5,
+              sheetId: 0, // Replace with your sheet ID
+              startRowIndex: 19, // Start from the first row (0-indexed)
+              endRowIndex: 20, // Use a large number to cover all rows (adjust as needed)
+              startColumnIndex: 0, // Column G (0-indexed)
+              endColumnIndex: 7, // Column G (exclusive)
             },
             cell: {
               userEnteredFormat: {
-                // backgroundColor: {
-                //   red: 0.8,
-                //   green: 0.8,
-                //   blue: 0.8,
-                // },
-                horizontalAlignment: "RIGHT",
-
-                // textFormat: {
-                //   bold: true,
-                // },
+                backgroundColor: {
+                  red: 0.8, // Gray color (0.5, 0.5, 0.5 for gray)
+                  green: 0.8,
+                  blue: 0.8,
+                },
+                textFormat: {
+                  bold: true, // Make text bold
+                },
               },
             },
-            fields: "userEnteredFormat(horizontalAlignment)",
+            fields:
+              "userEnteredFormat.backgroundColor,userEnteredFormat.textFormat",
           },
         },
-        // Resize columns for the layout
+        {
+          repeatCell: {
+            range: {
+              sheetId: 0, // Replace with your sheet ID
+              startRowIndex: 32, // Start from the first row (0-indexed)
+              endRowIndex: 33, // Use a large number to cover all rows (adjust as needed)
+              startColumnIndex: 0, // Column G (0-indexed)
+              endColumnIndex: 7, // Column G (exclusive)
+            },
+            cell: {
+              userEnteredFormat: {
+                backgroundColor: {
+                  red: 0.8, // Gray color (0.5, 0.5, 0.5 for gray)
+                  green: 0.8,
+                  blue: 0.8,
+                },
+                textFormat: {
+                  bold: true, // Make text bold
+                },
+              },
+            },
+            fields:
+              "userEnteredFormat.backgroundColor,userEnteredFormat.textFormat",
+          },
+        },
+        {
+          repeatCell: {
+            range: {
+              sheetId: 0, // Replace with your sheet ID
+              startRowIndex: 15, // Start from the first row (0-indexed)
+              endRowIndex: 16, // Use a large number to cover all rows (adjust as needed)
+              startColumnIndex: 0, // Column G (0-indexed)
+              endColumnIndex: 1, // Column G (exclusive)
+            },
+            cell: {
+              userEnteredFormat: {
+                horizontalAlignment: "LEFT", // Align text to the right
+                textFormat: {
+                  bold: true, // Make text bold
+                },
+              },
+            },
+            fields:
+              "userEnteredFormat.horizontalAlignment,userEnteredFormat.textFormat",
+          },
+        },
+
+        {
+          repeatCell: {
+            range: {
+              sheetId: 0, // Replace with your sheet ID
+              startRowIndex: 2, // Start row index of merged cells
+              endRowIndex: 3, // End row index of merged cells
+              startColumnIndex: 0, // Start column index of merged cells
+              endColumnIndex: 6, // End column index of merged cells
+            },
+            cell: {
+              userEnteredFormat: {
+                horizontalAlignment: "LEFT", // Align text to the left
+                textFormat: {
+                  fontSize: 8, // Optional: Adjust font size
+                },
+              },
+            },
+            fields: "userEnteredFormat(horizontalAlignment,textFormat)",
+          },
+        },
+
+        // widths of columns
+        // Set width for column A (0)
         {
           updateDimensionProperties: {
             range: {
-              sheetId: 0,
+              sheetId: 0, // Replace with your sheet ID
               dimension: "COLUMNS",
               startIndex: 0,
+              endIndex: 1,
+            },
+            properties: {
+              pixelSize: 60, // Width for column A
+            },
+            fields: "pixelSize",
+          },
+        },
+        // Set width for column B (1)
+        {
+          updateDimensionProperties: {
+            range: {
+              sheetId: 0, // Replace with your sheet ID
+              dimension: "COLUMNS",
+              startIndex: 1,
+              endIndex: 2,
+            },
+            properties: {
+              pixelSize: 100, // Width for column B
+            },
+            fields: "pixelSize",
+          },
+        },
+        // Set width for column C (2)
+        {
+          updateDimensionProperties: {
+            range: {
+              sheetId: 0, // Replace with your sheet ID
+              dimension: "COLUMNS",
+              startIndex: 2,
+              endIndex: 3,
+            },
+            properties: {
+              pixelSize: 100, // Width for column C
+            },
+            fields: "pixelSize",
+          },
+        },
+        // Set width for column D (3)
+        {
+          updateDimensionProperties: {
+            range: {
+              sheetId: 0, // Replace with your sheet ID
+              dimension: "COLUMNS",
+              startIndex: 3,
+              endIndex: 4,
+            },
+            properties: {
+              pixelSize: 180, // Width for column D
+            },
+            fields: "pixelSize",
+          },
+        },
+        // Set width for column E (4)
+        {
+          updateDimensionProperties: {
+            range: {
+              sheetId: 0, // Replace with your sheet ID
+              dimension: "COLUMNS",
+              startIndex: 4,
+              endIndex: 5,
+            },
+            properties: {
+              pixelSize: 77, // Width for column E
+            },
+            fields: "pixelSize",
+          },
+        },
+        // Set width for column F (5)
+        {
+          updateDimensionProperties: {
+            range: {
+              sheetId: 0, // Replace with your sheet ID
+              dimension: "COLUMNS",
+              startIndex: 5,
               endIndex: 6,
             },
             properties: {
-              pixelSize: 120, // Adjust width based on your needs
+              pixelSize: 69, // Width for column F
             },
             fields: "pixelSize",
+          },
+        },
+        // Set width for column G (6)
+        {
+          updateDimensionProperties: {
+            range: {
+              sheetId: 0, // Replace with your sheet ID
+              dimension: "COLUMNS",
+              startIndex: 6,
+              endIndex: 7,
+            },
+            properties: {
+              pixelSize: 145, // Width for column G
+            },
+            fields: "pixelSize",
+          },
+        },
+        {
+          updateSheetProperties: {
+            properties: {
+              sheetId: 0, // Replace with your sheet ID
+              gridProperties: {
+                hideGridlines: true,
+              },
+            },
+            fields: "gridProperties.hideGridlines",
           },
         },
       ],
@@ -1103,14 +1661,15 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
     },
   });
 
-  const sheetUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=pdf&portrait=true&gid=0&gridlines=false`;
+  const sheetUrlPdf = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=pdf&portrait=true&gid=0&gridlines=false`;
   const obj = await exportFinishedTasks(
     invoiceData.tasks,
     invoiceData.clientName
   );
-  // const sheetUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit#gid=0`;
+  const sheetUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit#gid=0`;
   return {
-    invoice: sheetUrl,
+    invoiceSheet: sheetUrl,
+    invoice: sheetUrlPdf,
     tasks: obj.tasksPdf,
     tasksSheet: obj.tasksGoogleSheet,
   };

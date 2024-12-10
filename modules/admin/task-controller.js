@@ -1089,7 +1089,7 @@ exports.importProjectTasks = async (req, res) => {
         ) {
           // console.log("due date: ", dayjs(row["Due Date"].toString().trim(), "DD.MM.YYYY", true))
           // console.log("Due Date result: ", dayjs(new Date(row["Due Date"].toString().trim())).toDate())
-          checkCSVError = `Make sure due date is given and is valid date YYYY-MM-DD`;
+          checkCSVError = `Make sure due date is given and is valid date DD.MM.YYYY`;
           return;
         }
         const task = {

@@ -23,6 +23,8 @@ const Billings = db.Billing.Billings;
 const freelancerEarnings = db.FreelancerEarning;
 const counter = db.Counters;
 const ProjectTask = db.ProjectTask;
+const FreelancerInvoice = db.FreelancerInvoice;
+
 
 
 exports.clientMonthlyTasks = async (req, res) => {
@@ -120,12 +122,10 @@ exports.testEmail = async (req, res) => {
 const calculateInvoice = async () => {
   // Get the start and end dates for the previous month, ensuring no time component
   const startOfPreviousMonth = dayjs("2024-12-1")
-    .subtract(1, "month")
     .startOf("month")
     .format("YYYY-MM-DD"); // Formats to '2024-10-01'
 
   const endOfPreviousMonth = dayjs("2024-12-1")
-    .subtract(1, "month")
     .endOf("month")
     .format("YYYY-MM-DD"); // Formats to '2024-10-31'
 
@@ -216,10 +216,13 @@ exports.test = async (req, res) => {
   try {
     const tempData = [];
     const earnings = await calculateInvoice();
+    const invoiceCount = await FreelancerInvoice.countDocuments({})
     console.log("earning length: ", earnings.length)
     for (const earning of earnings) {
       let temp = {
-        tasks: earning.earnings.map(item => ({...item.task, role: item.role})),
+        tasks: earning.earnings.map(item => ({ ...item.task, role: item.role })),
+        freelancerId: earning.freelancer._id,
+        invoiceNo: (invoiceCount + 1).toString(),
         creditNo: "2024-10-001",
         date: "2024-10-22",
         performancePeriod: "2024-09-01 to 2024-09-30",
@@ -282,7 +285,7 @@ exports.test = async (req, res) => {
 
       temp.performancePeriod = `${dayjs(startOfPreviousMonthDate).format(
         "DD.MM.YYYY"
-      )} to ${dayjs(endOfPreviousMonthDate).format("DD.MM.YYYY")}`;
+      )}-${dayjs(endOfPreviousMonthDate).format("DD.MM.YYYY")}`;
       temp.clientName = `${earning.freelancer.firstName} ${earning.freelancer.lastName}`;
 
       for (const taskEarning of earning.earnings) {
@@ -312,7 +315,7 @@ exports.test = async (req, res) => {
         vat = result;
         vatDescription = "VAT CY Ltd (19%)";
       }
-      temp.company = earning.freelancer.company;
+      temp.company = earning.freelancer.companyName;
       temp.city = earning.freelancer.city;
       temp.street = earning.freelancer.street;
       temp.vatId = earning.freelancer.vatIdNo;
@@ -329,7 +332,14 @@ exports.test = async (req, res) => {
 
     for (const temp of tempData) {
       const obj = await createInvoiceInGoogleSheets(temp);
+      await FreelancerInvoice.create({
+        freelancer: temp.freelancerId,
+        invoiceSheet: obj.invoiceSheet,
+        tasksSheet: obj.tasksSheet,
+        count: invoiceCount + 1
+      })
       finalData.push({
+        invoiceSheet: obj.invoiceSheet,
         invoice: obj.invoice,
         tasks: obj.tasks,
         tasksSheet: obj.tasksSheet

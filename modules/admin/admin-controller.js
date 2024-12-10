@@ -876,6 +876,11 @@ exports.trafficLightsTask = async (req, res) => {
     }
 
     const ninetyDaysAgo = dayjs().subtract(90, "day").startOf("day").toDate();
+    const allTasks = await ProjectTask.find({}).select("texter,lector,seo,metaLector").exec()
+    const texterIds = allTasks.map(item => item.texter.toString())
+    const lectorIds = allTasks.map(item => item.lectorIds.toString())
+    const seoIds = allTasks.map(item => item.seo.toString())
+    const metaLectorIds = allTasks.map(item => item.metaLector.toString())
     const trafficLights = await TrafficLight.find({
       $or: [
         {
@@ -906,7 +911,32 @@ exports.trafficLightsTask = async (req, res) => {
       };
     });
 
-    const finalData = filteredTasks.map((item) => {
+    const finalFilteredTasks = filteredTasks.map(obj => {
+      const freelancerId = obj.freelancer._id
+      let count = 0
+      if (texterIds.includes(freelancerId)) {
+        count = count + 1
+      }
+      if (lectorIds.includes(freelancerId)) {
+        count = count + 1
+      }
+      if (seoIds.includes(freelancerId)) {
+        count = count + 1
+      }
+      if (metaLectorIds.includes(freelancerId)) {
+        count = count + 1
+      }
+
+      return {
+        ...obj,
+        totalTasks: count
+      }
+
+    })
+
+
+
+    const finalData = finalFilteredTasks.map((item) => {
       return {
         ...item,
         deadlineTasks: item.deadlineTasks.length,
