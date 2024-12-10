@@ -758,10 +758,10 @@ exports.tasksCostDateFilter = async (req, res) => {
 
 exports.freelanerKPI = async (req, res) => {
   try {
-     if (!req.role || req.role.toLowerCase() !== "projectmanger") {
-       res.status(401).send({ message: "Your are not admin" });
-       return;
-     }
+    //  if (!req.role || req.role.toLowerCase() !== "projectmanger") {
+    //    res.status(401).send({ message: "Your are not admin" });
+    //    return;
+    //  }
     const startOfMonth = dayjs().startOf("month").toDate();
     const endOfMonth = dayjs().endOf("month").toDate();
 
@@ -914,17 +914,42 @@ exports.trafficLightsTask = async (req, res) => {
     const finalFilteredTasks = filteredTasks.map(obj => {
       const freelancerId = obj.freelancer._id.toString()
       let count = 0
-      if (texterIds.includes(freelancerId)) {
-        count = count + 1
+      if (obj.role.toLowerCase() === "texter" && texterIds.includes(freelancerId)) {
+        texterIds.forEach(item => {
+          if (item === freelancerId) {
+            count = count + 1
+          }
+        })
       }
-      if (lectorIds.includes(freelancerId)) {
-        count = count + 1
+      if (
+        obj.role.toLowerCase() === "lector" &&
+        lectorIds.includes(freelancerId)
+      ) {
+        lectorIds.forEach((item) => {
+          if (item === freelancerId) {
+            count = count + 1;
+          }
+        });
       }
-      if (seoIds.includes(freelancerId)) {
-        count = count + 1
+      if (
+        obj.role.toLowerCase() === "seo optimizer" &&
+        seoIds.includes(freelancerId)
+      ) {
+        seoIds.forEach((item) => {
+          if (item === freelancerId) {
+            count = count + 1;
+          }
+        });
       }
-      if (metaLectorIds.includes(freelancerId)) {
-        count = count + 1
+      if (
+        obj.role.toLowerCase() === "meta lector" &&
+        metaLectorIds.includes(freelancerId)
+      ) {
+        metaLectorIds.forEach((item) => {
+          if (item === freelancerId) {
+            count = count + 1;
+          }
+        });
       }
 
       return {
