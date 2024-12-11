@@ -11,6 +11,10 @@ router.get("/test", (req, res) => {
   testController.test(req, res);
 });
 
+router.get("/exportTasksSheet", (req, res) => {
+  testController.designFinishedTasksShert(req, res);
+});
+
 router.get("/freelancerInvoice", (req, res) => {
   testController.designFreelancerInvoice(req, res);
 });

@@ -109,32 +109,32 @@ Email.welcomeFreelancer = async (freelancer, language) => {
 Email.taskAssign = async (freelancer, task, role, language) => {
   try {
     let filePath = "";
-    let emailSubject = ''
-     if (language === "en") {
-       filePath = path.join(
-         __dirname,
-         "..",
-         "..",
-         "..",
-         "templates",
-         "freelancers",
-         "english",
-         "taskAssign.html"
-       );
-       emailSubject = `New task assigned: ${task.name} (${task.keyword})`;
-     } else {
-       filePath = path.join(
-         __dirname,
-         "..",
-         "..",
-         "..",
-         "templates",
-         "freelancers",
-         "taskAssign.html"
-       );
-       emailSubject = `Neuer Auftrag zugewiesen: ${task.name} (${task.keyword})`;
-     }
-   
+    let emailSubject = "";
+    if (language === "en") {
+      filePath = path.join(
+        __dirname,
+        "..",
+        "..",
+        "..",
+        "templates",
+        "freelancers",
+        "english",
+        "taskAssign.html"
+      );
+      emailSubject = `New task assigned: ${task.name} (${task.keyword})`;
+    } else {
+      filePath = path.join(
+        __dirname,
+        "..",
+        "..",
+        "..",
+        "templates",
+        "freelancers",
+        "taskAssign.html"
+      );
+      emailSubject = `Neuer Auftrag zugewiesen: ${task.name} (${task.keyword})`;
+    }
+
     // const filePath = path.join(
     //   __dirname,
     //   "..",
@@ -147,7 +147,7 @@ Email.taskAssign = async (freelancer, task, role, language) => {
     //console.log(filePath);
     const data = fs.readFileSync(filePath, "utf8");
     let text = data;
-    
+
     text = text.replace(
       "[DASHBOARD_LINK]",
       "https://driptext-app.vercel.app/freelancer-dashboard"
@@ -189,31 +189,31 @@ Email.taskAssign = async (freelancer, task, role, language) => {
 Email.reminder24Hours = async (freelancer, task, role, language) => {
   try {
     let filePath = "";
-    let emailSubject = ""
-     if (language === "en") {
-       filePath = path.join(
-         __dirname,
-         "..",
-         "..",
-         "..",
-         "templates",
-         "freelancers",
-         "english",
-         "reminder24Hours.html"
-       );
-       emailSubject = `Important: Only 24 hours left for ${task.name} (${task.keyword})`;
-     } else {
-       filePath = path.join(
-         __dirname,
-         "..",
-         "..",
-         "..",
-         "templates",
-         "freelancers",
-         "reminder24Hours.html"
-       );
-       emailSubject = `Wichtig: Nur noch 24h Zeit für ${task.name} (${task.keyword})`;
-     }
+    let emailSubject = "";
+    if (language === "en") {
+      filePath = path.join(
+        __dirname,
+        "..",
+        "..",
+        "..",
+        "templates",
+        "freelancers",
+        "english",
+        "reminder24Hours.html"
+      );
+      emailSubject = `Important: Only 24 hours left for ${task.name} (${task.keyword})`;
+    } else {
+      filePath = path.join(
+        __dirname,
+        "..",
+        "..",
+        "..",
+        "templates",
+        "freelancers",
+        "reminder24Hours.html"
+      );
+      emailSubject = `Wichtig: Nur noch 24h Zeit für ${task.name} (${task.keyword})`;
+    }
     // const filePath = path.join(
     //   __dirname,
     //   "..",
@@ -226,7 +226,7 @@ Email.reminder24Hours = async (freelancer, task, role, language) => {
     //console.log(filePath);
     const data = fs.readFileSync(filePath, "utf8");
     let text = data;
-    
+
     text = text.replace(
       "[DASHBOARD_LINK]",
       "https://driptext-app.vercel.app/freelancer-dashboard"
@@ -268,7 +268,7 @@ Email.reminder24Hours = async (freelancer, task, role, language) => {
 Email.taskInRevision = async (freelancer, task, language) => {
   try {
     let filePath = "";
-    let emailSubject = '';
+    let emailSubject = "";
     if (language === "en") {
       filePath = path.join(
         __dirname,
@@ -305,7 +305,6 @@ Email.taskInRevision = async (freelancer, task, language) => {
     //console.log(filePath);
     const data = fs.readFileSync(filePath, "utf8");
     let text = data;
-   
 
     text = text.replace(/\[TASK_NAME\]/g, task.name);
     text = text.replace(/\[KEYWORD\]/g, task.keyword);
@@ -353,7 +352,7 @@ Email.taskInRevision = async (freelancer, task, language) => {
 Email.finishTask = async (freelancer, task, role, language) => {
   try {
     let filePath = "";
-    let emailSubject = ""
+    let emailSubject = "";
     if (language === "en") {
       filePath = path.join(
         __dirname,
@@ -390,7 +389,6 @@ Email.finishTask = async (freelancer, task, role, language) => {
     //console.log(filePath);
     const data = fs.readFileSync(filePath, "utf8");
     let text = data;
-    
 
     text = text.replace(/\[TASK_NAME\]/g, task.name);
     text = text.replace(/\[KEYWORD\]/g, task.keyword);
@@ -398,13 +396,11 @@ Email.finishTask = async (freelancer, task, role, language) => {
     text = text.replace("[GOOGLE_DOC_LINK]", task.fileLink);
     text = text.replace("[ROLE]", role);
 
-
     // text = text.replace("[EDITOR_NAME]", task.editorName);
     text = text.replace(
       "[DASHBOARD_LINK]",
       "https://driptext-app.vercel.app/freelancer-dashboard"
     );
-    
 
     const params = {
       Source: `DripText <noreply@driptext.de>`,
@@ -434,7 +430,7 @@ Email.finishTask = async (freelancer, task, role, language) => {
 Email.monthlyInvoice = async (obj, invoiceLink, tasksLink, language) => {
   try {
     let filePath = "";
-    let emailSubject = ""
+    let emailSubject = "";
     const lastMonth = dayjs().subtract(1, "month").format("MMMM YYYY");
     if (language === "en") {
       filePath = path.join(
@@ -472,14 +468,14 @@ Email.monthlyInvoice = async (obj, invoiceLink, tasksLink, language) => {
     //console.log(filePath);
     const data = fs.readFileSync(filePath, "utf8");
     let text = data;
-   
 
-     text = text.replace(/\[MONTH\]/g, lastMonth);
+    text = text.replace(/\[MONTH\]/g, lastMonth);
 
-     text = text.replace("[INVOICE_LINK]", invoiceLink);
-     text = text.replace("[TASKS_LINK]", tasksLink);
-     text = text.replace(/\[FIRST_NAME\]/g, obj.name);
-   
+    text = text.replace("[INVOICE_LINK]", invoiceLink.pdf);
+    text = text.replace("[TASKS_LINK]", tasksLink.pdf);
+    text = text.replace("[INVOICE_SHEET_LINK]", invoiceLink.sheet);
+    text = text.replace("[TASKS_SHEET_LINK]", tasksLink.sheet);
+    text = text.replace(/\[FIRST_NAME\]/g, obj.name);
 
     const params = {
       Source: `DripText <noreply@driptext.de>`,

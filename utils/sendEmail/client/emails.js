@@ -5,6 +5,7 @@ const nodeMailer = require("../../nodeMailer");
 const jwt = require("../../jwt");
 const crypto = require("../../../utils/crypto");
 const handlebars = require("handlebars");
+const dayjs = require("dayjs")
 
 const path = require("path");
 const baseURL = secrets.frontend_URL;
@@ -336,10 +337,12 @@ Email.workStarted = async (email, obj, language) => {
   }
 };
 
-Email.montlyText = async (language) => {
+Email.montlyText = async (obj,tasksLinks,language) => {
     try {
-        let filePath = "";
-        let emailSubject = ''
+      let filePath = "";
+      let emailSubject = "";
+      const lastMonth = dayjs().subtract(1, "month").format("MMMM YYYY");
+
       if (language === "en") {
         filePath = path.join(
           __dirname,
@@ -351,7 +354,7 @@ Email.montlyText = async (language) => {
           "english",
           "monthlyTexts.html"
         );
-          emailSubject = `All texts for [PROJECT_DOMAIN] for [CURRENT MONTH] completed`;
+        emailSubject = `All texts for ${lastMonth} completed`;
       } else {
         filePath = path.join(
           __dirname,
@@ -362,7 +365,7 @@ Email.montlyText = async (language) => {
           "client",
           "monthlyTexts.html"
         );
-          emailSubject = `Alle Texte für [PROJECT_DOMAIN] für [CURRENT MONTH] abgeschlossen`;
+        emailSubject = `Alle Texte für ${lastMonth} abgeschlossen`;
       }
       // const filePath = path.join(
       //   __dirname,
@@ -376,8 +379,14 @@ Email.montlyText = async (language) => {
       //console.log(filePath);
       const data = fs.readFileSync(filePath, "utf8");
       let text = data;
+      // Format the tasksLinks into a string of anchor tags
+      const formattedLinks = tasksLinks
+        .map((link) => `<a href="${link}" target="_blank">${link}</a>`)
+        .join("<br>");
 
-      text = text.replace(/\[PROJECT_NAME\]/g, obj.projectName);
+      text = text.replace(/\[CURRENT_MONTH\]/g, lastMonth);
+      text = text.replace(/\[CLIENT_FIRST_NAME\]/g, obj.firstName);
+      text = text.replace(/\[TASKS_LINKS\]/g, formattedLinks);
 
       text = text.replace(
         "[DASHBOARD_LINK]",
@@ -387,7 +396,7 @@ Email.montlyText = async (language) => {
       const params = {
         Source: `DripText <noreply@driptext.de>`,
         Destination: {
-          ToAddresses: [email],
+          ToAddresses: [obj.email],
           // CcAddresses: ["backoffice@driptext.de"],
         },
         Message: {

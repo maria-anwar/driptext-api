@@ -10,6 +10,7 @@ const {
   exportFinishedTasks,
   freelancerInvoiceSpreadSheet,
   getColumnWidth,
+  designFinishExportTasksSheet,
 } = require("../../utils/googleService/actions");
 const { getSubscriptionInvoice } = require("../../utils/chargebee/actions");
 const freelancerEmails = require("../../utils/sendEmail/freelancer/emails");
@@ -24,57 +25,83 @@ const freelancerEarnings = db.FreelancerEarning;
 const counter = db.Counters;
 const ProjectTask = db.ProjectTask;
 const FreelancerInvoice = db.FreelancerInvoice;
+const FreelancrPrice = db.FreelancerPrice;
 
 
+exports.designFinishedTasksShert = async (req, res) => {
+  try {
+
+    const data = await designFinishExportTasksSheet()
+    // const data = await getColumnWidth()
+
+
+    res.status(200).send({message: "Success", data})
+    
+  } catch (error) {
+    res.status(500).send({message: error?.message || "Something went wrong"})
+  }
+}
 
 exports.clientMonthlyTasks = async (req, res) => {
   try {
-    // Get the start of the previous month
-    // const startOfMonth = dayjs().subtract(1, "month").startOf("month").toDate();
-    const startOfMonth = dayjs().startOf("month").toDate();
+    // Get the start and end date for the previous month using dayjs
+    // const startOfPreviousMonth = dayjs()
+    //   .subtract(1, "month")
+    //   .startOf("month")
+    //   .toDate();
+    // const endOfPreviousMonth = dayjs()
+    //   .subtract(1, "month")
+    //   .endOf("month")
+    //   .toDate();
+     const startOfPreviousMonth = dayjs()
+       .startOf("month")
+       .toDate();
+     const endOfPreviousMonth = dayjs()
+       .endOf("month")
+       .toDate();
+    
+    console.log("start of month: ", startOfPreviousMonth)
+    console.log("end of month: ", endOfPreviousMonth)
 
-
-    // Get the end of the previous month
-    // const endOfMonth = dayjs().subtract(1, "month").endOf("month").toDate();
-    const endOfMonth = dayjs().endOf("month").toDate();
-
-    const pipeline = [
-      // Match tasks where finishedDate is not null and is within the desired range
+    const data = await ProjectTask.aggregate([
+      // Filter tasks with a non-null 'finishedDate' within the previous month
       {
         $match: {
-          finishedDate: { $ne: null, $gte: startOfMonth, $lte: endOfMonth },
+          status: "Final",
+          finishedDate: { $ne: null },
+          finishedDate: {
+            $gte: startOfPreviousMonth,
+            $lte: endOfPreviousMonth,
+          },
         },
       },
-      // Group tasks by user and collect task details
+      // Group by user (_id)
       {
         $group: {
-          _id: "$user", // Group by user ID
-          tasks: { $push: "$$ROOT" }, // Optional: collect full task details
-          taskCount: { $sum: 1 }, // Optional: count tasks
+          _id: "$user", // Grouping by user _id
+          tasks: { $push: "$$ROOT" }, // Push the full task document into the 'tasks' array
         },
       },
-      // Optionally lookup user details
+      // Populate the user details (as a single object)
       {
         $lookup: {
-          from: "users", // Replace with your users collection name
-          localField: "_id",
-          foreignField: "_id",
-          as: "userDetails",
+          from: "users", // Correct the collection name to 'users' (or adjust it to your actual collection name)
+          localField: "_id", // We're joining on the grouped user _id
+          foreignField: "_id", // The field in the 'users' collection we're matching on
+          as: "userDetails", // The result will be an array, but it will have only one user document if the match is successful
         },
       },
-      // Format the result
+      // Optionally, you can flatten the userDetails array to get the first element as an object instead of an array
       {
-        $project: {
-          _id: 0, // Remove MongoDB's default _id field
-          user: { $arrayElemAt: ["$userDetails", 0] }, // Include user details
-          tasks: 1,
-          taskCount: 1,
+        $addFields: {
+          userDetails: { $arrayElemAt: ["$userDetails", 0] }, // Flatten to get a single user object
         },
       },
-    ];
+    ]);
 
-    const tasksGroupedByUser = await ProjectTask.aggregate(pipeline).exec();
-    res.status(200).send({message: "Success", data: tasksGroupedByUser})
+    console.log(data);
+
+    res.status(200).send({ message: "Success", data: data });
   } catch (error) {
     res.status(500).send({message: error?.message || "Something went wrong"})
   }
@@ -217,10 +244,33 @@ exports.test = async (req, res) => {
     const tempData = [];
     const earnings = await calculateInvoice();
     const invoiceCount = await FreelancerInvoice.countDocuments({})
+    const freelancerPrice = await FreelancrPrice.findOne({})
+    console.log("freelancer price: ", freelancerPrice)
+    const texterPrice = freelancerPrice?.texter || 0.07
+    const lectorPrice = freelancerPrice?.lector || 0.06
+    const seoPrice = freelancerPrice?.seoOptimizer || 0.05
+    const metaLectorPrice = freelancerPrice?.metaLector || 0.06
     console.log("earning length: ", earnings.length)
     for (const earning of earnings) {
+      
       let temp = {
-        tasks: earning.earnings.map(item => ({ ...item.task, role: item.role })),
+        tasks: earning.earnings.map(item => {
+          let pricePerWord = 0
+          if (item.role.toLowerCase() === "texter") {
+            pricePerWord = texterPrice
+          }
+          if (item.role.toLowerCase() === "lector") {
+            pricePerWord = lectorPrice
+          }
+          if (item.role.toLowerCase() === "seo optimizer") {
+            pricePerWord = seoPrice;
+          }
+          if (item.role.toLowerCase() === "meta lector") {
+            pricePerWord = metaLectorPrice;
+          }
+
+          return { ...item.task, role: item.role, pricePerWord: pricePerWord.toString(), billedWords: Number(item.billedWords).toFixed(2), total: Number(item.price).toFixed(2) };
+        }),
         freelancerId: earning.freelancer._id,
         invoiceNo: (invoiceCount + 1).toString(),
         creditNo: "2024-10-001",

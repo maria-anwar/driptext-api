@@ -67,6 +67,10 @@ class Server {
     cron.schedule("0 0 1 * *", () => {
       cornJobs.monthlyFreelancingInvoicing();
     });
+    // 0 0 1 * *
+    cron.schedule("0 0 1 * *", () => {
+      cornJobs.clientMonthlyTasks();
+    });
   }
 
   async appExecute() {

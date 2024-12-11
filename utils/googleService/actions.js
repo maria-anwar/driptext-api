@@ -63,18 +63,411 @@ exports.getColumnWidth = async () => {
   try {
     const sheetsClient = google.sheets({ version: "v4", auth });
     const response = await sheetsClient.spreadsheets.get({
-      spreadsheetId: "18Dgu3yK2pVvRp6t-zUAu7YNuIOw0qR7SgWaeDAdgWVU",
-      ranges: [`2024-4-139_Invoice!A1:G1`], // Replace `Sheet1!A1:G1` with your range.
+      spreadsheetId: "11E4_b0qht-idFECXwhrvtYzJXxXb1qZkWRneSegV-FM",
+      ranges: [`2024-4-139_Attachment`], // Replace `Sheet1!A1:G1` with your range.
       fields: `sheets.data.columnMetadata.pixelSize`,
     });
 
     // Check and log the width of the desired column.
     // const columnWidth =
     //   response.result.sheets[0].data[0].columnMetadata[columnIndex].pixelSize;
-    return response
+    return response;
   } catch (error) {
     console.log("get column width error: ", error);
   }
+};
+
+exports.designFinishExportTasksSheet = async () => {
+  console.log("inside export finished tasks function");
+  const lastMonth = dayjs().subtract(1, "month").format("MMMM YYYY");
+
+  // Step 1: Create the Google Sheet
+  const request = {
+    resource: {
+      properties: {
+        title: `export tasks sheet`,
+      },
+    },
+    fields: "spreadsheetId",
+  };
+
+  const createResponse = await sheets.spreadsheets.create(request);
+  const spreadsheetId = createResponse.data.spreadsheetId;
+
+  // Step 2: Prepare Task Data
+
+  // Prepare data with heading
+  const values = [
+    ["TASKS", "", "", "INFO", "", "SETTLEMENT", "", "",""],
+    [
+      "Date",
+      "ID",
+      "Status",
+      "Keyword",
+      "Req. Words",
+      "Bill. Words",
+      "Role",
+      "Price Per Word",
+      "Total",
+    ],
+  ];
+
+  // Step 3: Update the Google Sheet with data
+  const updateRequest = {
+    spreadsheetId,
+    range: "Sheet1!A1",
+    valueInputOption: "RAW",
+    resource: { values },
+  };
+
+  await sheets.spreadsheets.values.update(updateRequest);
+
+  // Step 4: Apply Bold Formatting to the Header Row
+  const batchUpdateRequest = {
+    spreadsheetId,
+    resource: {
+      requests: [
+        // removing other cells
+        {
+          deleteDimension: {
+            range: {
+              sheetId: 0, // Assuming it's the first sheet; replace with your sheet ID
+              dimension: "COLUMNS",
+              startIndex: 9, // Column H (0-indexed)
+            },
+          },
+        },
+        // Every cell of sheet text wrap
+        {
+          repeatCell: {
+            range: {
+              sheetId: 0, // Replace with your sheet ID
+            },
+            cell: {
+              userEnteredFormat: {
+                wrapStrategy: "WRAP", // Enable text wrapping
+              },
+            },
+            fields: "userEnteredFormat.wrapStrategy",
+          },
+        },
+
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 0,
+              endRowIndex: 1,
+              startColumnIndex: 0,
+              endColumnIndex: 3,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 0,
+              endRowIndex: 1,
+              startColumnIndex: 3,
+              endColumnIndex: 5,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 0,
+              endRowIndex: 1,
+              startColumnIndex: 5,
+              endColumnIndex: 9,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+        {
+          repeatCell: {
+            range: {
+              sheetId: 0, // Replace with your sheet ID
+              startRowIndex: 0, // Adjust the starting row index
+              endRowIndex: 1, // Adjust the ending row index
+              startColumnIndex: 0, // Adjust the starting column index
+              endColumnIndex: 3, // Adjust the ending column index
+            },
+            cell: {
+              userEnteredFormat: {
+                backgroundColor: {
+                  red: 1.0,
+                  green: 0.0,
+                  blue: 0.0,
+                },
+                horizontalAlignment: "CENTER",
+                textFormat: {
+                  bold: true,
+                  foregroundColor: {
+                    red: 1.0,
+                    green: 1.0,
+                    blue: 1.0,
+                  },
+                },
+              },
+            },
+            fields:
+              "userEnteredFormat(backgroundColor, textFormat.bold, textFormat.foregroundColor, horizontalAlignment)",
+          },
+        },
+        {
+          repeatCell: {
+            range: {
+              sheetId: 0, // Replace with your sheet ID
+              startRowIndex: 0, // Adjust the starting row index
+              endRowIndex: 1, // Adjust the ending row index
+              startColumnIndex: 3, // Adjust the starting column index
+              endColumnIndex: 5, // Adjust the ending column index
+            },
+            cell: {
+              userEnteredFormat: {
+                backgroundColor: {
+                  red: 0.5,
+                  green: 0.5,
+                  blue: 0.5,
+                },
+                horizontalAlignment: "CENTER",
+                textFormat: {
+                  bold: true,
+                  foregroundColor: {
+                    red: 1.0,
+                    green: 1.0,
+                    blue: 1.0,
+                  },
+                },
+              },
+            },
+            fields:
+              "userEnteredFormat(backgroundColor, textFormat.bold, textFormat.foregroundColor, horizontalAlignment)",
+          },
+        },
+        {
+          repeatCell: {
+            range: {
+              sheetId: 0, // Replace with your sheet ID
+              startRowIndex: 0, // Adjust the starting row index
+              endRowIndex: 1, // Adjust the ending row index
+              startColumnIndex: 5, // Adjust the starting column index
+              endColumnIndex: 8, // Adjust the ending column index
+            },
+            cell: {
+              userEnteredFormat: {
+                backgroundColor: {
+                  red: 0.0,
+                  green: 0.0,
+                  blue: 1.0,
+                },
+                horizontalAlignment: "CENTER",
+                textFormat: {
+                  bold: true,
+                  foregroundColor: {
+                    red: 1.0,
+                    green: 1.0,
+                    blue: 1.0,
+                  },
+                },
+              },
+            },
+            fields:
+              "userEnteredFormat(backgroundColor, textFormat.bold, textFormat.foregroundColor, horizontalAlignment)",
+          },
+        },
+        {
+          repeatCell: {
+            range: {
+              sheetId: 0, // Replace with your sheet ID
+              startRowIndex: 1, // Adjust the starting row index
+              endRowIndex: 2, // Adjust the ending row index
+              startColumnIndex: 0, // Adjust the starting column index
+              endColumnIndex: 9, // Adjust the ending column index
+            },
+            cell: {
+              userEnteredFormat: {
+                backgroundColor: {
+                  red: 1,
+                  green: 1,
+                  blue: 1,
+                },
+                horizontalAlignment: "CENTER",
+                textFormat: {
+                  bold: true,
+                },
+              },
+            },
+            fields:
+              "userEnteredFormat(backgroundColor, textFormat.bold, horizontalAlignment)",
+          },
+        },
+        // Column C Background Color
+        {
+          repeatCell: {
+            range: {
+              sheetId: 0,
+              startColumnIndex: 2,
+              endColumnIndex: 3,
+              startRowIndex: 1,
+            },
+            cell: {
+              userEnteredFormat: {
+                backgroundColor: {
+                  red: 0.9,
+                  green: 0.9,
+                  blue: 0.9,
+                },
+              },
+            },
+            fields: "userEnteredFormat(backgroundColor)",
+          },
+        },
+
+        // Adjusting column widdth
+        {
+          updateDimensionProperties: {
+            range: {
+              sheetId: 0, // Replace with your sheet ID
+              dimension: "COLUMNS",
+              startIndex: 0,
+              endIndex: 1,
+            },
+            properties: {
+              pixelSize: 112, // Width for column B
+            },
+            fields: "pixelSize",
+          },
+        },
+        {
+          updateDimensionProperties: {
+            range: {
+              sheetId: 0, // Replace with your sheet ID
+              dimension: "COLUMNS",
+              startIndex: 1,
+              endIndex: 2,
+            },
+            properties: {
+              pixelSize: 118, // Width for column B
+            },
+            fields: "pixelSize",
+          },
+        },
+        {
+          updateDimensionProperties: {
+            range: {
+              sheetId: 0, // Replace with your sheet ID
+              dimension: "COLUMNS",
+              startIndex: 2,
+              endIndex: 3,
+            },
+            properties: {
+              pixelSize: 186, // Width for column B
+            },
+            fields: "pixelSize",
+          },
+        },
+        {
+          updateDimensionProperties: {
+            range: {
+              sheetId: 0, // Replace with your sheet ID
+              dimension: "COLUMNS",
+              startIndex: 3,
+              endIndex: 4,
+            },
+            properties: {
+              pixelSize: 493, // Width for column B
+            },
+            fields: "pixelSize",
+          },
+        },
+        {
+          updateDimensionProperties: {
+            range: {
+              sheetId: 0, // Replace with your sheet ID
+              dimension: "COLUMNS",
+              startIndex: 4,
+              endIndex: 5,
+            },
+            properties: {
+              pixelSize: 100, // Width for column B
+            },
+            fields: "pixelSize",
+          },
+        },
+        {
+          updateDimensionProperties: {
+            range: {
+              sheetId: 0, // Replace with your sheet ID
+              dimension: "COLUMNS",
+              startIndex: 5,
+              endIndex: 6,
+            },
+            properties: {
+              pixelSize: 100, // Width for column B
+            },
+            fields: "pixelSize",
+          },
+        },
+        {
+          updateDimensionProperties: {
+            range: {
+              sheetId: 0, // Replace with your sheet ID
+              dimension: "COLUMNS",
+              startIndex: 6,
+              endIndex: 7,
+            },
+            properties: {
+              pixelSize: 100, // Width for column B
+            },
+            fields: "pixelSize",
+          },
+        },
+        {
+          updateDimensionProperties: {
+            range: {
+              sheetId: 0, // Replace with your sheet ID
+              dimension: "COLUMNS",
+              startIndex: 7,
+              endIndex: 8,
+            },
+            properties: {
+              pixelSize: 100, // Width for column B
+            },
+            fields: "pixelSize",
+          },
+        },
+      ],
+    },
+  };
+
+  await sheets.spreadsheets.batchUpdate(batchUpdateRequest);
+
+  // Step 5: Make the Google Sheet Publicly Accessible
+  const driveClient = google.drive({ version: "v3", auth });
+  await driveClient.permissions.create({
+    fileId: spreadsheetId,
+    resource: {
+      role: "reader",
+      type: "anyone",
+    },
+  });
+
+  // Step 6: Export Links
+  const tasksGoogleSheet = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`;
+  const tasksPdf = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=pdf&portrait=true&gid=0&gridlines=false`;
+
+  return {
+    tasksPdf,
+    tasksGoogleSheet,
+  };
 };
 
 exports.freelancerInvoiceSpreadSheet = async (spreadsheetIddd) => {
@@ -603,10 +996,7 @@ exports.freelancerInvoiceSpreadSheet = async (spreadsheetIddd) => {
             },
             cell: {
               userEnteredFormat: {
-                
                 textFormat: {
-                 
-                 
                   foregroundColor: {
                     red: 0.6, // Light gray color for the font
                     green: 0.6,
@@ -615,8 +1005,7 @@ exports.freelancerInvoiceSpreadSheet = async (spreadsheetIddd) => {
                 },
               },
             },
-            fields:
-              ",userEnteredFormat.textFormat",
+            fields: ",userEnteredFormat.textFormat",
           },
         },
         {
@@ -853,8 +1242,8 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
   });
 
   const spreadsheetId = createSheetResponse.data.spreadsheetId;
-  let vatName = ''
-  let vatDescription = ''
+  let vatName = "";
+  let vatDescription = "";
 
   if (invoiceData.vat === 0) {
     vatName = "0 %VAT";
@@ -862,7 +1251,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
       "No VAT accoroding to Reverse-Charge. Payment is due within 7 days from the date of this invoice.";
   }
   if (invoiceData.vat > 0) {
-    vatName = "19% VAT"
+    vatName = "19% VAT";
     vatDescription = "VAT CY Ltd (19%)";
   }
 
@@ -1743,32 +2132,34 @@ const exportFinishedTasks = async (tasks, freelancerName) => {
   // Step 2: Prepare Task Data
   const taskData = tasks.map((task, index) => [
     task.finishedDate ? dayjs(task.finishedDate).format("DD.MM.YYYY") : "",
-    task.role,
-    task.keywords || "",
-    task.status || "",
-    task.type || "",
-    task.desiredNumberOfWords || "",
-    task.actualNumberOfWords || "",
-    task?.calculatedWords,
+    task?.taskName || "",
+    task?.status || "",
+    task?.keywords || "",
+    task?.desiredNumberOfWords || "",
+    task?.billedWords || "",
+    task?.role || "",
+    task?.pricePerWord || "",
+    task?.total || ""
   ]);
+  const endRowIndexForColumnC = taskData.length + 2
 
   const title = `Finished Tasks In ${lastMonth} By ${freelancerName}`;
 
   // Prepare data with heading
   const values = [
-    [title],
-    [],
+    ["TASKS", "", "", "INFO", "", "SETTLEMENT", "", "", ""],
     [
-      "Finished Date",
-      "Role",
-      "Keywords",
+      "Date",
+      "ID",
       "Status",
-      "Type",
-      "Expec. Words",
-      "Actual Words",
-      "Billed Words",
-    ], // Headers
-    ...taskData,
+      "Keyword",
+      "Req. Words",
+      "Bill. Words",
+      "Role",
+      "Price Per Word",
+      "Total",
+    ],
+    ...taskData
   ];
 
   // Step 3: Update the Google Sheet with data
@@ -1786,15 +2177,65 @@ const exportFinishedTasks = async (tasks, freelancerName) => {
     spreadsheetId,
     resource: {
       requests: [
-        // Merge cells in the first row to span all columns
+        // removing other cells
+        {
+          deleteDimension: {
+            range: {
+              sheetId: 0, // Assuming it's the first sheet; replace with your sheet ID
+              dimension: "COLUMNS",
+              startIndex: 9, // Column H (0-indexed)
+            },
+          },
+        },
+        // Every cell of sheet text wrap
+        {
+          repeatCell: {
+            range: {
+              sheetId: 0, // Replace with your sheet ID
+            },
+            cell: {
+              userEnteredFormat: {
+                wrapStrategy: "WRAP", // Enable text wrapping
+              },
+            },
+            fields: "userEnteredFormat.wrapStrategy",
+          },
+        },
+
         {
           mergeCells: {
             range: {
-              sheetId: 0, // Default sheet is Sheet1 with ID 0
-              startRowIndex: 0, // Title row
+              sheetId: 0,
+              startRowIndex: 0,
               endRowIndex: 1,
-              startColumnIndex: 0, // Start from the first column
-              endColumnIndex: 8, // Adjust this to match the number of columns (8 for example)
+              startColumnIndex: 0,
+              endColumnIndex: 3,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 0,
+              endRowIndex: 1,
+              startColumnIndex: 3,
+              endColumnIndex: 5,
+            },
+            mergeType: "MERGE_ALL",
+          },
+        },
+
+        {
+          mergeCells: {
+            range: {
+              sheetId: 0,
+              startRowIndex: 0,
+              endRowIndex: 1,
+              startColumnIndex: 5,
+              endColumnIndex: 9,
             },
             mergeType: "MERGE_ALL",
           },
@@ -1802,72 +2243,256 @@ const exportFinishedTasks = async (tasks, freelancerName) => {
         {
           repeatCell: {
             range: {
-              sheetId: 0,
-              startRowIndex: 0, // Title row after merging
-              endRowIndex: 1,
-              startColumnIndex: 0,
-              endColumnIndex: 8, // Same as the number of columns to apply format
+              sheetId: 0, // Replace with your sheet ID
+              startRowIndex: 0, // Adjust the starting row index
+              endRowIndex: 1, // Adjust the ending row index
+              startColumnIndex: 0, // Adjust the starting column index
+              endColumnIndex: 3, // Adjust the ending column index
             },
             cell: {
               userEnteredFormat: {
+                backgroundColor: {
+                  red: 1.0,
+                  green: 0.0,
+                  blue: 0.0,
+                },
                 horizontalAlignment: "CENTER",
-                wrapStrategy: "WRAP",
                 textFormat: {
                   bold: true,
-                  fontSize: 16, // Adjust font size as needed
+                  foregroundColor: {
+                    red: 1.0,
+                    green: 1.0,
+                    blue: 1.0,
+                  },
                 },
-              },
-              userEnteredValue: {
-                stringValue: title,
               },
             },
             fields:
-              "userEnteredFormat(horizontalAlignment, wrapStrategy, textFormat), userEnteredValue",
+              "userEnteredFormat(backgroundColor, textFormat.bold, textFormat.foregroundColor, horizontalAlignment)",
           },
         },
         {
           repeatCell: {
             range: {
-              sheetId: 0,
-              startRowIndex: 2, // Header row
-              endRowIndex: 3,
-              startColumnIndex: 0,
-              endColumnIndex: 8, // Apply to header columns as needed
+              sheetId: 0, // Replace with your sheet ID
+              startRowIndex: 0, // Adjust the starting row index
+              endRowIndex: 1, // Adjust the ending row index
+              startColumnIndex: 3, // Adjust the starting column index
+              endColumnIndex: 5, // Adjust the ending column index
             },
             cell: {
               userEnteredFormat: {
+                backgroundColor: {
+                  red: 0.5,
+                  green: 0.5,
+                  blue: 0.5,
+                },
                 horizontalAlignment: "CENTER",
-                wrapStrategy: "WRAP",
                 textFormat: {
                   bold: true,
-                  fontSize: 10,
+                  foregroundColor: {
+                    red: 1.0,
+                    green: 1.0,
+                    blue: 1.0,
+                  },
                 },
               },
             },
             fields:
-              "userEnteredFormat(horizontalAlignment, wrapStrategy, textFormat)",
+              "userEnteredFormat(backgroundColor, textFormat.bold, textFormat.foregroundColor, horizontalAlignment)",
           },
         },
         {
           repeatCell: {
             range: {
-              sheetId: 0,
-              startRowIndex: 3, // Start from the first task row
-              endRowIndex: values.length,
-              startColumnIndex: 0,
-              endColumnIndex: 8, // Adjust this if you have more columns
+              sheetId: 0, // Replace with your sheet ID
+              startRowIndex: 0, // Adjust the starting row index
+              endRowIndex: 1, // Adjust the ending row index
+              startColumnIndex: 5, // Adjust the starting column index
+              endColumnIndex: 8, // Adjust the ending column index
             },
             cell: {
               userEnteredFormat: {
+                backgroundColor: {
+                  red: 0.0,
+                  green: 0.0,
+                  blue: 1.0,
+                },
                 horizontalAlignment: "CENTER",
-                wrapStrategy: "WRAP",
                 textFormat: {
-                  fontSize: 10, // Adjust font size as needed
+                  bold: true,
+                  foregroundColor: {
+                    red: 1.0,
+                    green: 1.0,
+                    blue: 1.0,
+                  },
                 },
               },
             },
             fields:
-              "userEnteredFormat(horizontalAlignment, wrapStrategy, textFormat)",
+              "userEnteredFormat(backgroundColor, textFormat.bold, textFormat.foregroundColor, horizontalAlignment)",
+          },
+        },
+        {
+          repeatCell: {
+            range: {
+              sheetId: 0, // Replace with your sheet ID
+              startRowIndex: 1, // Adjust the starting row index
+              endRowIndex: 2, // Adjust the ending row index
+              startColumnIndex: 0, // Adjust the starting column index
+              endColumnIndex: 9, // Adjust the ending column index
+            },
+            cell: {
+              userEnteredFormat: {
+                backgroundColor: {
+                  red: 1,
+                  green: 1,
+                  blue: 1,
+                },
+                horizontalAlignment: "CENTER",
+                textFormat: {
+                  bold: true,
+                },
+              },
+            },
+            fields:
+              "userEnteredFormat(backgroundColor, textFormat.bold, horizontalAlignment)",
+          },
+        },
+        // Column C Background Color
+        {
+          repeatCell: {
+            range: {
+              sheetId: 0,
+              startColumnIndex: 2,
+              endColumnIndex: 3,
+              startRowIndex: 1,
+              endRowIndex: endRowIndexForColumnC,
+            },
+            cell: {
+              userEnteredFormat: {
+                backgroundColor: {
+                  red: 0.9,
+                  green: 0.9,
+                  blue: 0.9,
+                },
+              },
+            },
+            fields: "userEnteredFormat(backgroundColor)",
+          },
+        },
+
+        // Adjusting column widdth
+        {
+          updateDimensionProperties: {
+            range: {
+              sheetId: 0, // Replace with your sheet ID
+              dimension: "COLUMNS",
+              startIndex: 0,
+              endIndex: 1,
+            },
+            properties: {
+              pixelSize: 112, // Width for column B
+            },
+            fields: "pixelSize",
+          },
+        },
+        {
+          updateDimensionProperties: {
+            range: {
+              sheetId: 0, // Replace with your sheet ID
+              dimension: "COLUMNS",
+              startIndex: 1,
+              endIndex: 2,
+            },
+            properties: {
+              pixelSize: 118, // Width for column B
+            },
+            fields: "pixelSize",
+          },
+        },
+        {
+          updateDimensionProperties: {
+            range: {
+              sheetId: 0, // Replace with your sheet ID
+              dimension: "COLUMNS",
+              startIndex: 2,
+              endIndex: 3,
+            },
+            properties: {
+              pixelSize: 186, // Width for column B
+            },
+            fields: "pixelSize",
+          },
+        },
+        {
+          updateDimensionProperties: {
+            range: {
+              sheetId: 0, // Replace with your sheet ID
+              dimension: "COLUMNS",
+              startIndex: 3,
+              endIndex: 4,
+            },
+            properties: {
+              pixelSize: 493, // Width for column B
+            },
+            fields: "pixelSize",
+          },
+        },
+        {
+          updateDimensionProperties: {
+            range: {
+              sheetId: 0, // Replace with your sheet ID
+              dimension: "COLUMNS",
+              startIndex: 4,
+              endIndex: 5,
+            },
+            properties: {
+              pixelSize: 100, // Width for column B
+            },
+            fields: "pixelSize",
+          },
+        },
+        {
+          updateDimensionProperties: {
+            range: {
+              sheetId: 0, // Replace with your sheet ID
+              dimension: "COLUMNS",
+              startIndex: 5,
+              endIndex: 6,
+            },
+            properties: {
+              pixelSize: 100, // Width for column B
+            },
+            fields: "pixelSize",
+          },
+        },
+        {
+          updateDimensionProperties: {
+            range: {
+              sheetId: 0, // Replace with your sheet ID
+              dimension: "COLUMNS",
+              startIndex: 6,
+              endIndex: 7,
+            },
+            properties: {
+              pixelSize: 100, // Width for column B
+            },
+            fields: "pixelSize",
+          },
+        },
+        {
+          updateDimensionProperties: {
+            range: {
+              sheetId: 0, // Replace with your sheet ID
+              dimension: "COLUMNS",
+              startIndex: 7,
+              endIndex: 8,
+            },
+            properties: {
+              pixelSize: 100, // Width for column B
+            },
+            fields: "pixelSize",
           },
         },
       ],

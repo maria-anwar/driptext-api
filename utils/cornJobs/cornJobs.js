@@ -17,6 +17,8 @@ const Freelancers = db.Freelancer;
 const freelancerEarnings = db.FreelancerEarning;
 const TrafficLight = db.TrafficLight;
 const Language = db.Language;
+const FreelancerInvoice = db.FreelancerInvoice;
+const FreelancrPrice = db.FreelancerPrice;
 
 const onBoardingReminder = async () => {
   try {
@@ -41,7 +43,7 @@ const onBoardingReminder = async () => {
             item.user.email,
             {
               projectDomain: item.projectName,
-              firstName: user.firstName
+              firstName: user.firstName,
             },
             userLanguage?.language || "de"
           );
@@ -142,18 +144,21 @@ const taskDeadlineCheck = async () => {
             { $unwind: "$role" }, // Unwind to treat each role as a separate document
             { $match: { "role.title": "ProjectManger" } }, // Filter for specific title
           ]);
-          const project = await Project.findOne({_id: task.project})
+          const project = await Project.findOne({ _id: task.project });
           for (const admin of admins) {
-            const userLanguage = await Language.findOne({ userId: admin._id })
-            
-            adminEmails.assignFreelancer48Hours(admin.email, {
-              freelancerName: `${prevFreelacer.firstName} ${prevFreelacer.lastName}`,
-              freelancerRole: "Texter",
-              taskName: task.taskName,
-              taskKeyword: task.keywords,
-              projectDomain: project?.projectName
+            const userLanguage = await Language.findOne({ userId: admin._id });
 
-            },userLanguage?.language || "de")
+            adminEmails.assignFreelancer48Hours(
+              admin.email,
+              {
+                freelancerName: `${prevFreelacer.firstName} ${prevFreelacer.lastName}`,
+                freelancerRole: "Texter",
+                taskName: task.taskName,
+                taskKeyword: task.keywords,
+                projectDomain: project?.projectName,
+              },
+              userLanguage?.language || "de"
+            );
           }
         } else if (hoursDifference >= 24) {
           const freelancer = await Freelancers.findOne({ _id: task.texter });
@@ -190,36 +195,36 @@ const taskDeadlineCheck = async () => {
             },
             { new: true }
           );
-            const admins = await Users.aggregate([
-              {
-                $lookup: {
-                  from: "roles", // The collection name where roles are stored
-                  localField: "role", // Field in Users referencing the Role document
-                  foreignField: "_id", // The primary field in Role that Users reference
-                  as: "role",
-                },
+          const admins = await Users.aggregate([
+            {
+              $lookup: {
+                from: "roles", // The collection name where roles are stored
+                localField: "role", // Field in Users referencing the Role document
+                foreignField: "_id", // The primary field in Role that Users reference
+                as: "role",
               },
-              { $unwind: "$role" }, // Unwind to treat each role as a separate document
-              { $match: { "role.title": "ProjectManger" } }, // Filter for specific title
-            ]);
-            const project = await Project.findOne({ _id: task.project });
-            for (const admin of admins) {
-              const userLanguage = await Language.findOne({
-                userId: admin._id,
-              });
+            },
+            { $unwind: "$role" }, // Unwind to treat each role as a separate document
+            { $match: { "role.title": "ProjectManger" } }, // Filter for specific title
+          ]);
+          const project = await Project.findOne({ _id: task.project });
+          for (const admin of admins) {
+            const userLanguage = await Language.findOne({
+              userId: admin._id,
+            });
 
-              adminEmails.assignFreelancer48Hours(
-                admin.email,
-                {
-                  freelancerName: `${prevFreelacer.firstName} ${prevFreelacer.lastName}`,
-                  freelancerRole: "Lector",
-                  taskName: task.taskName,
-                  taskKeyword: task.keywords,
-                  projectDomain: project?.projectName,
-                },
-                userLanguage?.language || "de"
-              );
-            }
+            adminEmails.assignFreelancer48Hours(
+              admin.email,
+              {
+                freelancerName: `${prevFreelacer.firstName} ${prevFreelacer.lastName}`,
+                freelancerRole: "Lector",
+                taskName: task.taskName,
+                taskKeyword: task.keywords,
+                projectDomain: project?.projectName,
+              },
+              userLanguage?.language || "de"
+            );
+          }
         } else if (hoursDifference >= 24) {
           const freelancer = await Freelancers.findOne({ _id: task.lector });
           if (freelancer) {
@@ -255,36 +260,36 @@ const taskDeadlineCheck = async () => {
             },
             { new: true }
           );
-            const admins = await Users.aggregate([
-              {
-                $lookup: {
-                  from: "roles", // The collection name where roles are stored
-                  localField: "role", // Field in Users referencing the Role document
-                  foreignField: "_id", // The primary field in Role that Users reference
-                  as: "role",
-                },
+          const admins = await Users.aggregate([
+            {
+              $lookup: {
+                from: "roles", // The collection name where roles are stored
+                localField: "role", // Field in Users referencing the Role document
+                foreignField: "_id", // The primary field in Role that Users reference
+                as: "role",
               },
-              { $unwind: "$role" }, // Unwind to treat each role as a separate document
-              { $match: { "role.title": "ProjectManger" } }, // Filter for specific title
-            ]);
-            const project = await Project.findOne({ _id: task.project });
-            for (const admin of admins) {
-              const userLanguage = await Language.findOne({
-                userId: admin._id,
-              });
+            },
+            { $unwind: "$role" }, // Unwind to treat each role as a separate document
+            { $match: { "role.title": "ProjectManger" } }, // Filter for specific title
+          ]);
+          const project = await Project.findOne({ _id: task.project });
+          for (const admin of admins) {
+            const userLanguage = await Language.findOne({
+              userId: admin._id,
+            });
 
-              adminEmails.assignFreelancer48Hours(
-                admin.email,
-                {
-                  freelancerName: `${prevFreelacer.firstName} ${prevFreelacer.lastName}`,
-                  freelancerRole: "SEO Optimizer",
-                  taskName: task.taskName,
-                  taskKeyword: task.keywords,
-                  projectDomain: project?.projectName,
-                },
-                userLanguage?.language || "de"
-              );
-            }
+            adminEmails.assignFreelancer48Hours(
+              admin.email,
+              {
+                freelancerName: `${prevFreelacer.firstName} ${prevFreelacer.lastName}`,
+                freelancerRole: "SEO Optimizer",
+                taskName: task.taskName,
+                taskKeyword: task.keywords,
+                projectDomain: project?.projectName,
+              },
+              userLanguage?.language || "de"
+            );
+          }
         } else if (hoursDifference >= 24) {
           const freelancer = await Freelancers.findOne({ _id: task.seo });
           if (freelancer) {
@@ -320,36 +325,36 @@ const taskDeadlineCheck = async () => {
             },
             { new: true }
           );
-            const admins = await Users.aggregate([
-              {
-                $lookup: {
-                  from: "roles", // The collection name where roles are stored
-                  localField: "role", // Field in Users referencing the Role document
-                  foreignField: "_id", // The primary field in Role that Users reference
-                  as: "role",
-                },
+          const admins = await Users.aggregate([
+            {
+              $lookup: {
+                from: "roles", // The collection name where roles are stored
+                localField: "role", // Field in Users referencing the Role document
+                foreignField: "_id", // The primary field in Role that Users reference
+                as: "role",
               },
-              { $unwind: "$role" }, // Unwind to treat each role as a separate document
-              { $match: { "role.title": "ProjectManger" } }, // Filter for specific title
-            ]);
-            const project = await Project.findOne({ _id: task.project });
-            for (const admin of admins) {
-              const userLanguage = await Language.findOne({
-                userId: admin._id,
-              });
+            },
+            { $unwind: "$role" }, // Unwind to treat each role as a separate document
+            { $match: { "role.title": "ProjectManger" } }, // Filter for specific title
+          ]);
+          const project = await Project.findOne({ _id: task.project });
+          for (const admin of admins) {
+            const userLanguage = await Language.findOne({
+              userId: admin._id,
+            });
 
-              adminEmails.assignFreelancer48Hours(
-                admin.email,
-                {
-                  freelancerName: `${prevFreelacer.firstName} ${prevFreelacer.lastName}`,
-                  freelancerRole: "Meta Lector",
-                  taskName: task.taskName,
-                  taskKeyword: task.keywords,
-                  projectDomain: project?.projectName,
-                },
-                userLanguage?.language || "de"
-              );
-            }
+            adminEmails.assignFreelancer48Hours(
+              admin.email,
+              {
+                freelancerName: `${prevFreelacer.firstName} ${prevFreelacer.lastName}`,
+                freelancerRole: "Meta Lector",
+                taskName: task.taskName,
+                taskKeyword: task.keywords,
+                projectDomain: project?.projectName,
+              },
+              userLanguage?.language || "de"
+            );
+          }
         } else if (hoursDifference >= 24) {
           const freelancer = await Freelancers.findOne({
             _id: task.metaLector,
@@ -571,12 +576,13 @@ const calculateInvoice = async () => {
   const startOfPreviousMonth = dayjs()
     .subtract(1, "month")
     .startOf("month")
-    .format("YYYY-MM-DD"); // Formats to '2024-10-01'
+    .format("YYYY-MM-DD");
 
   const endOfPreviousMonth = dayjs()
     .subtract(1, "month")
     .endOf("month")
-    .format("YYYY-MM-DD"); // Formats to '2024-10-31'
+    .format("YYYY-MM-DD");
+ 
 
   console.log("Previous month start date:", startOfPreviousMonth);
   console.log("Previous month end date:", endOfPreviousMonth);
@@ -589,7 +595,7 @@ const calculateInvoice = async () => {
       $match: {
         finishedDate: {
           $gte: startOfPreviousMonthDate,
-          $lt: dayjs(endOfPreviousMonthDate).add(1, "day").toDate(), // Includes the last day entirely
+          $lte: endOfPreviousMonthDate, // Includes the last day entirely
         },
         task: { $ne: null },
         project: { $ne: null },
@@ -654,32 +660,42 @@ const monthlyFreelancingInvoicing = async () => {
     console.log("monthly invoice job ...");
     const tempData = [];
     const earnings = await calculateInvoice();
+    const invoiceCount = await FreelancerInvoice.countDocuments({});
+    const freelancerPrice = await FreelancrPrice.findOne({});
+    console.log("freelancer price: ", freelancerPrice);
+    const texterPrice = freelancerPrice?.texter || 0.07;
+    const lectorPrice = freelancerPrice?.lector || 0.06;
+    const seoPrice = freelancerPrice?.seoOptimizer || 0.05;
+    const metaLectorPrice = freelancerPrice?.metaLector || 0.06;
+    console.log("earning length: ", earnings.length);
     for (const earning of earnings) {
       let temp = {
         freelancerId: earning.freelancer._id,
         tasks: earning.earnings.map((item) => {
-          const desiredWords = item.task.desiredNumberOfWords;
-          const actualWords = item.task.actualNumberOfWords;
-
-          // Calculate 10% of the desired words
-          const tenPercentOfDesiredWords = desiredWords * 0.1;
-
-          let calculatedWords = 0;
-
-          // Check if actualWords are more than 10% greater than desiredWords
-          if (actualWords > desiredWords + tenPercentOfDesiredWords) {
-            calculatedWords = desiredWords * 1.1;
-          } else {
-            calculatedWords = actualWords;
+          let pricePerWord = 0;
+          if (item.role.toLowerCase() === "texter") {
+            pricePerWord = texterPrice;
+          }
+          if (item.role.toLowerCase() === "lector") {
+            pricePerWord = lectorPrice;
+          }
+          if (item.role.toLowerCase() === "seo optimizer") {
+            pricePerWord = seoPrice;
+          }
+          if (item.role.toLowerCase() === "meta lector") {
+            pricePerWord = metaLectorPrice;
           }
 
           return {
             ...item.task,
             role: item.role,
-            calculatedWords: calculatedWords.toString().split(".").at(0),
-            freelancerName: `${earning.freelancer.firstName} ${earning.freelancer.lastName}`
+            pricePerWord: pricePerWord.toString(),
+            billedWords: Number(item.billedWords).toFixed(2),
+            total: Number(item.price).toFixed(2),
+            freelancerName: `${earning.freelancer.firstName} ${earning.freelancer.lastName}`,
           };
         }),
+        invoiceNo: (invoiceCount + 1).toString(),
         creditNo: "2024-10-001",
         date: "2024-10-22",
         performancePeriod: "2024-09-01 to 2024-09-30",
@@ -791,9 +807,17 @@ const monthlyFreelancingInvoicing = async () => {
 
     for (const temp of tempData) {
       const obj = await createInvoiceInGoogleSheets(temp);
+      await FreelancerInvoice.create({
+        freelancer: temp.freelancerId,
+        invoiceSheet: obj.invoiceSheet,
+        tasksSheet: obj.tasksSheet,
+        count: invoiceCount + 1,
+      });
       finalData.push({
         invoice: obj.invoice,
+        invoiceSheet: obj.invoiceSheet,
         tasks: obj.tasks,
+        tasksSheet: obj.tasksSheet,
         freelancerEmail: temp.freelancerEmail,
         freelancerName: temp.clientName,
         freelancerId: temp.freelancerId,
@@ -809,8 +833,8 @@ const monthlyFreelancingInvoicing = async () => {
           name: data.freelancerName,
           email: data.freelancerEmail,
         },
-        data.invoice,
-        data.tasks,
+        { pdf: data.invoice, sheet: data.invoiceSheet },
+        { pdf: data.tasks, sheet: data.tasksSheet },
         userLanguage?.language || "de"
       );
       const admins = await Users.aggregate([
@@ -834,9 +858,10 @@ const monthlyFreelancingInvoicing = async () => {
           {
             name: data.freelancerName,
             email: admin.email,
+            // email: "mariaanwar996@gmail.com",
           },
-          data.invoice,
-          data.tasks,
+          {pdf: data.invoice, sheet: data.invoiceSheet},
+          {pdf: data.tasks, sheet: data.tasksSheet},
           userLanguage?.language || "de"
         );
       }
@@ -852,13 +877,78 @@ const monthlyFreelancingInvoicing = async () => {
 
 const clientMonthlyTasks = async () => {
   try {
+    const startOfPreviousMonth = dayjs()
+      .subtract(1, "month")
+      .startOf("month")
+      .toDate();
+    const endOfPreviousMonth = dayjs()
+      .subtract(1, "month")
+      .endOf("month")
+      .toDate();
+    // const startOfPreviousMonth = dayjs().startOf("month").toDate();
+    // const endOfPreviousMonth = dayjs().endOf("month").toDate();
 
-    const data = await ProjectTask
-    
+    console.log("start of month: ", startOfPreviousMonth);
+    console.log("end of month: ", endOfPreviousMonth);
+
+    const data = await ProjectTask.aggregate([
+      // Filter tasks with a non-null 'finishedDate' within the previous month
+      {
+        $match: {
+          status: "Final",
+          finishedDate: { $ne: null },
+          finishedDate: {
+            $gte: startOfPreviousMonth,
+            $lte: endOfPreviousMonth,
+          },
+        },
+      },
+      // Group by user (_id)
+      {
+        $group: {
+          _id: "$user", // Grouping by user _id
+          tasks: { $push: "$$ROOT" }, // Push the full task document into the 'tasks' array
+        },
+      },
+      // Populate the user details (as a single object)
+      {
+        $lookup: {
+          from: "users", // Correct the collection name to 'users' (or adjust it to your actual collection name)
+          localField: "_id", // We're joining on the grouped user _id
+          foreignField: "_id", // The field in the 'users' collection we're matching on
+          as: "userDetails", // The result will be an array, but it will have only one user document if the match is successful
+        },
+      },
+      // Optionally, you can flatten the userDetails array to get the first element as an object instead of an array
+      {
+        $addFields: {
+          userDetails: { $arrayElemAt: ["$userDetails", 0] }, // Flatten to get a single user object
+        },
+      },
+    ]);
+
+    if (data.length > 0) {
+      for (const user of data) {
+        const tasksLinks = user.tasks.map((item) => item.fileLink);
+        const temp = {
+          email: user.userDetails.email,
+          // email:"abdullahmuneer402@gmail.com",
+          firstName: user.userDetails.firstName,
+        };
+        const userLanguage = await Language.findOne({ userId: user._id });
+        console.log("sending monthly texts email to client");
+        await clientEmails.montlyText(
+          temp,
+          tasksLinks,
+          userLanguage?.language || "de"
+        );
+        console.log("email sent");
+      }
+    }
   } catch (error) {
-    console.log("client monthly tasks email: ", error)
+    console.log("client monthly tasks email: ", error);
   }
-}
+};
 
 module.exports = {
   onBoardingReminder,
@@ -866,4 +956,5 @@ module.exports = {
   taskDeadlineCheck,
   monthlyFreelancingInvoicing,
   trafficLightDealineCheck,
+  clientMonthlyTasks,
 };

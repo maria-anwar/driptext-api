@@ -452,8 +452,10 @@ Email.freelancerMonthlyInvoice = async (
 
     text = text.replace(/\[MONTH\]/g, lastMonth);
 
-    text = text.replace("[INVOICE_LINK]", invoiceLink);
-    text = text.replace("[TASKS_LINK]", tasksLink);
+    text = text.replace("[INVOICE_LINK]", invoiceLink.pdf);
+    text = text.replace("[TASKS_LINK]", tasksLink.pdf);
+    text = text.replace("[INVOICE_SHEET_LINK]", invoiceLink.sheet);
+    text = text.replace("[TASKS_SHEET_LINK]", tasksLink.sheet);
     text = text.replace("[FIRST_NAME]", obj.name);
 
     const params = {
