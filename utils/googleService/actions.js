@@ -98,7 +98,7 @@ exports.designFinishExportTasksSheet = async () => {
 
   // Prepare data with heading
   const values = [
-    ["TASKS", "", "", "INFO", "", "SETTLEMENT", "", "",""],
+    ["TASKS", "", "", "INFO", "", "SETTLEMENT", "", "", ""],
     [
       "Date",
       "ID",
@@ -1236,24 +1236,61 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
   const createSheetResponse = await sheetsClient.spreadsheets.create({
     resource: {
       properties: {
-        title: `Invoice-${invoiceData.invoiceNo}`,
+        title: `${dayjs().year()}-${dayjs().month() + 1}-${
+          invoiceData.invoiceNo
+        }_Invoice`,
       },
+      sheets: [
+        {
+          properties: {
+            title: `${dayjs().year()}-${dayjs().month() + 1}-${
+              invoiceData.invoiceNo
+            }_Invoice`, // Sets the first sheet name
+          },
+        },
+      ],
     },
   });
 
   const spreadsheetId = createSheetResponse.data.spreadsheetId;
+  console.log("inside creating invoice: ");
+  // console.log(JSON.stringify(createSheetResponse, null, 2));
+
+  const sheetId = createSheetResponse.data.sheets[0].properties.sheetId;
+  console.log(" sheet id: ", sheetId);
+  const sheetName = `${dayjs().year()}-${dayjs().month() + 1}-${
+    invoiceData.invoiceNo
+  }_Invoice`;
+
   let vatName = "";
   let vatDescription = "";
 
   if (invoiceData.vat === 0) {
     vatName = "0 %VAT";
-    vatDescription =
-      "No VAT accoroding to Reverse-Charge. Payment is due within 7 days from the date of this invoice.";
   }
   if (invoiceData.vat > 0) {
     vatName = "19% VAT";
-    vatDescription = "VAT CY Ltd (19%)";
   }
+
+  if (
+    invoiceData.vatRegulation.toLowerCase().includes("cy company") ||
+    invoiceData.vatRegulation.toLowerCase().includes("non-eu company")
+  ) {
+    vatDescription = "";
+  }
+
+  if (invoiceData.vatRegulation.toLowerCase().includes("eu reverse-charge")) {
+    vatDescription = "No VAT according to Reverse-Charge.";
+  }
+  if (invoiceData.vatRegulation.toLowerCase().includes("Kleinunternehmer")) {
+    vatDescription = "No VAT according to § 19 paragraph 1 ustg.";
+  }
+
+  const priceFormatter = new Intl.NumberFormat("de-DE", {
+    style: "currency",
+    currency: "EUR",
+    minimumFractionDigits: 2,
+  });
 
   // Hardcoded layout as per the template
   const values = [
@@ -1261,7 +1298,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
     ["", "", "", "", "", "", ""],
     ["", "", "", "", "", "", ""],
     [
-      `       DripText Ltd. - Makariou Avenue 59, 3rd Floor, Office 301 - 6017 Larnaca, Cyprus`,
+      `       DripText Ltd. – Poseidonos Ave 47, Limnaria Westpark, Office 023 – 8042 Paphos, Cyprus`,
       "",
       "",
       "",
@@ -1335,12 +1372,12 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
     [],
     ...invoiceData.items.map((item) => [
       "1",
-      item.description,
+      "Credit for content created during the performance period via AI",
       "",
       "",
-      item.amount,
-      `${Number(item.price).toFixed(2)}€`,
-      `${Number(item.total).toFixed(2)}€`,
+      item.amount.toString(),
+      `${priceFormatter.format(item.price)}`,
+      `${priceFormatter.format(item.total)}`,
     ]),
     // [
     //   "1",
@@ -1364,19 +1401,35 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
       "",
       "",
       "",
-      `${Number(invoiceData.subtotal).toFixed(2)}€`,
+      `${priceFormatter.format(invoiceData.subtotal)}`,
     ],
     [],
-    ["", "", vatName, "", "", "", `${Number(invoiceData.vat).toFixed(2)}€`],
+    ["", "", vatName, "", "", "", `${priceFormatter.format(invoiceData.vat)}`],
     [],
-    ["", "Total", "", "", "", "", `${Number(invoiceData.total).toFixed(2)}€`],
-    [],
-    ["Details of created content see attached.", "", "", "", "", "", ""],
+    [
+      "",
+      "Total",
+      "",
+      "",
+      "",
+      "",
+      `${priceFormatter.format(invoiceData.total)}`,
+    ],
     [],
     [vatDescription, "", "", "", "", "", ""],
     [],
     [
-      "Thank you very much for your trust. We appreciate doing bussiness with you.",
+      "The credited performances are not considered performances within the scope of the Artists' Social Security Fund.",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+    ],
+    [],
+    [
+      "Since the service provider only operated the AI, the copyright of the created or edited content was never with them.",
       "",
       "",
       "",
@@ -1390,7 +1443,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
 
     ["DripText Ltd.:", "", "", "Contact", "", "Bank Account:"],
     [
-      "Makariou Avenue 59,3rd Floor, Office 301",
+      "Poseidonos Ave 47, Limnaria Westpark, 023",
       "",
       "",
       "hallo@driptext.de",
@@ -1398,7 +1451,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
       "DripText Ltd.",
     ],
     [
-      "6017 Laranaca,Cyprus",
+      "8042 Paphos, Cyprus",
       "",
       "",
       "Accounting:",
@@ -1410,7 +1463,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
 
   const updateValuesRequest = {
     spreadsheetId: spreadsheetId,
-    range: "Sheet1!A1",
+    range: `${sheetName}!A1`,
     valueInputOption: "RAW",
     resource: { values },
   };
@@ -1425,7 +1478,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
         {
           deleteDimension: {
             range: {
-              sheetId: 0, // Assuming it's the first sheet; replace with your sheet ID
+              sheetId, // Assuming it's the first sheet; replace with your sheet ID
               dimension: "COLUMNS",
               startIndex: 7, // Column H (0-indexed)
             },
@@ -1434,7 +1487,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
         {
           repeatCell: {
             range: {
-              sheetId: 0, // Replace with your sheet ID
+              sheetId, // Replace with your sheet ID
               startRowIndex: 0, // Start from the first row (0-indexed)
               endRowIndex: 1000, // Use a large number to cover all rows (adjust as needed)
               startColumnIndex: 6, // Column G (0-indexed)
@@ -1454,7 +1507,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
         {
           repeatCell: {
             range: {
-              sheetId: 0, // Replace with your sheet ID
+              sheetId, // Replace with your sheet ID
             },
             cell: {
               userEnteredFormat: {
@@ -1468,7 +1521,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
         {
           mergeCells: {
             range: {
-              sheetId: 0,
+              sheetId,
               startRowIndex: 2,
               endRowIndex: 3,
               startColumnIndex: 0,
@@ -1480,7 +1533,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
         {
           mergeCells: {
             range: {
-              sheetId: 0,
+              sheetId,
               startRowIndex: 5,
               endRowIndex: 6,
               startColumnIndex: 4,
@@ -1492,7 +1545,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
         {
           mergeCells: {
             range: {
-              sheetId: 0,
+              sheetId,
               startRowIndex: 6,
               endRowIndex: 7,
               startColumnIndex: 4,
@@ -1504,7 +1557,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
         {
           mergeCells: {
             range: {
-              sheetId: 0,
+              sheetId,
               startRowIndex: 7,
               endRowIndex: 8,
               startColumnIndex: 4,
@@ -1516,7 +1569,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
         {
           mergeCells: {
             range: {
-              sheetId: 0,
+              sheetId,
               startRowIndex: 6,
               endRowIndex: 7,
               startColumnIndex: 0,
@@ -1528,7 +1581,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
         {
           mergeCells: {
             range: {
-              sheetId: 0,
+              sheetId,
               startRowIndex: 7,
               endRowIndex: 8,
               startColumnIndex: 0,
@@ -1540,7 +1593,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
         {
           mergeCells: {
             range: {
-              sheetId: 0,
+              sheetId,
               startRowIndex: 8,
               endRowIndex: 9,
               startColumnIndex: 0,
@@ -1552,7 +1605,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
         {
           mergeCells: {
             range: {
-              sheetId: 0,
+              sheetId,
               startRowIndex: 9,
               endRowIndex: 10,
               startColumnIndex: 0,
@@ -1564,7 +1617,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
         {
           mergeCells: {
             range: {
-              sheetId: 0,
+              sheetId,
               startRowIndex: 10,
               endRowIndex: 11,
               startColumnIndex: 0,
@@ -1576,7 +1629,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
         {
           mergeCells: {
             range: {
-              sheetId: 0,
+              sheetId,
               startRowIndex: 15,
               endRowIndex: 16,
               startColumnIndex: 0,
@@ -1588,7 +1641,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
         {
           mergeCells: {
             range: {
-              sheetId: 0,
+              sheetId,
               startRowIndex: 19,
               endRowIndex: 20,
               startColumnIndex: 1,
@@ -1600,7 +1653,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
         {
           mergeCells: {
             range: {
-              sheetId: 0,
+              sheetId,
               startRowIndex: 20,
               endRowIndex: 21,
               startColumnIndex: 1,
@@ -1612,7 +1665,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
         {
           mergeCells: {
             range: {
-              sheetId: 0,
+              sheetId,
               startRowIndex: 21,
               endRowIndex: 22,
               startColumnIndex: 1,
@@ -1624,7 +1677,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
         {
           mergeCells: {
             range: {
-              sheetId: 0,
+              sheetId,
               startRowIndex: 34,
               endRowIndex: 35,
               startColumnIndex: 0,
@@ -1636,7 +1689,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
         {
           mergeCells: {
             range: {
-              sheetId: 0,
+              sheetId,
               startRowIndex: 36,
               endRowIndex: 37,
               startColumnIndex: 0,
@@ -1648,7 +1701,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
         {
           mergeCells: {
             range: {
-              sheetId: 0,
+              sheetId,
               startRowIndex: 38,
               endRowIndex: 39,
               startColumnIndex: 0,
@@ -1660,7 +1713,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
         {
           mergeCells: {
             range: {
-              sheetId: 0,
+              sheetId,
               startRowIndex: 42,
               endRowIndex: 43,
               startColumnIndex: 0,
@@ -1672,7 +1725,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
         {
           mergeCells: {
             range: {
-              sheetId: 0,
+              sheetId,
               startRowIndex: 43,
               endRowIndex: 44,
               startColumnIndex: 0,
@@ -1684,7 +1737,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
         {
           mergeCells: {
             range: {
-              sheetId: 0,
+              sheetId,
               startRowIndex: 44,
               endRowIndex: 45,
               startColumnIndex: 0,
@@ -1696,7 +1749,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
         {
           mergeCells: {
             range: {
-              sheetId: 0,
+              sheetId,
               startRowIndex: 45,
               endRowIndex: 46,
               startColumnIndex: 0,
@@ -1708,7 +1761,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
         {
           mergeCells: {
             range: {
-              sheetId: 0,
+              sheetId,
               startRowIndex: 42,
               endRowIndex: 43,
               startColumnIndex: 3,
@@ -1720,7 +1773,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
         {
           mergeCells: {
             range: {
-              sheetId: 0,
+              sheetId,
               startRowIndex: 43,
               endRowIndex: 44,
               startColumnIndex: 3,
@@ -1732,7 +1785,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
         {
           mergeCells: {
             range: {
-              sheetId: 0,
+              sheetId,
               startRowIndex: 44,
               endRowIndex: 45,
               startColumnIndex: 3,
@@ -1744,7 +1797,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
         {
           mergeCells: {
             range: {
-              sheetId: 0,
+              sheetId,
               startRowIndex: 45,
               endRowIndex: 46,
               startColumnIndex: 3,
@@ -1756,7 +1809,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
         {
           mergeCells: {
             range: {
-              sheetId: 0,
+              sheetId,
               startRowIndex: 42,
               endRowIndex: 43,
               startColumnIndex: 5,
@@ -1768,7 +1821,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
         {
           mergeCells: {
             range: {
-              sheetId: 0,
+              sheetId,
               startRowIndex: 43,
               endRowIndex: 44,
               startColumnIndex: 5,
@@ -1780,7 +1833,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
         {
           mergeCells: {
             range: {
-              sheetId: 0,
+              sheetId,
               startRowIndex: 44,
               endRowIndex: 45,
               startColumnIndex: 5,
@@ -1792,7 +1845,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
         {
           mergeCells: {
             range: {
-              sheetId: 0,
+              sheetId,
               startRowIndex: 45,
               endRowIndex: 46,
               startColumnIndex: 5,
@@ -1804,7 +1857,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
         {
           repeatCell: {
             range: {
-              sheetId: 0, // Replace with your sheet ID
+              sheetId, // Replace with your sheet ID
               startRowIndex: 42, // Start from the first row (0-indexed)
               endRowIndex: 46, // Use a large number to cover all rows (adjust as needed)
               startColumnIndex: 0, // Column G (0-indexed)
@@ -1827,7 +1880,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
         {
           repeatCell: {
             range: {
-              sheetId: 0, // Replace with your sheet ID
+              sheetId, // Replace with your sheet ID
               startRowIndex: 19, // Start from the first row (0-indexed)
               endRowIndex: 20, // Use a large number to cover all rows (adjust as needed)
               startColumnIndex: 0, // Column G (0-indexed)
@@ -1852,7 +1905,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
         {
           repeatCell: {
             range: {
-              sheetId: 0, // Replace with your sheet ID
+              sheetId, // Replace with your sheet ID
               startRowIndex: 32, // Start from the first row (0-indexed)
               endRowIndex: 33, // Use a large number to cover all rows (adjust as needed)
               startColumnIndex: 0, // Column G (0-indexed)
@@ -1877,7 +1930,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
         {
           repeatCell: {
             range: {
-              sheetId: 0, // Replace with your sheet ID
+              sheetId, // Replace with your sheet ID
               startRowIndex: 15, // Start from the first row (0-indexed)
               endRowIndex: 16, // Use a large number to cover all rows (adjust as needed)
               startColumnIndex: 0, // Column G (0-indexed)
@@ -1899,7 +1952,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
         {
           repeatCell: {
             range: {
-              sheetId: 0, // Replace with your sheet ID
+              sheetId, // Replace with your sheet ID
               startRowIndex: 2, // Start row index of merged cells
               endRowIndex: 3, // End row index of merged cells
               startColumnIndex: 0, // Start column index of merged cells
@@ -1922,7 +1975,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
         {
           updateDimensionProperties: {
             range: {
-              sheetId: 0, // Replace with your sheet ID
+              sheetId, // Replace with your sheet ID
               dimension: "COLUMNS",
               startIndex: 0,
               endIndex: 1,
@@ -1937,7 +1990,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
         {
           updateDimensionProperties: {
             range: {
-              sheetId: 0, // Replace with your sheet ID
+              sheetId, // Replace with your sheet ID
               dimension: "COLUMNS",
               startIndex: 1,
               endIndex: 2,
@@ -1952,7 +2005,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
         {
           updateDimensionProperties: {
             range: {
-              sheetId: 0, // Replace with your sheet ID
+              sheetId, // Replace with your sheet ID
               dimension: "COLUMNS",
               startIndex: 2,
               endIndex: 3,
@@ -1967,7 +2020,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
         {
           updateDimensionProperties: {
             range: {
-              sheetId: 0, // Replace with your sheet ID
+              sheetId, // Replace with your sheet ID
               dimension: "COLUMNS",
               startIndex: 3,
               endIndex: 4,
@@ -1982,7 +2035,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
         {
           updateDimensionProperties: {
             range: {
-              sheetId: 0, // Replace with your sheet ID
+              sheetId, // Replace with your sheet ID
               dimension: "COLUMNS",
               startIndex: 4,
               endIndex: 5,
@@ -1997,7 +2050,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
         {
           updateDimensionProperties: {
             range: {
-              sheetId: 0, // Replace with your sheet ID
+              sheetId, // Replace with your sheet ID
               dimension: "COLUMNS",
               startIndex: 5,
               endIndex: 6,
@@ -2012,7 +2065,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
         {
           updateDimensionProperties: {
             range: {
-              sheetId: 0, // Replace with your sheet ID
+              sheetId, // Replace with your sheet ID
               dimension: "COLUMNS",
               startIndex: 6,
               endIndex: 7,
@@ -2026,7 +2079,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
         {
           updateSheetProperties: {
             properties: {
-              sheetId: 0, // Replace with your sheet ID
+              sheetId, // Replace with your sheet ID
               gridProperties: {
                 hideGridlines: true,
               },
@@ -2050,12 +2103,18 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
     },
   });
 
-  const sheetUrlPdf = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=pdf&portrait=true&gid=0&gridlines=false`;
+  const formattedInvoiceNo = `${dayjs().year()}-${dayjs().month() + 1}-${
+    invoiceData.invoiceNo
+  }`;
+
+  const sheetUrlPdf = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=pdf&portrait=true&gid=${sheetId}&gridlines=false&name=${encodeURIComponent(sheetName)}.pdf`;
+
+  const sheetUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit#gid=${sheetId}`;
   const obj = await exportFinishedTasks(
     invoiceData.tasks,
-    invoiceData.clientName
+    invoiceData.clientName,
+    formattedInvoiceNo
   );
-  const sheetUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit#gid=0`;
   return {
     invoiceSheet: sheetUrl,
     invoice: sheetUrlPdf,
@@ -2112,7 +2171,7 @@ exports.findOrCreateFolderInParent = async (parentFolderId, folderName) => {
   }
 };
 
-const exportFinishedTasks = async (tasks, freelancerName) => {
+const exportFinishedTasks = async (tasks, freelancerName, invoiceNo) => {
   console.log("inside export finished tasks function");
   const lastMonth = dayjs().subtract(1, "month").format("MMMM YYYY");
 
@@ -2122,12 +2181,29 @@ const exportFinishedTasks = async (tasks, freelancerName) => {
       properties: {
         title: `Finished Tasks In ${lastMonth} By ${freelancerName}`,
       },
+      sheets: [
+        {
+          properties: {
+            title: `${invoiceNo}_Attachment`, // Sets the first sheet name
+          },
+        },
+      ],
     },
-    fields: "spreadsheetId",
   };
+
+  const sheetName = `${invoiceNo}_Attachment`;
 
   const createResponse = await sheets.spreadsheets.create(request);
   const spreadsheetId = createResponse.data.spreadsheetId;
+  console.log("inside creating attachment: ");
+  // console.log(JSON.stringify(createResponse, null, 2));
+  const sheetId = createResponse.data.sheets[0].properties.sheetId;
+
+  const priceFormatter = new Intl.NumberFormat("de-DE", {
+    style: "currency",
+    currency: "EUR",
+    minimumFractionDigits: 2,
+  });
 
   // Step 2: Prepare Task Data
   const taskData = tasks.map((task, index) => [
@@ -2138,10 +2214,10 @@ const exportFinishedTasks = async (tasks, freelancerName) => {
     task?.desiredNumberOfWords || "",
     task?.billedWords || "",
     task?.role || "",
-    task?.pricePerWord || "",
-    task?.total || ""
+    task?.pricePerWord && priceFormatter.format(task?.pricePerWord) || "",
+    task?.total && priceFormatter.format(task?.total) || "",
   ]);
-  const endRowIndexForColumnC = taskData.length + 2
+  const endRowIndexForColumnC = taskData.length + 2;
 
   const title = `Finished Tasks In ${lastMonth} By ${freelancerName}`;
 
@@ -2159,13 +2235,13 @@ const exportFinishedTasks = async (tasks, freelancerName) => {
       "Price Per Word",
       "Total",
     ],
-    ...taskData
+    ...taskData,
   ];
 
   // Step 3: Update the Google Sheet with data
   const updateRequest = {
     spreadsheetId,
-    range: "Sheet1!A1",
+    range: `${sheetName}!A1`,
     valueInputOption: "RAW",
     resource: { values },
   };
@@ -2181,7 +2257,7 @@ const exportFinishedTasks = async (tasks, freelancerName) => {
         {
           deleteDimension: {
             range: {
-              sheetId: 0, // Assuming it's the first sheet; replace with your sheet ID
+              sheetId, // Assuming it's the first sheet; replace with your sheet ID
               dimension: "COLUMNS",
               startIndex: 9, // Column H (0-indexed)
             },
@@ -2191,7 +2267,7 @@ const exportFinishedTasks = async (tasks, freelancerName) => {
         {
           repeatCell: {
             range: {
-              sheetId: 0, // Replace with your sheet ID
+              sheetId, // Replace with your sheet ID
             },
             cell: {
               userEnteredFormat: {
@@ -2205,7 +2281,7 @@ const exportFinishedTasks = async (tasks, freelancerName) => {
         {
           mergeCells: {
             range: {
-              sheetId: 0,
+              sheetId,
               startRowIndex: 0,
               endRowIndex: 1,
               startColumnIndex: 0,
@@ -2218,7 +2294,7 @@ const exportFinishedTasks = async (tasks, freelancerName) => {
         {
           mergeCells: {
             range: {
-              sheetId: 0,
+              sheetId,
               startRowIndex: 0,
               endRowIndex: 1,
               startColumnIndex: 3,
@@ -2231,7 +2307,7 @@ const exportFinishedTasks = async (tasks, freelancerName) => {
         {
           mergeCells: {
             range: {
-              sheetId: 0,
+              sheetId,
               startRowIndex: 0,
               endRowIndex: 1,
               startColumnIndex: 5,
@@ -2243,7 +2319,7 @@ const exportFinishedTasks = async (tasks, freelancerName) => {
         {
           repeatCell: {
             range: {
-              sheetId: 0, // Replace with your sheet ID
+              sheetId, // Replace with your sheet ID
               startRowIndex: 0, // Adjust the starting row index
               endRowIndex: 1, // Adjust the ending row index
               startColumnIndex: 0, // Adjust the starting column index
@@ -2274,7 +2350,7 @@ const exportFinishedTasks = async (tasks, freelancerName) => {
         {
           repeatCell: {
             range: {
-              sheetId: 0, // Replace with your sheet ID
+              sheetId, // Replace with your sheet ID
               startRowIndex: 0, // Adjust the starting row index
               endRowIndex: 1, // Adjust the ending row index
               startColumnIndex: 3, // Adjust the starting column index
@@ -2305,7 +2381,7 @@ const exportFinishedTasks = async (tasks, freelancerName) => {
         {
           repeatCell: {
             range: {
-              sheetId: 0, // Replace with your sheet ID
+              sheetId, // Replace with your sheet ID
               startRowIndex: 0, // Adjust the starting row index
               endRowIndex: 1, // Adjust the ending row index
               startColumnIndex: 5, // Adjust the starting column index
@@ -2336,7 +2412,7 @@ const exportFinishedTasks = async (tasks, freelancerName) => {
         {
           repeatCell: {
             range: {
-              sheetId: 0, // Replace with your sheet ID
+              sheetId, // Replace with your sheet ID
               startRowIndex: 1, // Adjust the starting row index
               endRowIndex: 2, // Adjust the ending row index
               startColumnIndex: 0, // Adjust the starting column index
@@ -2363,7 +2439,7 @@ const exportFinishedTasks = async (tasks, freelancerName) => {
         {
           repeatCell: {
             range: {
-              sheetId: 0,
+              sheetId,
               startColumnIndex: 2,
               endColumnIndex: 3,
               startRowIndex: 1,
@@ -2386,7 +2462,7 @@ const exportFinishedTasks = async (tasks, freelancerName) => {
         {
           updateDimensionProperties: {
             range: {
-              sheetId: 0, // Replace with your sheet ID
+              sheetId, // Replace with your sheet ID
               dimension: "COLUMNS",
               startIndex: 0,
               endIndex: 1,
@@ -2400,7 +2476,7 @@ const exportFinishedTasks = async (tasks, freelancerName) => {
         {
           updateDimensionProperties: {
             range: {
-              sheetId: 0, // Replace with your sheet ID
+              sheetId, // Replace with your sheet ID
               dimension: "COLUMNS",
               startIndex: 1,
               endIndex: 2,
@@ -2414,7 +2490,7 @@ const exportFinishedTasks = async (tasks, freelancerName) => {
         {
           updateDimensionProperties: {
             range: {
-              sheetId: 0, // Replace with your sheet ID
+              sheetId, // Replace with your sheet ID
               dimension: "COLUMNS",
               startIndex: 2,
               endIndex: 3,
@@ -2428,7 +2504,7 @@ const exportFinishedTasks = async (tasks, freelancerName) => {
         {
           updateDimensionProperties: {
             range: {
-              sheetId: 0, // Replace with your sheet ID
+              sheetId, // Replace with your sheet ID
               dimension: "COLUMNS",
               startIndex: 3,
               endIndex: 4,
@@ -2442,7 +2518,7 @@ const exportFinishedTasks = async (tasks, freelancerName) => {
         {
           updateDimensionProperties: {
             range: {
-              sheetId: 0, // Replace with your sheet ID
+              sheetId, // Replace with your sheet ID
               dimension: "COLUMNS",
               startIndex: 4,
               endIndex: 5,
@@ -2456,7 +2532,7 @@ const exportFinishedTasks = async (tasks, freelancerName) => {
         {
           updateDimensionProperties: {
             range: {
-              sheetId: 0, // Replace with your sheet ID
+              sheetId, // Replace with your sheet ID
               dimension: "COLUMNS",
               startIndex: 5,
               endIndex: 6,
@@ -2470,7 +2546,7 @@ const exportFinishedTasks = async (tasks, freelancerName) => {
         {
           updateDimensionProperties: {
             range: {
-              sheetId: 0, // Replace with your sheet ID
+              sheetId, // Replace with your sheet ID
               dimension: "COLUMNS",
               startIndex: 6,
               endIndex: 7,
@@ -2484,7 +2560,7 @@ const exportFinishedTasks = async (tasks, freelancerName) => {
         {
           updateDimensionProperties: {
             range: {
-              sheetId: 0, // Replace with your sheet ID
+              sheetId, // Replace with your sheet ID
               dimension: "COLUMNS",
               startIndex: 7,
               endIndex: 8,
@@ -2513,7 +2589,7 @@ const exportFinishedTasks = async (tasks, freelancerName) => {
 
   // Step 6: Export Links
   const tasksGoogleSheet = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`;
-  const tasksPdf = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=pdf&portrait=true&gid=0&gridlines=false`;
+  const tasksPdf = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=pdf&portrait=true&gid=${sheetId}&gridlines=false&name=${sheetName}.pdf`;
 
   return {
     tasksPdf,

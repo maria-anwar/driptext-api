@@ -582,6 +582,7 @@ const calculateInvoice = async () => {
     .subtract(1, "month")
     .endOf("month")
     .format("YYYY-MM-DD");
+  
  
 
   console.log("Previous month start date:", startOfPreviousMonth);
@@ -690,7 +691,7 @@ const monthlyFreelancingInvoicing = async () => {
             ...item.task,
             role: item.role,
             pricePerWord: pricePerWord.toString(),
-            billedWords: Number(item.billedWords).toFixed(2),
+            billedWords: item.billedWords.toString(),
             total: Number(item.price).toFixed(2),
             freelancerName: `${earning.freelancer.firstName} ${earning.freelancer.lastName}`,
           };
@@ -759,7 +760,7 @@ const monthlyFreelancingInvoicing = async () => {
 
       temp.performancePeriod = `${dayjs(startOfPreviousMonthDate).format(
         "DD.MM.YYYY"
-      )} to ${dayjs(endOfPreviousMonthDate).format("DD.MM.YYYY")}`;
+      )}-${dayjs(endOfPreviousMonthDate).format("DD.MM.YYYY")}`;
       temp.clientName = `${earning.freelancer.firstName} ${earning.freelancer.lastName}`;
 
       for (const taskEarning of earning.earnings) {
@@ -799,6 +800,7 @@ const monthlyFreelancingInvoicing = async () => {
       temp.vat = vat;
       temp.total = total;
       temp.freelancerEmail = earning.freelancer.email;
+      temp.vatRegulation = earning?.freelancer?.billingInfo?.vatRegulation;
 
       tempData.push(temp);
     }
@@ -828,14 +830,17 @@ const monthlyFreelancingInvoicing = async () => {
       const userLanguage = await Language.findOne({
         userId: data.freelancerId,
       });
-      freelancerEmails.monthlyInvoice(
+      await freelancerEmails.monthlyInvoice(
         {
           name: data.freelancerName,
           email: data.freelancerEmail,
+         
         },
         { pdf: data.invoice, sheet: data.invoiceSheet },
         { pdf: data.tasks, sheet: data.tasksSheet },
         userLanguage?.language || "de"
+        
+        
       );
       const admins = await Users.aggregate([
         {
@@ -858,7 +863,7 @@ const monthlyFreelancingInvoicing = async () => {
           {
             name: data.freelancerName,
             email: admin.email,
-            // email: "mariaanwar996@gmail.com",
+            // email: "abdullahmuneer402@gmail.com",
           },
           {pdf: data.invoice, sheet: data.invoiceSheet},
           {pdf: data.tasks, sheet: data.tasksSheet},
