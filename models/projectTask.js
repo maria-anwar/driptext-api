@@ -70,6 +70,10 @@ module.exports = (mongoose) => {
         required: false,
         default: null,
       },
+      texterAssignDate: { type: Date, required: false, unique: false, default: null },
+      seoAssignDate: { type: Date, required: false, unique: false, default: null },
+      lectorAssignDate: { type: Date, required: false, unique: false, default: null },
+      metaLectorAssignDate: { type: Date, required: false, unique: false, default: null },
       project: { type: Schema.Types.ObjectId, ref: "Project", required: false },
       isActive: {
         type: String,

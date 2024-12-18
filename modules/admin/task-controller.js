@@ -124,6 +124,7 @@ exports.addTask = async (req, res) => {
 
                   published: true,
                   metaLector: project.metaLector,
+                  metaLectorAssignDate: dayjs().startOf("day").toDate()
                 };
 
                 let upadteProject = await Projects.findOneAndUpdate(
@@ -296,6 +297,7 @@ exports.addTask = async (req, res) => {
                 published: true,
                 ...(taskCount % 9 === 0 && {
                   metaLector: project.metaLector,
+                  metaLectorAssignDate: dayjs().startOf("day").toDate()
                 }),
               };
 
@@ -670,6 +672,7 @@ exports.importProjectTasks = async (req, res) => {
               //   onBoarding: createCompany._id,
               //   tasks: taskCount,
               metaLector: project.metaLector,
+              metaLectorAssignDate: dayjs().startOf("day").toDate()
             };
 
             let upadteProject = await Projects.findOneAndUpdate(
@@ -878,7 +881,7 @@ exports.importProjectTasks = async (req, res) => {
             desiredNumberOfWords: task.wordCount,
             project: project._id,
             user: user._id,
-            ...(taskCount % 9 === 0 && { metaLector: project.metaLector }),
+            ...(taskCount % 9 === 0 && { metaLector: project.metaLector, metaLectorAssignDate: dayjs().startOf("day").toDate() }),
             // onBoarding: createCompany._id,
           };
 

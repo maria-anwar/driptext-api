@@ -148,13 +148,18 @@ exports.testEmail = async (req, res) => {
 
 const calculateInvoice = async () => {
   // Get the start and end dates for the previous month, ensuring no time component
-  const startOfPreviousMonth = dayjs("2024-12-1")
-    .startOf("month")
-    .format("YYYY-MM-DD"); // Formats to '2024-10-01'
+  // const startOfPreviousMonth = dayjs()
+  //   .subtract(1, "month")
+  //   .startOf("month")
+  //   .format("YYYY-MM-DD");
 
-  const endOfPreviousMonth = dayjs("2024-12-1")
-    .endOf("month")
-    .format("YYYY-MM-DD"); // Formats to '2024-10-31'
+  // const endOfPreviousMonth = dayjs()
+  //   .subtract(1, "month")
+  //   .endOf("month")
+  //   .format("YYYY-MM-DD");
+  const startOfPreviousMonth = dayjs().startOf("month").format("YYYY-MM-DD");
+
+  const endOfPreviousMonth = dayjs().endOf("month").format("YYYY-MM-DD");
 
   console.log("Previous month start date:", startOfPreviousMonth);
   console.log("Previous month end date:", endOfPreviousMonth);
@@ -167,9 +172,8 @@ const calculateInvoice = async () => {
       $match: {
         finishedDate: {
           $gte: startOfPreviousMonthDate,
-          $lt: dayjs(endOfPreviousMonthDate).add(1, "day").toDate(), // Includes the last day entirely
+          $lte: endOfPreviousMonthDate, // Includes the last day entirely
         },
-        finalize: true,
         task: { $ne: null },
         project: { $ne: null },
         freelancer: { $ne: null },
@@ -241,26 +245,27 @@ exports.testCounter = async (req, res) => {
 
 exports.test = async (req, res) => {
   try {
+    console.log("monthly invoice job ...");
     const tempData = [];
     const earnings = await calculateInvoice();
-    const invoiceCount = await FreelancerInvoice.countDocuments({})
-    const freelancerPrice = await FreelancrPrice.findOne({})
-    console.log("freelancer price: ", freelancerPrice)
-    const texterPrice = freelancerPrice?.texter || 0.07
-    const lectorPrice = freelancerPrice?.lector || 0.06
-    const seoPrice = freelancerPrice?.seoOptimizer || 0.05
-    const metaLectorPrice = freelancerPrice?.metaLector || 0.06
-    console.log("earning length: ", earnings.length)
+    const invoiceCount = await FreelancerInvoice.countDocuments({});
+    const freelancerPrice = await FreelancrPrice.findOne({});
+    console.log("freelancer price: ", freelancerPrice);
+    const texterPrice = freelancerPrice?.texter || 0.07;
+    const lectorPrice = freelancerPrice?.lector || 0.06;
+    const seoPrice = freelancerPrice?.seoOptimizer || 0.05;
+    const metaLectorPrice = freelancerPrice?.metaLector || 0.06;
+    console.log("earning length: ", earnings.length);
     for (const earning of earnings) {
-      
       let temp = {
-        tasks: earning.earnings.map(item => {
-          let pricePerWord = 0
+        freelancerId: earning.freelancer._id,
+        tasks: earning.earnings.map((item) => {
+          let pricePerWord = 0;
           if (item.role.toLowerCase() === "texter") {
-            pricePerWord = texterPrice
+            pricePerWord = texterPrice;
           }
           if (item.role.toLowerCase() === "lector") {
-            pricePerWord = lectorPrice
+            pricePerWord = lectorPrice;
           }
           if (item.role.toLowerCase() === "seo optimizer") {
             pricePerWord = seoPrice;
@@ -269,14 +274,21 @@ exports.test = async (req, res) => {
             pricePerWord = metaLectorPrice;
           }
 
-          return { ...item.task, role: item.role, pricePerWord: pricePerWord.toString(), billedWords: Number(item.billedWords).toFixed(2), total: Number(item.price).toFixed(2) };
+          return {
+            ...item.task,
+            role: item.role,
+            pricePerWord: pricePerWord.toString(),
+            billedWords: Number(item.billedWords).toFixed(2),
+            total: Number(item.price).toFixed(2),
+            freelancerName: `${earning.freelancer.firstName} ${earning.freelancer.lastName}`,
+          };
         }),
-        freelancerId: earning.freelancer._id,
         invoiceNo: (invoiceCount + 1).toString(),
         creditNo: "2024-10-001",
         date: "2024-10-22",
         performancePeriod: "2024-09-01 to 2024-09-30",
-        clientName: "John Doe Ltd.",
+        clientName: earning.freelancer.firstName,
+        freelancerEmail: "",
         vatDescription: "",
         company: "",
         city: "",
@@ -317,12 +329,12 @@ exports.test = async (req, res) => {
         "No VAT as the service is not taxed in the domestic market.";
       temp.creditNo = dayjs().startOf("day").format("DD.MM.YYYY");
       temp.date = dayjs().startOf("day").format("DD.MM.YYYY");
-      const startOfPreviousMonth = dayjs("2024-12-1")
+      const startOfPreviousMonth = dayjs()
         .subtract(1, "month")
         .startOf("month")
         .format("YYYY-MM-DD"); // Formats to '2024-10-01'
 
-      const endOfPreviousMonth = dayjs("2024-12-1")
+      const endOfPreviousMonth = dayjs()
         .subtract(1, "month")
         .endOf("month")
         .format("YYYY-MM-DD"); // Formats to '2024-10-31'
@@ -365,7 +377,7 @@ exports.test = async (req, res) => {
         vat = result;
         vatDescription = "VAT CY Ltd (19%)";
       }
-      temp.company = earning.freelancer.companyName;
+      temp.company = earning.freelancer.company;
       temp.city = earning.freelancer.city;
       temp.street = earning.freelancer.street;
       temp.vatId = earning.freelancer.vatIdNo;
@@ -374,6 +386,8 @@ exports.test = async (req, res) => {
       temp.subtotal = subTotal;
       temp.vat = vat;
       temp.total = total;
+      temp.freelancerEmail = earning.freelancer.email;
+      temp.vatRegulation = earning?.freelancer?.billingInfo?.vatRegulation;
 
       tempData.push(temp);
     }
@@ -386,21 +400,27 @@ exports.test = async (req, res) => {
         freelancer: temp.freelancerId,
         invoiceSheet: obj.invoiceSheet,
         tasksSheet: obj.tasksSheet,
-        count: invoiceCount + 1
-      })
+        count: invoiceCount + 1,
+      });
       finalData.push({
-        invoiceSheet: obj.invoiceSheet,
         invoice: obj.invoice,
+        invoiceSheet: obj.invoiceSheet,
         tasks: obj.tasks,
-        tasksSheet: obj.tasksSheet
+        tasksSheet: obj.tasksSheet,
+        freelancerEmail: temp.freelancerEmail,
+        freelancerName: temp.clientName,
+        freelancerId: temp.freelancerId,
       });
     }
 
+  
+
     // const data = await createInvoiceInGoogleSheets(invoiceData);
 
-    res.status(200).send({ message: "Success", data: finalData });
-  } catch (error) {
-    res.status(500).json({ error: error.message || "Something went wrong" });
+     res.status(200).send({ message: "Success", data: finalData });
+  } catch (err) {
+    console.log("error in freelancer monthly invoicing job: ", err);
+    res.status(500).send({message: err?.message || "Something went wrong"})
   }
 };
 

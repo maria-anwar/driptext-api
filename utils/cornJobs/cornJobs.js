@@ -582,6 +582,13 @@ const calculateInvoice = async () => {
     .subtract(1, "month")
     .endOf("month")
     .format("YYYY-MM-DD");
+  //  const startOfPreviousMonth = dayjs()
+  //    .startOf("month")
+  //    .format("YYYY-MM-DD");
+
+  //  const endOfPreviousMonth = dayjs()
+  //    .endOf("month")
+  //    .format("YYYY-MM-DD");
   
  
 
@@ -691,7 +698,7 @@ const monthlyFreelancingInvoicing = async () => {
             ...item.task,
             role: item.role,
             pricePerWord: pricePerWord.toString(),
-            billedWords: item.billedWords.toString(),
+            billedWords: Number(item.billedWords).toFixed(2),
             total: Number(item.price).toFixed(2),
             freelancerName: `${earning.freelancer.firstName} ${earning.freelancer.lastName}`,
           };
@@ -863,10 +870,10 @@ const monthlyFreelancingInvoicing = async () => {
           {
             name: data.freelancerName,
             email: admin.email,
-            // email: "abdullahmuneer402@gmail.com",
+            // email: "mariaanwar996@gmail.com",
           },
-          {pdf: data.invoice, sheet: data.invoiceSheet},
-          {pdf: data.tasks, sheet: data.tasksSheet},
+          { pdf: data.invoice, sheet: data.invoiceSheet },
+          { pdf: data.tasks, sheet: data.tasksSheet },
           userLanguage?.language || "de"
         );
       }

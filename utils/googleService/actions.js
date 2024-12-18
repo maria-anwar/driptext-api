@@ -1338,10 +1338,10 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
     [invoiceData.city, "", "", "", "", "", ""],
     [invoiceData.street, "", "", "", "", "", ""],
     [
-      `VAT: ${
-        invoiceData?.vatId === "null"
-          ? "No Vat Id Given"
-          : invoiceData.invoiceNo
+      `${
+        invoiceData?.vat === 0 && invoiceData?.vatId === "null"
+          ? ""
+          : invoiceData.vatId
       }`,
       "",
       "",
@@ -1351,7 +1351,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
       "",
     ],
     ["", "", "", "", "", "", ""],
-    ["", "", "", "", "", "", dayjs().format("DD.MM.YYYY")],
+    ["", "", "", "", "", "", ""],
     ["", "", "", "", "", "", ""],
     ["", "", "", "", "", "", ""],
     [
@@ -1441,7 +1441,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
     [],
     [],
 
-    ["DripText Ltd.:", "", "", "Contact", "", "Bank Account:"],
+    ["DripText Ltd.", "", "", "Contact:", "", "Bank Account:"],
     [
       "Poseidonos Ave 47, Limnaria Westpark, 023",
       "",
@@ -1867,10 +1867,11 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
               userEnteredFormat: {
                 textFormat: {
                   foregroundColor: {
-                    red: 0.6, // Light gray color for the font
-                    green: 0.6,
-                    blue: 0.6,
+                    red: 0.4, // Light gray color for the font
+                    green: 0.4,
+                    blue: 0.4,
                   },
+                  fontSize: 9,
                 },
               },
             },
@@ -2433,6 +2434,102 @@ const exportFinishedTasks = async (tasks, freelancerName, invoiceNo) => {
             },
             fields:
               "userEnteredFormat(backgroundColor, textFormat.bold, horizontalAlignment)",
+          },
+        },
+        {
+          repeatCell: {
+            range: {
+              sheetId, // Replace with your sheet ID
+
+              startColumnIndex: 0, // Adjust the starting column index
+              endColumnIndex: 1, // Adjust the ending column index
+            },
+            cell: {
+              userEnteredFormat: {
+                horizontalAlignment: "CENTER",
+              },
+            },
+            fields: "userEnteredFormat(horizontalAlignment)",
+          },
+        },
+        {
+          repeatCell: {
+            range: {
+              sheetId, // Replace with your sheet ID
+
+              startColumnIndex: 1, // Adjust the starting column index
+              endColumnIndex: 2, // Adjust the ending column index
+            },
+            cell: {
+              userEnteredFormat: {
+                horizontalAlignment: "CENTER",
+              },
+            },
+            fields: "userEnteredFormat(horizontalAlignment)",
+          },
+        },
+        {
+          repeatCell: {
+            range: {
+              sheetId, // Replace with your sheet ID
+
+              startColumnIndex: 4, // Adjust the starting column index
+              endColumnIndex: 5, // Adjust the ending column index
+            },
+            cell: {
+              userEnteredFormat: {
+                horizontalAlignment: "CENTER",
+              },
+            },
+            fields: "userEnteredFormat(horizontalAlignment)",
+          },
+        },
+        {
+          repeatCell: {
+            range: {
+              sheetId, // Replace with your sheet ID
+
+              startColumnIndex: 5, // Adjust the starting column index
+              endColumnIndex: 6, // Adjust the ending column index
+            },
+            cell: {
+              userEnteredFormat: {
+                horizontalAlignment: "CENTER",
+              },
+            },
+            fields: "userEnteredFormat(horizontalAlignment)",
+          },
+        },
+        {
+          repeatCell: {
+            range: {
+              sheetId, // Replace with your sheet ID
+
+              startColumnIndex: 7, // Adjust the starting column index
+              endColumnIndex: 8, // Adjust the ending column index
+            },
+            cell: {
+              userEnteredFormat: {
+                horizontalAlignment: "CENTER",
+              },
+            },
+            fields: "userEnteredFormat(horizontalAlignment)",
+          },
+        },
+        {
+          repeatCell: {
+            range: {
+              sheetId, // Replace with your sheet ID
+
+              startColumnIndex: 8, // Adjust the starting column index
+              endColumnIndex: 9, // Adjust the ending column index
+            },
+            cell: {
+              userEnteredFormat: {
+                horizontalAlignment: "CENTER",
+              },
+            },
+            fields: "userEnteredFormat(horizontalAlignment)",
           },
         },
         // Column C Background Color

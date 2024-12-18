@@ -55,7 +55,7 @@ router.get("/getAllTasksCost", jwt.protect, (req, res) => {
   adminController.allTasksCost(req, res);
 });
 
-router.get("/getFreelancersKPI", jwt.protect, (req, res) => {
+router.get("/getFreelancersKPI",  (req, res) => {
   adminController.freelanerKPI(req, res);
 });
 

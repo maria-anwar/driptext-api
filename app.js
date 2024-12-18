@@ -64,7 +64,7 @@ class Server {
       cornJobs.taskDeadlineCheck();
     });
     // 0 0 1 * *
-    cron.schedule("*/2 * * * *", () => {
+    cron.schedule("0 0 1 * *", () => {
       cornJobs.monthlyFreelancingInvoicing();
     });
     // 0 0 1 * *

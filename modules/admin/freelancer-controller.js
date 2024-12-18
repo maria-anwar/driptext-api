@@ -108,7 +108,7 @@ exports.assignFreelancersByProject = async (req, res) => {
         for (const task of projectTasks) {
           await ProjectTask.findOneAndUpdate(
             { _id: task._id },
-            { texter: req.body.freelancerId },
+            { texter: req.body.freelancerId, texterAssignDate: dayjs().startOf("day").toDate() },
             { new: true }
           );
           const userLanguage = await Language.findOne({userId: freelancer._id})
@@ -147,7 +147,7 @@ exports.assignFreelancersByProject = async (req, res) => {
         for (const task of projectTasks) {
           await ProjectTask.findOneAndUpdate(
             { _id: task._id },
-            { lector: req.body.freelancerId },
+            { lector: req.body.freelancerId, lectorAssignDate: dayjs().startOf("day").toDate() },
             { new: true }
           );
           const userLanguage = await Language.findOne({userId: freelancer._id})
@@ -180,7 +180,7 @@ exports.assignFreelancersByProject = async (req, res) => {
         for (const task of projectTasks) {
           await ProjectTask.findOneAndUpdate(
             { _id: task._id },
-            { seo: req.body.freelancerId },
+            { seo: req.body.freelancerId, seoAssignDate: dayjs().startOf("day").toDate() },
             { new: true }
           );
           const userLanguage = await Language.findOne({userId: freelancer._id})
@@ -217,7 +217,7 @@ exports.assignFreelancersByProject = async (req, res) => {
         for (const task of projectTasks) {
           await ProjectTask.findOneAndUpdate(
             { _id: task._id },
-            { metaLector: req.body.freelancerId },
+            { metaLector: req.body.freelancerId, metaLectorAssignDate: dayjs().startOf("day").toDate() },
             { new: true }
           );
            const userLanguage = await Language.findOne({
@@ -242,7 +242,7 @@ exports.assignFreelancersByProject = async (req, res) => {
             if (count % 10 === 0) {
               await ProjectTask.findOneAndUpdate(
                 { _id: task._id },
-                { metaLector: req.body.freelancerId },
+                { metaLector: req.body.freelancerId, metaLectorAssignDate: dayjs().startOf("day").toDate() },
                 { new: true }
               );
               const userLanguage = await Language.findOne({userId: freelancer._id})
@@ -324,7 +324,7 @@ exports.assignFreelancerByTask = async (req, res) => {
     if (req.body.role.toLowerCase() === "texter") {
       const updatedTask = await ProjectTask.findOneAndUpdate(
         { _id: req.body.taskId },
-        { texter: req.body.freelancerId },
+        { texter: req.body.freelancerId, texterAssignDate: dayjs().startOf("day").toDate() },
         { new: true }
       );
       const userLanguage = await Language.findOne({userId: freelancer._id})
@@ -354,7 +354,7 @@ exports.assignFreelancerByTask = async (req, res) => {
     if (req.body.role.toLowerCase() === "lector") {
       const updatedTask = await ProjectTask.findOneAndUpdate(
         { _id: req.body.taskId },
-        { lector: req.body.freelancerId },
+        { lector: req.body.freelancerId, lectorAssignDate: dayjs().startOf("day").toDate() },
         { new: true }
       );
       const userLanguage = await Language.findOne({userId: freelancer._id})
@@ -370,7 +370,7 @@ exports.assignFreelancerByTask = async (req, res) => {
     if (req.body.role.toLowerCase() === "seo-optimizer") {
       const updatedTask = await ProjectTask.findOneAndUpdate(
         { _id: req.body.taskId },
-        { seo: req.body.freelancerId },
+        { seo: req.body.freelancerId, seoAssignDate: dayjs().startOf("day").toDate() },
         { new: true }
       );
       const userLanguage = await Language.findOne({userId: freelancer._id})

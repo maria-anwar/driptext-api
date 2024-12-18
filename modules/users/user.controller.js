@@ -1309,6 +1309,7 @@ exports.onboarding = async (req, res) => {
              //   onBoarding: createCompany._id,
              published: true,
              metaLector: updatedProject.metaLector,
+             metaLectorAssignDate: dayjs().startOf("day").toDate(),
              sampleText: true
              //   tasks: taskCount,
            };
