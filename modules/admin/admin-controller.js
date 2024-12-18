@@ -756,14 +756,13 @@ exports.tasksCostDateFilter = async (req, res) => {
 
 exports.freelanerKPI = async (req, res) => {
   try {
-    //  if (!req.role || req.role.toLowerCase() !== "projectmanger") {
-    //    res.status(401).send({ message: "Your are not admin" });
-    //    return;
-    //  }
+     if (!req.role || req.role.toLowerCase() !== "projectmanger") {
+       res.status(401).send({ message: "Your are not admin" });
+       return;
+     }
     const startOfMonth = dayjs().startOf("month").toDate();
     const endOfMonth = dayjs().endOf("month").toDate();
     const ninetyDaysAgo = dayjs().subtract(90, "day").startOf("day").toDate();
-
 
     let freelancers = await Freelancers.find({})
       .select("email firstName lastName phone")
@@ -771,7 +770,9 @@ exports.freelanerKPI = async (req, res) => {
     const freelancerIds = freelancers.map((obj) => obj._id.toString());
     const allTasks = await projectTasks
       .find({})
-      .select("dueDate finishedDate status texter texterAssignDate lector lectorAssignDate seo seoAssignDate metaLector metaLectorAssignDate")
+      .select(
+        "dueDate finishedDate status texter texterAssignDate lector lectorAssignDate seo seoAssignDate metaLector metaLectorAssignDate"
+      )
       .exec();
     const trafficLights = await TrafficLight.find({
       $or: [
@@ -782,7 +783,9 @@ exports.freelanerKPI = async (req, res) => {
           "returnTasks.date": { $gte: ninetyDaysAgo },
         },
       ],
-    }).exec();
+    })
+      .populate("freelancer")
+      .exec();
 
     const texterIds = allTasks.map((item) => {
       if (item?.texter) {
@@ -808,8 +811,6 @@ exports.freelanerKPI = async (req, res) => {
     let freelancersFinalData = [];
 
     allTasks.forEach((task) => {
-      if (!task) return; // Skip undefined tasks
-
       const taskTexterId = task?.texter?.toString() || "";
       const taskLectorId = task?.lector?.toString() || "";
       const taskSeoId = task?.seo?.toString() || "";
@@ -839,10 +840,20 @@ exports.freelanerKPI = async (req, res) => {
                   obj._id === texter._id && obj.role.toLowerCase() === "texter"
               );
               if (existing) {
-                existing.openTasksThisMonth = existing.openTasksThisMonth + 1;
+                const temp = freelancersFinalData.map((obj) => {
+                  if (obj._id === existing._id && obj.role === existing.role) {
+                    return {
+                      ...obj,
+                      openTasksThisMonth: obj?.openTasksThisMonth || 0 + 1,
+                    }
+                  } else {
+                    return obj
+                  }
+                });
+                freelancersFinalData = [...temp];
               } else {
                 const temp = {
-                  ...texter,
+                  ...texter.toObject(),
                   openTasksThisMonth: 1,
                   role: "Texter",
                 };
@@ -859,10 +870,20 @@ exports.freelanerKPI = async (req, res) => {
                   obj._id === lector._id && obj.role.toLowerCase() === "lector"
               );
               if (existing) {
-                existing.openTasksThisMonth = existing.openTasksThisMonth + 1;
+                const temp = freelancersFinalData.map((obj) => {
+                  if (obj._id === existing._id && obj.role === existing.role) {
+                    return {
+                      ...obj,
+                      openTasksThisMonth: obj?.openTasksThisMonth || 0 + 1,
+                    };
+                  } else {
+                    return obj;
+                  }
+                });
+                freelancersFinalData = [...temp];
               } else {
                 const temp = {
-                  ...lector,
+                  ...lector.toObject(),
                   openTasksThisMonth: 1,
                   role: "Lector",
                 };
@@ -880,10 +901,20 @@ exports.freelanerKPI = async (req, res) => {
                   obj.role.toLowerCase() === "seo optimizer"
               );
               if (existing) {
-                existing.openTasksThisMonth = existing.openTasksThisMonth + 1;
+                const temp = freelancersFinalData.map((obj) => {
+                  if (obj._id === existing._id && obj.role === existing.role) {
+                    return {
+                      ...obj,
+                      openTasksThisMonth: obj?.openTasksThisMonth || 0 + 1,
+                    };
+                  } else {
+                    return obj;
+                  }
+                });
+                freelancersFinalData = [...temp];
               } else {
                 const temp = {
-                  ...seoOptimizer,
+                  ...seoOptimizer.toObject(),
                   openTasksThisMonth: 1,
                   role: "SEO Optimizer",
                 };
@@ -901,10 +932,20 @@ exports.freelanerKPI = async (req, res) => {
                   obj.role.toLowerCase() === "meta lector"
               );
               if (existing) {
-                existing.openTasksThisMonth = existing.openTasksThisMonth + 1;
+                const temp = freelancersFinalData.map((obj) => {
+                  if (obj._id === existing._id && obj.role === existing.role) {
+                    return {
+                      ...obj,
+                      openTasksThisMonth: obj?.openTasksThisMonth || 0 + 1,
+                    };
+                  } else {
+                    return obj;
+                  }
+                });
+                freelancersFinalData = [...temp];
               } else {
                 const temp = {
-                  ...metaLector,
+                  ...metaLector.toObject(),
                   openTasksThisMonth: 1,
                   role: "Meta Lector",
                 };
@@ -931,10 +972,21 @@ exports.freelanerKPI = async (req, res) => {
                 obj._id === texter._id && obj.role.toLowerCase() === "texter"
             );
             if (existing) {
-              existing.taskAssignThisMonth = existing.taskAssignThisMonth + 1;
+                 const temp = freelancersFinalData.map((obj) => {
+                   if (obj._id === existing._id && obj.role === existing.role) {
+                     return {
+                       ...obj,
+                       taskAssignThisMonth:
+                         obj?.taskAssignThisMonth || 0 + 1,
+                     };
+                   } else {
+                     return obj;
+                   }
+                 });
+                 freelancersFinalData = [...temp];
             } else {
               const temp = {
-                ...texter,
+                ...texter.toObject(),
                 taskAssignThisMonth: 1,
                 role: "Texter",
               };
@@ -958,10 +1010,21 @@ exports.freelanerKPI = async (req, res) => {
                 obj._id === lector._id && obj.role.toLowerCase() === "lector"
             );
             if (existing) {
-              existing.taskAssignThisMonth = existing.taskAssignThisMonth + 1;
+               const temp = freelancersFinalData.map((obj) => {
+                 if (obj._id === existing._id && obj.role === existing.role) {
+                   return {
+                     ...obj,
+                     taskAssignThisMonth:
+                       obj?.taskAssignThisMonth || 0 + 1,
+                   };
+                 } else {
+                   return obj;
+                 }
+               });
+               freelancersFinalData = [...temp];
             } else {
               const temp = {
-                ...lector,
+                ...lector.toObject(),
                 taskAssignThisMonth: 1,
                 role: "Lector",
               };
@@ -986,10 +1049,21 @@ exports.freelanerKPI = async (req, res) => {
                 obj.role.toLowerCase() === "seo optimizer"
             );
             if (existing) {
-              existing.taskAssignThisMonth = existing.taskAssignThisMonth + 1;
+               const temp = freelancersFinalData.map((obj) => {
+                 if (obj._id === existing._id && obj.role === existing.role) {
+                   return {
+                     ...obj,
+                     taskAssignThisMonth:
+                       obj?.taskAssignThisMonth || 0 + 1,
+                   };
+                 } else {
+                   return obj;
+                 }
+               });
+               freelancersFinalData = [...temp];
             } else {
               const temp = {
-                ...seoOptimizer,
+                ...seoOptimizer.toObject(),
                 taskAssignThisMonth: 1,
                 role: "SEO Optimizer",
               };
@@ -1014,10 +1088,21 @@ exports.freelanerKPI = async (req, res) => {
                 obj.role.toLowerCase() === "meta lector"
             );
             if (existing) {
-              existing.taskAssignThisMonth = existing.taskAssignThisMonth + 1;
+               const temp = freelancersFinalData.map((obj) => {
+                 if (obj._id === existing._id && obj.role === existing.role) {
+                   return {
+                     ...obj,
+                     taskAssignThisMonth:
+                       obj?.taskAssignThisMonth || 0 + 1,
+                   };
+                 } else {
+                   return obj;
+                 }
+               });
+               freelancersFinalData = [...temp];
             } else {
               const temp = {
-                ...metaLector,
+                ...metaLector.toObject(),
                 taskAssignThisMonth: 1,
                 role: "Meta Lector",
               };
@@ -1038,10 +1123,20 @@ exports.freelanerKPI = async (req, res) => {
                 obj._id === texter._id && obj.role.toLowerCase() === "texter"
             );
             if (existing) {
-              existing.assignedTotalTasks = existing.assignedTotalTasks + 1;
+               const temp = freelancersFinalData.map((obj) => {
+                 if (obj._id === existing._id && obj.role === existing.role) {
+                   return {
+                     ...obj,
+                     assignedTotalTasks: obj?.assignedTotalTasks || 0 + 1,
+                   };
+                 } else {
+                   return obj;
+                 }
+               });
+               freelancersFinalData = [...temp];
             } else {
               const temp = {
-                ...texter,
+                ...texter.toObject(),
                 assignedTotalTasks: 1,
                 role: "Texter",
               };
@@ -1052,90 +1147,171 @@ exports.freelanerKPI = async (req, res) => {
 
         // Lector
         if (task?.lector) {
-           const lector = freelancers.find(
-             (obj) => obj._id.toString() === taskLectorId
-           );
-           if (lector) {
-             const existing = freelancersFinalData.find(
-               (obj) =>
-                 obj._id === lector._id && obj.role.toLowerCase() === "lector"
-             );
-             if (existing) {
-               existing.assignedTotalTasks = existing.assignedTotalTasks + 1;
-             } else {
-               const temp = {
-                 ...lector,
-                 assignedTotalTasks: 1,
-                 role: "Lector",
-               };
-               freelancersFinalData.push(temp);
-             }
-           }
+          const lector = freelancers.find(
+            (obj) => obj._id.toString() === taskLectorId
+          );
+          if (lector) {
+            const existing = freelancersFinalData.find(
+              (obj) =>
+                obj._id === lector._id && obj.role.toLowerCase() === "lector"
+            );
+            if (existing) {
+               const temp = freelancersFinalData.map((obj) => {
+                 if (obj._id === existing._id && obj.role === existing.role) {
+                   return {
+                     ...obj,
+                     assignedTotalTasks: obj?.assignedTotalTasks || 0 + 1,
+                   };
+                 } else {
+                   return obj;
+                 }
+               });
+               freelancersFinalData = [...temp];
+            } else {
+              const temp = {
+                ...lector.toObject(),
+                assignedTotalTasks: 1,
+                role: "Lector",
+              };
+              freelancersFinalData.push(temp);
+            }
+          }
         }
 
         // Seo
         if (task?.seo) {
-           const seoOptimizer = freelancers.find(
-             (obj) => obj._id.toString() === taskSeoId
-           );
-           if (seoOptimizer) {
-             const existing = freelancersFinalData.find(
-               (obj) =>
-                 obj._id === seoOptimizer._id &&
-                 obj.role.toLowerCase() === "seo optimizer"
-             );
-             if (existing) {
-               existing.assignedTotalTasks = existing.assignedTotalTasks + 1;
-             } else {
-               const temp = {
-                 ...seoOptimizer,
-                 assignedTotalTasks: 1,
-                 role: "SEO Optimizer",
-               };
-               freelancersFinalData.push(temp);
-             }
-           }
-          
+          const seoOptimizer = freelancers.find(
+            (obj) => obj._id.toString() === taskSeoId
+          );
+          if (seoOptimizer) {
+            const existing = freelancersFinalData.find(
+              (obj) =>
+                obj._id === seoOptimizer._id &&
+                obj.role.toLowerCase() === "seo optimizer"
+            );
+            if (existing) {
+              const temp = freelancersFinalData.map((obj) => {
+                if (obj._id === existing._id && obj.role === existing.role) {
+                  return {
+                    ...obj,
+                    assignedTotalTasks: obj?.assignedTotalTasks || 0 + 1,
+                  };
+                } else {
+                  return obj;
+                }
+              });
+              freelancersFinalData = [...temp];
+            } else {
+              const temp = {
+                ...seoOptimizer.toObject(),
+                assignedTotalTasks: 1,
+                role: "SEO Optimizer",
+              };
+              freelancersFinalData.push(temp);
+            }
+          }
         }
 
         // meta lector
         if (task?.metaLector) {
-           const metaLector = freelancers.find(
-             (obj) => obj._id.toString() === taskMetaLectorId
-           );
-           if (metaLector) {
-             const existing = freelancersFinalData.find(
-               (obj) =>
-                 obj._id === metaLector._id &&
-                 obj.role.toLowerCase() === "meta lector"
-             );
-             if (existing) {
-               existing.assignedTotalTasks = existing.assignedTotalTasks + 1;
-             } else {
-               const temp = {
-                 ...metaLector,
-                 assignedTotalTasks: 1,
-                 role: "Meta Lector",
-               };
-               freelancersFinalData.push(temp);
-             }
-           }
+          const metaLector = freelancers.find(
+            (obj) => obj._id.toString() === taskMetaLectorId
+          );
+          if (metaLector) {
+            const existing = freelancersFinalData.find(
+              (obj) =>
+                obj._id === metaLector._id &&
+                obj.role.toLowerCase() === "meta lector"
+            );
+            if (existing) {
+               const temp = freelancersFinalData.map((obj) => {
+                 if (obj._id === existing._id && obj.role === existing.role) {
+                   return {
+                     ...obj,
+                     assignedTotalTasks: obj?.assignedTotalTasks || 0 + 1,
+                   };
+                 } else {
+                   return obj;
+                 }
+               });
+               freelancersFinalData = [...temp];
+            } else {
+              const temp = {
+                ...metaLector.toObject(),
+                assignedTotalTasks: 1,
+                role: "Meta Lector",
+              };
+              freelancersFinalData.push(temp);
+            }
+          }
         }
       }
     });
 
-    const finalDataFreelancersIds = freelancersFinalData.map(item => item._id)
+    const finalDataFreelancersIds = freelancersFinalData.map((item) =>
+      item._id.toString()
+    );
 
-    trafficLights.forEach(item => {
-      if (finalDataFreelancersIds.includes(item.freelancer)) {
-        
-        const freelancer = freelancersFinalData.find(obj => obj._id === item._id)
-        freelancer.deadlineTasks = item.deadlineTasks.length
-        freelancer.returnTasks = item.returnTasks.length
+    // console.log("traffic lights: ", trafficLights)
+  
+    trafficLights.forEach((item) => {
+      if (finalDataFreelancersIds.includes(item.freelancer._id.toString())) {
+        const temp = freelancersFinalData.map(obj => {
+          
+          if (obj._id.toString() === item.freelancer._id.toString() && obj.role === item.role) {
+            console.log("found traffic light: ", item.freelancer._id)
+            return {
+              ...obj,
+              returnTasks: item.returnTasks.length,
+              deadlineTasks: item.deadlineTasks.length
+            }
+          } else {
+            return obj
+          }
+        })
+        freelancersFinalData = [...temp]
+      } else {
+        const temp = {
+          _id: item.freelancer._id,
+          email: item.freelancer.email,
+          firstName: item.freelancer.firstName,
+          lastName: item.freelancer.lastName,
+          phone: item.freelancer.phone,
+          taskAssignThisMonth: 0,
+          openTasksThisMonth: 0,
+          assignedTotalTasks: 0,
+          returnTasks: 0,
+          deadlineTasks: 0
+        }
+        freelancersFinalData.push(temp)
       }
     })
 
-    res.status(200).send({ message: "Success", data: allTasks });
+
+    freelancersFinalData = freelancersFinalData.map(item => {
+      let temp = {}
+      if (!item?.taskAssignThisMonth) {
+        temp.taskAssignThisMonth = 0
+      }
+      if (!item?.openTasksThisMonth) {
+        temp.openTasksThisMonth = 0
+      }
+      if (!item?.assignedTotalTasks) {
+        temp.assignedTotalTasks = 0
+      }
+      if (!item?.returnTasks) {
+        temp.returnTasks = 0
+      }
+      if (!item?.deadlineTasks) {
+        temp.deadlineTasks = 0
+      }
+      return {
+        ...item,
+        ...temp
+      }
+    })
+
+    res.status(200).send({ message: "Success", data: freelancersFinalData });
   } catch (error) {
     console.error(error);
     res.status(500).send({ message: error?.message || "Something went wrong" });
