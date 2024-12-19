@@ -1533,7 +1533,7 @@ exports.emailSubscription = async (req, res) => {
     const { error, value } = joiSchema.validate(req.body);
 
     if (error) {
-      emails.errorEmail(req, error);
+      // emails.errorEmail(req, error);
 
       const message = error.details[0].message.replace(/"/g, "");
       res.status(401).send({
@@ -1555,3 +1555,55 @@ exports.emailSubscription = async (req, res) => {
     res.status(500).send({ message: error?.message || "Something went wrong" });
   }
 };
+
+exports.getClientInvoices = async (req, res) => {
+  try {
+    const joiSchema = Joi.object({
+      email: Joi.string().required(),
+    });
+    const { error, value } = joiSchema.validate(req.body);
+
+    if (error) {
+      // emails.errorEmail(req, error);
+
+      const message = error.details[0].message.replace(/"/g, "");
+      res.status(401).send({
+        message: message,
+      });
+      return;
+    }
+
+    const invoices = await Subscription.find({ "subscriptionData.customer.email": req.body.email }).select("subscriptionData.invoice").exec()
+    
+    res.status(200).send({message: "Success", data: invoices})
+
+  } catch (error) {
+    res.status(500).send({message: error?.message || "Something went wrong"})
+  }
+}
+
+exports.getInvoiceUrl = async (req, res) => {
+  try {
+     const joiSchema = Joi.object({
+       invoice_id: Joi.string().required(),
+     });
+     const { error, value } = joiSchema.validate(req.body);
+
+     if (error) {
+       // emails.errorEmail(req, error);
+
+       const message = error.details[0].message.replace(/"/g, "");
+       res.status(401).send({
+         message: message,
+       });
+       return;
+     }
+    
+    const response = await getSubscriptionInvoice(req.body.invoice_id)
+
+    res.status(200).send({message: "Success", data: response})
+    
+  } catch (error) {
+    res.status(500).send({message: error?.message || "Something went wrong"})
+  }
+}

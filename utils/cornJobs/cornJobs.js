@@ -698,7 +698,7 @@ const monthlyFreelancingInvoicing = async () => {
             ...item.task,
             role: item.role,
             pricePerWord: pricePerWord.toString(),
-            billedWords: Number(item.billedWords).toFixed(2),
+            billedWords: Math.ceil(item.billedWords).toString(),
             total: Number(item.price).toFixed(2),
             freelancerName: `${earning.freelancer.firstName} ${earning.freelancer.lastName}`,
           };
@@ -791,7 +791,7 @@ const monthlyFreelancingInvoicing = async () => {
       if (
         earning.freelancer.billingInfo.vatRegulation
           .toLowerCase()
-          .includes("cy ltd")
+          .includes("cy company")
       ) {
         const result = (19 / 100) * subTotal;
         vat = result;

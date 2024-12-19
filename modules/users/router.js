@@ -36,4 +36,11 @@ router.post("/emailCheck", (req, res) => {
 
 })
 
+router.post("/getClientInvoice", jwt.protect, (req, res) => {
+  usersController.getClientInvoices(req, res);
+});
+router.post("/getInvoiceUrl", jwt.protect, (req, res) => {
+  usersController.getInvoiceUrl(req, res);
+});
+
 module.exports = router;

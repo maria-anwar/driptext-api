@@ -1238,14 +1238,14 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
       properties: {
         title: `${dayjs().year()}-${dayjs().month() + 1}-${
           invoiceData.invoiceNo
-        }_Invoice`,
+        }_Credit`,
       },
       sheets: [
         {
           properties: {
             title: `${dayjs().year()}-${dayjs().month() + 1}-${
               invoiceData.invoiceNo
-            }_Invoice`, // Sets the first sheet name
+            }_Credit`, // Sets the first sheet name
           },
         },
       ],
@@ -1260,7 +1260,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
   console.log(" sheet id: ", sheetId);
   const sheetName = `${dayjs().year()}-${dayjs().month() + 1}-${
     invoiceData.invoiceNo
-  }_Invoice`;
+  }_Credit`;
 
   let vatName = "";
   let vatDescription = "";
@@ -1276,7 +1276,8 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
     invoiceData.vatRegulation.toLowerCase().includes("cy company") ||
     invoiceData.vatRegulation.toLowerCase().includes("non-eu company")
   ) {
-    vatDescription = "";
+    vatDescription =
+      "No VAT as the service is not taxed in the domestic market.";
   }
 
   if (invoiceData.vatRegulation.toLowerCase().includes("eu reverse-charge")) {
@@ -1313,7 +1314,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
       "",
       "",
       "",
-      "Invoice No: ",
+      "Credit No: ",
       "",
       `${dayjs().year()}-${dayjs().month() + 1}-${invoiceData.invoiceNo}`,
     ],
@@ -1341,7 +1342,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
       `${
         invoiceData?.vat === 0 && invoiceData?.vatId === "null"
           ? ""
-          : invoiceData.vatId
+          : `VAT: ${invoiceData.vatId}`
       }`,
       "",
       "",
@@ -1355,7 +1356,7 @@ exports.createInvoiceInGoogleSheets = async (invoiceData) => {
     ["", "", "", "", "", "", ""],
     ["", "", "", "", "", "", ""],
     [
-      `Invoice No. ${dayjs().year()}-${dayjs().month() + 1}-${
+      `Credit No. ${dayjs().year()}-${dayjs().month() + 1}-${
         invoiceData.invoiceNo
       }`,
       "",
@@ -2213,6 +2214,7 @@ const exportFinishedTasks = async (tasks, freelancerName, invoiceNo) => {
     task?.status || "",
     task?.keywords || "",
     task?.desiredNumberOfWords || "",
+    task?.actualNumberOfWords || "",
     task?.billedWords || "",
     task?.role || "",
     task?.pricePerWord && priceFormatter.format(task?.pricePerWord) || "",
@@ -2231,6 +2233,7 @@ const exportFinishedTasks = async (tasks, freelancerName, invoiceNo) => {
       "Status",
       "Keyword",
       "Req. Words",
+      "Act. Words",
       "Bill. Words",
       "Role",
       "Price Per Word",
@@ -2260,7 +2263,7 @@ const exportFinishedTasks = async (tasks, freelancerName, invoiceNo) => {
             range: {
               sheetId, // Assuming it's the first sheet; replace with your sheet ID
               dimension: "COLUMNS",
-              startIndex: 9, // Column H (0-indexed)
+              startIndex: 10, // Column H (0-indexed)
             },
           },
         },
@@ -2312,7 +2315,7 @@ const exportFinishedTasks = async (tasks, freelancerName, invoiceNo) => {
               startRowIndex: 0,
               endRowIndex: 1,
               startColumnIndex: 5,
-              endColumnIndex: 9,
+              endColumnIndex: 10,
             },
             mergeType: "MERGE_ALL",
           },
@@ -2386,7 +2389,7 @@ const exportFinishedTasks = async (tasks, freelancerName, invoiceNo) => {
               startRowIndex: 0, // Adjust the starting row index
               endRowIndex: 1, // Adjust the ending row index
               startColumnIndex: 5, // Adjust the starting column index
-              endColumnIndex: 8, // Adjust the ending column index
+              endColumnIndex: 9, // Adjust the ending column index
             },
             cell: {
               userEnteredFormat: {
@@ -2417,7 +2420,7 @@ const exportFinishedTasks = async (tasks, freelancerName, invoiceNo) => {
               startRowIndex: 1, // Adjust the starting row index
               endRowIndex: 2, // Adjust the ending row index
               startColumnIndex: 0, // Adjust the starting column index
-              endColumnIndex: 9, // Adjust the ending column index
+              endColumnIndex: 10, // Adjust the ending column index
             },
             cell: {
               userEnteredFormat: {
@@ -2473,6 +2476,22 @@ const exportFinishedTasks = async (tasks, freelancerName, invoiceNo) => {
             range: {
               sheetId, // Replace with your sheet ID
 
+              startColumnIndex: 2, // Adjust the starting column index
+              endColumnIndex: 3, // Adjust the ending column index
+            },
+            cell: {
+              userEnteredFormat: {
+                horizontalAlignment: "CENTER",
+              },
+            },
+            fields: "userEnteredFormat(horizontalAlignment)",
+          },
+        },
+        {
+          repeatCell: {
+            range: {
+              sheetId, // Replace with your sheet ID
+
               startColumnIndex: 4, // Adjust the starting column index
               endColumnIndex: 5, // Adjust the ending column index
             },
@@ -2505,6 +2524,22 @@ const exportFinishedTasks = async (tasks, freelancerName, invoiceNo) => {
             range: {
               sheetId, // Replace with your sheet ID
 
+              startColumnIndex: 6, // Adjust the starting column index
+              endColumnIndex: 7, // Adjust the ending column index
+            },
+            cell: {
+              userEnteredFormat: {
+                horizontalAlignment: "CENTER",
+              },
+            },
+            fields: "userEnteredFormat(horizontalAlignment)",
+          },
+        },
+        {
+          repeatCell: {
+            range: {
+              sheetId, // Replace with your sheet ID
+
               startColumnIndex: 7, // Adjust the starting column index
               endColumnIndex: 8, // Adjust the ending column index
             },
@@ -2523,6 +2558,22 @@ const exportFinishedTasks = async (tasks, freelancerName, invoiceNo) => {
 
               startColumnIndex: 8, // Adjust the starting column index
               endColumnIndex: 9, // Adjust the ending column index
+            },
+            cell: {
+              userEnteredFormat: {
+                horizontalAlignment: "CENTER",
+              },
+            },
+            fields: "userEnteredFormat(horizontalAlignment)",
+          },
+        },
+        {
+          repeatCell: {
+            range: {
+              sheetId, // Replace with your sheet ID
+
+              startColumnIndex: 9, // Adjust the starting column index
+              endColumnIndex: 10, // Adjust the ending column index
             },
             cell: {
               userEnteredFormat: {
@@ -2661,6 +2712,20 @@ const exportFinishedTasks = async (tasks, freelancerName, invoiceNo) => {
               dimension: "COLUMNS",
               startIndex: 7,
               endIndex: 8,
+            },
+            properties: {
+              pixelSize: 100, // Width for column B
+            },
+            fields: "pixelSize",
+          },
+        },
+        {
+          updateDimensionProperties: {
+            range: {
+              sheetId, // Replace with your sheet ID
+              dimension: "COLUMNS",
+              startIndex: 8,
+              endIndex: 9,
             },
             properties: {
               pixelSize: 100, // Width for column B
