@@ -589,8 +589,6 @@ const calculateInvoice = async () => {
   //  const endOfPreviousMonth = dayjs()
   //    .endOf("month")
   //    .format("YYYY-MM-DD");
-  
- 
 
   console.log("Previous month start date:", startOfPreviousMonth);
   console.log("Previous month end date:", endOfPreviousMonth);
@@ -841,13 +839,11 @@ const monthlyFreelancingInvoicing = async () => {
         {
           name: data.freelancerName,
           email: data.freelancerEmail,
-         
+          // email: "mariaanwar996@gmail.com",
         },
         { pdf: data.invoice, sheet: data.invoiceSheet },
         { pdf: data.tasks, sheet: data.tasksSheet },
         userLanguage?.language || "de"
-        
-        
       );
       const admins = await Users.aggregate([
         {

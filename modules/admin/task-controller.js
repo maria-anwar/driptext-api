@@ -122,7 +122,7 @@ exports.addTask = async (req, res) => {
 
                   user: userId,
 
-                  published: true,
+                  // published: true,
                   metaLector: project.metaLector,
                   metaLectorAssignDate: dayjs().startOf("day").toDate()
                 };
@@ -294,7 +294,7 @@ exports.addTask = async (req, res) => {
                 project: project._id,
                 user: userId,
                 // onBoarding: createCompany._id,
-                published: true,
+                // published: true,
                 ...(taskCount % 9 === 0 && {
                   metaLector: project.metaLector,
                   metaLectorAssignDate: dayjs().startOf("day").toDate()
@@ -664,7 +664,7 @@ exports.importProjectTasks = async (req, res) => {
               dueDate: task.dueDate,
               topic: task.topic,
               type: task.type,
-              published: true,
+              // published: true,
               project: project._id,
               desiredNumberOfWords: task.wordCount,
               status: "Ready To Work",
@@ -877,7 +877,7 @@ exports.importProjectTasks = async (req, res) => {
             topic: task.topic,
             type: task.type,
             status: "Ready To Work",
-            published: true,
+            // published: true,
             desiredNumberOfWords: task.wordCount,
             project: project._id,
             user: user._id,

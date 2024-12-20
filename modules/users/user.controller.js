@@ -1307,7 +1307,7 @@ exports.onboarding = async (req, res) => {
              //   status: taskStatus,
              user: userId,
              //   onBoarding: createCompany._id,
-             published: true,
+            //  published: true,
              metaLector: updatedProject.metaLector,
              metaLectorAssignDate: dayjs().startOf("day").toDate(),
              sampleText: true
