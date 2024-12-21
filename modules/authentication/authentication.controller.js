@@ -3,7 +3,8 @@ const jwt = require("../../utils/jwt");
 const encryptHelper = require("../../utils/encryptHelper");
 const emails = require("../../utils/emails");
 const Joi = require("@hapi/joi");
-const crypto = require("../../utils/crypto")
+const crypto = require("../../utils/crypto");
+const { verifyPassword, hashPassword } = require("../../utils/passwordEncryption");
 
 // const Clients = db.clients;
 const Users = db.User;
@@ -36,7 +37,6 @@ exports.login = async (req, res) => {
     if (FreelancerExists) {
       const freelancer = await Freelancers.findOne({
         email: req.body.email.trim(),
-        password: req.body.password,
         isActive: "Y",
       })
         .select("firstName lastName email role password")
@@ -46,7 +46,7 @@ exports.login = async (req, res) => {
 
       if (
         freelancer &&
-        crypto.decrypt(freelancer.password) == req.body.password
+        await verifyPassword(req.body.password, freelancer.password)
       ) {
         // encryptHelper(user);
         console.log("logdin");
@@ -79,7 +79,6 @@ exports.login = async (req, res) => {
       if (userExist) {
         const user = await Users.findOne({
           email: req.body.email.trim(),
-          password: req.body.password,
           isActive: "Y",
         })
           .select("firstName lastName email role password emailSubscription")
@@ -87,7 +86,7 @@ exports.login = async (req, res) => {
         
         // const decryptedPassword = crypto.decrypt(user.password)
 
-        if (user && crypto.decrypt(user.password) == req.body.password) {
+        if (user && await verifyPassword(req.body.password, user.password)) {
           // encryptHelper(user);
           console.log("logdin");
           const token = jwt.signToken({
@@ -118,7 +117,6 @@ exports.login = async (req, res) => {
         if (userExist) {
           const user = await Users.findOne({
             email: req.body.email.trim(),
-            password: req.body.password,
             isActive: "Y",
           })
             .select("firstName lastName email role password emailSubscription")
@@ -126,7 +124,7 @@ exports.login = async (req, res) => {
           
           // const decryptedPassword = crypto.decrypt(user.password)
 
-          if (user && crypto.decrypt(user.password) == req.body.password) {
+          if (user && await verifyPassword(req.body.password, user.password)) {
             // encryptHelper(user);
             console.log("logdin");
             const token = jwt.signToken({
@@ -195,7 +193,7 @@ exports.create = async (req, res) => {
           firstName: req.body.firstName?.trim(),
           lastName: req.body.lastName?.trim(),
           email: req.body.email,
-          password: crypto.encrypt(req.body.password),
+          password: await hashPassword(req.body.password),
         };
 
         console.log(userObj);
@@ -294,7 +292,7 @@ exports.resetPassword = async (req, res) => {
       }
 
       if (user) {
-        var password = req.body.password;
+        var password = await hashPassword(req.body.password);
 
         Users.findOneAndUpdate(
           { email: email.trim() },
@@ -313,7 +311,7 @@ exports.resetPassword = async (req, res) => {
             });
           });
       } else if (freelancer) {
-        var password = req.body.password;
+        var password = await hashPassword(req.body.password);
 
         Freelancers.findOneAndUpdate(
           { email: email.trim() },

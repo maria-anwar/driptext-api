@@ -6,7 +6,7 @@ const dayjs = require("dayjs");
 const csvParser = require("csv-parser");
 const fs = require("fs");
 const path = require("path");
-const crypto = require("../../utils/crypto")
+const {hashPassword, verifyPassword} = require("../../utils/passwordEncryption")
 
 // const { RDS } = require("aws-sdk");
 
@@ -69,7 +69,7 @@ exports.createProjectManager = async (req, res) => {
     const session = await mongoose.startSession();
     session.startTransaction();
 
-    const encryptedPassword = crypto.encrypt(req.body.password)
+    const encryptedPassword = await hashPassword(req.body.password)
 
     const body = {
       firstName: req.body.firstName,
