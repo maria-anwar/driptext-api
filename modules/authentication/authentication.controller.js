@@ -3,6 +3,7 @@ const jwt = require("../../utils/jwt");
 const encryptHelper = require("../../utils/encryptHelper");
 const emails = require("../../utils/emails");
 const Joi = require("@hapi/joi");
+const crypto = require("../../utils/crypto")
 
 // const Clients = db.clients;
 const Users = db.User;
@@ -27,6 +28,7 @@ exports.login = async (req, res) => {
         message: message,
       });
     }
+    
     const FreelancerExists = await Freelancers.findOne({
       email: req.body.email.trim(),
       isActive: "Y",
@@ -39,8 +41,10 @@ exports.login = async (req, res) => {
       })
         .select("firstName lastName email role password")
         .populate({ path: "role", select: "title" });
+      
+      const decryptedPassword = crypto.decrypt(freelancer.password)
 
-      if (freelancer && freelancer.password == req.body.password) {
+      if (freelancer && decryptedPassword == req.body.password) {
         // encryptHelper(user);
         console.log("logdin");
         const token = jwt.signToken({
@@ -77,8 +81,10 @@ exports.login = async (req, res) => {
         })
           .select("firstName lastName email role password emailSubscription")
           .populate({ path: "role", select: "title" });
+        
+        const decryptedPassword = crypto.decrypt(user.password)
 
-        if (user && user.password == req.body.password) {
+        if (user && decryptedPassword == req.body.password) {
           // encryptHelper(user);
           console.log("logdin");
           const token = jwt.signToken({
@@ -114,8 +120,10 @@ exports.login = async (req, res) => {
           })
             .select("firstName lastName email role password emailSubscription")
             .populate({ path: "role", select: "title" });
+          
+          const decryptedPassword = crypto.decrypt(user.password)
 
-          if (user && user.password == req.body.password) {
+          if (user && decryptedPassword == req.body.password) {
             // encryptHelper(user);
             console.log("logdin");
             const token = jwt.signToken({
@@ -184,7 +192,7 @@ exports.create = async (req, res) => {
           firstName: req.body.firstName?.trim(),
           lastName: req.body.lastName?.trim(),
           email: req.body.email,
-          password: req.body.password,
+          password: crypto.encrypt(req.body.password),
         };
 
         console.log(userObj);

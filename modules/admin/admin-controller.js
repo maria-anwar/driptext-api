@@ -6,6 +6,7 @@ const dayjs = require("dayjs");
 const csvParser = require("csv-parser");
 const fs = require("fs");
 const path = require("path");
+const crypto = require("../../utils/crypto")
 
 // const { RDS } = require("aws-sdk");
 
@@ -68,12 +69,14 @@ exports.createProjectManager = async (req, res) => {
     const session = await mongoose.startSession();
     session.startTransaction();
 
+    const encryptedPassword = crypto.encrypt(req.body.password)
+
     const body = {
       firstName: req.body.firstName,
       lastName: req.body.lastName,
       email: req.body.email,
       role: role._id,
-      password: req.body.password,
+      password: encryptedPassword,
     };
 
     const admin = await Users.create(body);
