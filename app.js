@@ -21,10 +21,10 @@ class Server {
   }
   // mongodb://localhost:27017/
   connectToDatabase() {
-    // const dbURI =
-    //   process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/driptextdb";
     const dbURI =
-      "mongodb+srv://driptextde:tEKVnpM3vBW1n13m@cluster0.tvtce.mongodb.net/driptext?retryWrites=true&w=majority";
+      process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/driptextdb";
+    // const dbURI =
+    //   "mongodb+srv://driptextde:tEKVnpM3vBW1n13m@cluster0.tvtce.mongodb.net/driptext?retryWrites=true&w=majority";
 
     mongoose.connect(dbURI, {
       useNewUrlParser: true,

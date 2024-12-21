@@ -20,6 +20,7 @@ const {
 } = require("../../utils/googleService/actions");
 const { getSubscriptionInvoice } = require("../../utils/chargebee/actions");
 const { getProjectCounter, getTaskCounter } = require("../../utils/counter/counter");
+const {hashPassword, verifyPassword} = require("../../utils/passwordEncryption")
 
 const Users = db.User;
 const Roles = db.Role;
@@ -74,7 +75,7 @@ exports.create = async (req, res) => {
         country: req.body.country ? req.body.country : null,
         vatIdNo: req.body.vatId ? req.body.vatId : null,
         companyName: req.body.companyName ? req.body.companyName : null,
-        password: req.body.password ? req.body.password : "123456@123456",
+        password: req.body.password ? await  hashPassword(req.body.password) : await hashPassword("123456@123456"),
         role: req.body.roleId,
         isSubscribed: req.body.isSubscribed ? req.body.isSubscribed : "N",
       };
