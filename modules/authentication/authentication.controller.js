@@ -42,9 +42,12 @@ exports.login = async (req, res) => {
         .select("firstName lastName email role password")
         .populate({ path: "role", select: "title" });
       
-      const decryptedPassword = crypto.decrypt(freelancer.password)
+      // const decryptedPassword = crypto.decrypt(freelancer.password)
 
-      if (freelancer && decryptedPassword == req.body.password) {
+      if (
+        freelancer &&
+        crypto.decrypt(freelancer.password) == req.body.password
+      ) {
         // encryptHelper(user);
         console.log("logdin");
         const token = jwt.signToken({
@@ -82,9 +85,9 @@ exports.login = async (req, res) => {
           .select("firstName lastName email role password emailSubscription")
           .populate({ path: "role", select: "title" });
         
-        const decryptedPassword = crypto.decrypt(user.password)
+        // const decryptedPassword = crypto.decrypt(user.password)
 
-        if (user && decryptedPassword == req.body.password) {
+        if (user && crypto.decrypt(user.password) == req.body.password) {
           // encryptHelper(user);
           console.log("logdin");
           const token = jwt.signToken({
@@ -121,9 +124,9 @@ exports.login = async (req, res) => {
             .select("firstName lastName email role password emailSubscription")
             .populate({ path: "role", select: "title" });
           
-          const decryptedPassword = crypto.decrypt(user.password)
+          // const decryptedPassword = crypto.decrypt(user.password)
 
-          if (user && decryptedPassword == req.body.password) {
+          if (user && crypto.decrypt(user.password) == req.body.password) {
             // encryptHelper(user);
             console.log("logdin");
             const token = jwt.signToken({
