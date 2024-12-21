@@ -9,6 +9,7 @@ const freelancerEmails = require("../../utils/sendEmail/freelancer/emails");
 const adminEmails = require("../../utils/sendEmail/admin/emails");
 const clientEmails = require("../../utils/sendEmail/client/emails");
 const emails = require("../../utils/emails");
+const { hashPassword, verifyPassword } = require("../../utils/passwordEncryption");
 
 const Freelancers = db.Freelancer;
 const Users = db.User;
@@ -94,7 +95,7 @@ exports.create = async (req, res) => {
         iban: req.body.iban,
         vatRegulation: req.body.vatRegulation,
       },
-      password: req.body.password ? req.body.password : "123456@123456",
+      password: req.body.password ? await hashPassword(req.body.password) : await hashPassword("123456@123456"),
     };
     const user = await Freelancers.create(tempUser);
     freelancerEmails
