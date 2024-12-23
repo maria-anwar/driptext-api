@@ -295,7 +295,7 @@ exports.addTask = async (req, res) => {
                 user: userId,
                 // onBoarding: createCompany._id,
                 // published: true,
-                ...(taskCount % 9 === 0 && {
+                ...(taskCount > 0 && taskCount % 9 === 0 && {
                   metaLector: project.metaLector,
                   metaLectorAssignDate: dayjs().startOf("day").toDate()
                 }),
@@ -327,7 +327,7 @@ exports.addTask = async (req, res) => {
                 },
                 { new: true }
               );
-              if (taskCount % 9 === 0) {
+              if (taskCount > 0 && taskCount % 9 === 0) {
                 const freelancer = await Freelancers.findOne({
                   _id: project.metaLector,
                 });
@@ -881,7 +881,7 @@ exports.importProjectTasks = async (req, res) => {
             desiredNumberOfWords: task.wordCount,
             project: project._id,
             user: user._id,
-            ...(taskCount % 9 === 0 && { metaLector: project.metaLector, metaLectorAssignDate: dayjs().startOf("day").toDate() }),
+            ...(taskCount > 0 && taskCount % 9 === 0 && { metaLector: project.metaLector, metaLectorAssignDate: dayjs().startOf("day").toDate() }),
             // onBoarding: createCompany._id,
           };
 
@@ -952,7 +952,7 @@ exports.importProjectTasks = async (req, res) => {
             },
             { new: true }
           );
-          if (taskCount % 9 === 0) {
+          if (taskCount > 0 && taskCount % 9 === 0) {
             const freelancer = await Freelancers.findOne({
               _id: project.metaLector,
             });
