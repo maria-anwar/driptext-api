@@ -62,8 +62,8 @@ exports.login = async (req, res) => {
         });
       } else {
         res.status(403).send({
-          title: "Incorrect Logins",
-          message: "Incorrect Logins",
+          title: "email or password is incorrect",
+          message: "email or password is incorrect",
         });
       }
     } else {
@@ -145,7 +145,8 @@ exports.login = async (req, res) => {
           }
         } else {
           res.status(401).send({
-            title: "Incorrect Email.",
+            title:
+              "Email does not exist in our system, Please verify you have entered correct email.",
             message:
               "Email does not exist in our system, Please verify you have entered correct email.",
           });
@@ -186,7 +187,7 @@ exports.create = async (req, res) => {
       if (userExists) {
         res.status(401).send({
           title: "Email already exists!",
-          mesage: "Email already registered.",
+          mesage: "Email already exists!",
         });
       } else {
         const userObj = {
@@ -305,7 +306,7 @@ exports.resetPassword = async (req, res) => {
             });
           })
           .catch((err) => {
-            emails.errorEmail(req, err);
+            // emails.errorEmail(req, err);
             res.status(500).send({
               message: "Error while reset User password",
             });
@@ -324,7 +325,7 @@ exports.resetPassword = async (req, res) => {
             });
           })
           .catch((err) => {
-            emails.errorEmail(req, err);
+            // emails.errorEmail(req, err);
             res.status(500).send({
               message: "Error while reset User password",
             });
