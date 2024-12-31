@@ -207,7 +207,7 @@ exports.assignFreelancersByProject = async (req, res) => {
       );
       const projectTasks =
         project?.projectTasks && project.projectTasks.length > 0
-          ? project.projectTasks
+          ? [...project.projectTasks]
           : null;
       if (
         projectTasks &&
@@ -261,6 +261,7 @@ exports.assignFreelancersByProject = async (req, res) => {
         }
       }
     }
+    
     if (!project.workStarted) {
       const client = await Users.findOne({ _id: project.user });
       if (client && client?.emailSubscription) {

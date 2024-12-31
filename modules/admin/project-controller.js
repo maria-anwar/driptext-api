@@ -120,7 +120,7 @@ exports.editProject = async (req, res) => {
       const alreadyExist = await Projects.findOne({
         _id: { $ne: project._id },
         projectName: req.body.domain,
-      });
+      }).populate("plan");
       if (alreadyExist) {
         res.status(500).send({ message: "This project Name already exists" });
         return;
@@ -160,6 +160,7 @@ exports.editProject = async (req, res) => {
       await Projects.findOneAndUpdate(
         { _id: req.body.projectId },
         {
+          projectStatus: project?.plan?.subscription ? "Ready" : "Free Trial",
           onBoardingInfo: newOnBoarding._id,
           onBoarding: true
         },
